@@ -1,0 +1,7 @@
+{
+  "port": 5000,
+  "jwtSecret": "supersecret",
+  "baseUrl": "http://localhost:5000",
+  "pgconnect": "postgresql://user:password@localhost:5432/scrap",
+  "register": "yes"
+}
