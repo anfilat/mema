@@ -14,8 +14,8 @@ const initDb = async () => {
     });
 };
 
-async function getConnect() {
-    return pool.connect();
+async function query(sql, values) {
+    return pool.query(sql, values);
 }
 
 async function get(sql, values) {
@@ -24,6 +24,14 @@ async function get(sql, values) {
         return null;
     }
     return res.rows[0];
+}
+
+async function getValue(sql, values, name) {
+    const res = await pool.query(sql, values);
+    if (res.rowCount === 0) {
+        return null;
+    }
+    return res.rows[0][name];
 }
 
 async function transaction(func) {
@@ -54,7 +62,8 @@ async function transaction(func) {
 
 module.exports = {
     initDb,
-    getConnect,
+    query,
     get,
+    getValue,
     transaction,
 };
