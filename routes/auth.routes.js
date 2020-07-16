@@ -28,17 +28,14 @@ if (config.get('register') === 'yes') {
                 }
 
                 const {email, password} = req.body;
+                const hashedPassword = await bcrypt.hash(password, 10);
 
-                const candidate = await db.getUser(email);
+                const ok = await db.addUser(email, hashedPassword);
 
-                if (candidate) {
-                    return res.status(400).json({message: 'Такой пользователь уже существует'});
+                if (ok) {
+                    return res.status(201).json({message: 'Пользователь создан'});
                 }
-
-                const hashedPassword = await bcrypt.hash(password, 13);
-                await db.addUser(email, hashedPassword);
-
-                res.status(201).json({message: 'Пользователь создан'});
+                res.status(400).json({message: 'Такой пользователь уже существует'});
             } catch (e) {
                 res.status(500).json({message: 'Что-то пошло не так, попробуйте снова'});
             }
@@ -49,7 +46,7 @@ if (config.get('register') === 'yes') {
 router.post(
     '/login',
     [
-        check('email', 'Введите корректный email').normalizeEmail().isEmail(),
+        check('email', 'Введите email').exists(),
         check('password', 'Введите пароль').exists()
     ],
     async (req, res) => {

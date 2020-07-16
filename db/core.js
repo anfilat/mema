@@ -25,6 +25,10 @@ const initDb = async () => {
     }
 };
 
+async function getConnect() {
+    return pool.connect();
+}
+
 async function get(sql, values) {
     const res = await pool.query(sql, values);
     if (res.rowCount === 0) {
@@ -35,6 +39,6 @@ async function get(sql, values) {
 
 module.exports = {
     initDb,
-    pool,
+    getConnect,
     get,
 };
