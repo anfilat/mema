@@ -1,11 +1,11 @@
-const {Router} = require('express')
-const bcrypt = require('bcryptjs')
-const config = require('config')
-const jwt = require('jsonwebtoken')
-const {check, validationResult} = require('express-validator')
-const db = require('../db')
+const {Router} = require('express');
+const bcrypt = require('bcryptjs');
+const config = require('config');
+const jwt = require('jsonwebtoken');
+const {check, validationResult} = require('express-validator');
+const db = require('../db');
 
-const router = Router()
+const router = Router();
 
 // /api/auth/register
 if (config.get('register') === 'yes') {
@@ -18,31 +18,31 @@ if (config.get('register') === 'yes') {
         ],
         async (req, res) => {
             try {
-                const errors = validationResult(req)
+                const errors = validationResult(req);
 
                 if (!errors.isEmpty()) {
                     return res.status(400).json({
                         errors: errors.array(),
                         message: 'Некорректный данные при регистрации'
-                    })
+                    });
                 }
 
-                const {email, password} = req.body
+                const {email, password} = req.body;
 
                 const candidate = await db.getUser(email);
 
                 if (candidate) {
-                    return res.status(400).json({message: 'Такой пользователь уже существует'})
+                    return res.status(400).json({message: 'Такой пользователь уже существует'});
                 }
 
-                const hashedPassword = await bcrypt.hash(password, 13)
-                await db.addUser(email, hashedPassword)
+                const hashedPassword = await bcrypt.hash(password, 13);
+                await db.addUser(email, hashedPassword);
 
-                res.status(201).json({message: 'Пользователь создан'})
+                res.status(201).json({message: 'Пользователь создан'});
             } catch (e) {
-                res.status(500).json({message: 'Что-то пошло не так, попробуйте снова'})
+                res.status(500).json({message: 'Что-то пошло не так, попробуйте снова'});
             }
-        })
+        });
 }
 
 // /api/auth/login
@@ -54,40 +54,40 @@ router.post(
     ],
     async (req, res) => {
         try {
-            const errors = validationResult(req)
+            const errors = validationResult(req);
 
             if (!errors.isEmpty()) {
                 return res.status(400).json({
                     errors: errors.array(),
                     message: 'Некорректный данные при входе в систему'
-                })
+                });
             }
 
-            const {email, password} = req.body
+            const {email, password} = req.body;
 
             const user = await db.getUser(email);
 
             if (!user) {
-                return res.status(400).json({message: 'Пользователь не найден'})
+                return res.status(400).json({message: 'Пользователь не найден'});
             }
 
-            const isMatch = await bcrypt.compare(password, user.password)
+            const isMatch = await bcrypt.compare(password, user.password);
 
             if (!isMatch) {
-                return res.status(400).json({message: 'Неверный пароль, попробуйте снова'})
+                return res.status(400).json({message: 'Неверный пароль, попробуйте снова'});
             }
 
             const token = jwt.sign(
                 {userId: user.user_id},
                 config.get('jwtSecret'),
                 {expiresIn: '1h'}
-            )
+            );
 
-            res.json({token, userId: user.user_id})
+            res.json({token, userId: user.user_id});
         } catch (e) {
-            res.status(500).json({message: 'Что-то пошло не так, попробуйте снова'})
+            res.status(500).json({message: 'Что-то пошло не так, попробуйте снова'});
         }
-    })
+    });
 
 
-module.exports = router
+module.exports = router;

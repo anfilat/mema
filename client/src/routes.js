@@ -1,7 +1,7 @@
-import React from 'react'
-import {Switch, Route, Redirect} from 'react-router-dom'
-import {AuthPage} from './pages/AuthPage'
-import {NewPage} from './pages/NewPage'
+import React from 'react';
+import {Switch, Route, Redirect} from 'react-router-dom';
+import {AuthPage} from './pages/AuthPage';
+import {NewPage} from './pages/NewPage';
 
 export const useRoutes = isAuthenticated => {
     if (isAuthenticated) {
@@ -12,7 +12,7 @@ export const useRoutes = isAuthenticated => {
                 </Route>
                 <Redirect to="/new"/>
             </Switch>
-        )
+        );
     }
 
     return (
@@ -22,5 +22,5 @@ export const useRoutes = isAuthenticated => {
             </Route>
             <Redirect to="/"/>
         </Switch>
-    )
-}
+    );
+};
