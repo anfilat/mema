@@ -1,4 +1,4 @@
-const config = require('config')
+const config = require('config');
 const {Pool} = require('pg');
 
 const pool = new Pool({
@@ -26,7 +26,7 @@ const initDb = async () => {
         console.error(err);
         process.exit(1);
     }
-}
+};
 
 initDb();
 
