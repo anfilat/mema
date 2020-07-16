@@ -37,8 +37,35 @@ async function get(sql, values) {
     return res.rows[0];
 }
 
+async function transaction(func) {
+    const client = await pool.connect();
+
+    let cancelled = false;
+    async function cancel() {
+        cancelled = true;
+        return client.query('ROLLBACK');
+    }
+
+    try {
+        await client.query('BEGIN');
+
+        const result = await func(client, cancel);
+
+        if (!cancelled) {
+            await client.query('COMMIT');
+        }
+        return result;
+    } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+    } finally {
+        client.release();
+    }
+}
+
 module.exports = {
     initDb,
     getConnect,
     get,
+    transaction,
 };
