@@ -2,8 +2,9 @@ const {Router} = require('express');
 const bcrypt = require('bcryptjs');
 const config = require('config');
 const jwt = require('jsonwebtoken');
-const {check, validationResult} = require('express-validator');
+const {body} = require('express-validator');
 const db = require('../db');
+const {stopOnError} = require('./util');
 
 const router = Router();
 
@@ -12,22 +13,13 @@ if (config.get('register') === 'yes') {
     router.post(
         '/register',
         [
-            check('email', 'Некорректный email').isEmail(),
-            check('password', 'Минимальная длина пароля 6 символов')
-                .isLength({min: 6})
+            body('email')
+                .isEmail().withMessage('Некорректный email'),
+            body('password')
+                .isLength({min: 6}).withMessage('Минимальная длина пароля 6 символов'),
+            stopOnError('Некорректные данные при регистрации'),
         ],
         async (req, res) => {
-            const errors = validationResult(req);
-
-            if (!errors.isEmpty()) {
-                return res
-                    .status(400)
-                    .json({
-                        errors: errors.array(),
-                        message: 'Некорректный данные при регистрации'
-                    });
-            }
-
             const {email, password} = req.body;
             const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -49,21 +41,15 @@ if (config.get('register') === 'yes') {
 router.post(
     '/login',
     [
-        check('email', 'Введите email').exists(),
-        check('password', 'Введите пароль').exists()
+        body('email')
+            .trim()
+            .not().isEmpty().withMessage('Введите email'),
+        body('password')
+            .trim()
+            .not().isEmpty().withMessage('Введите пароль'),
+        stopOnError('Некорректные данные при входе в систему'),
     ],
     async (req, res) => {
-        const errors = validationResult(req);
-
-        if (!errors.isEmpty()) {
-            return res
-                .status(400)
-                .json({
-                    errors: errors.array(),
-                    message: 'Некорректный данные при входе в систему'
-                });
-        }
-
         const {email, password} = req.body;
 
         const account = await db.getAccount(email);
