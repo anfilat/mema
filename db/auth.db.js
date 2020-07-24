@@ -1,33 +1,33 @@
 const {query, get, getValue} = require('./core');
 
-async function addUser(email, hashedPassword) {
-    const checkUserSQL = 'SELECT Count(*) AS count FROM "user" WHERE email = $1';
-    const checkUserValues = [email];
-    const count = await getValue(checkUserSQL, checkUserValues, 'count');
+async function addAccount(email, hashedPassword) {
+    const checkAccountSQL = 'SELECT Count(*) AS count FROM account WHERE email = $1';
+    const checkAccountValues = [email];
+    const count = await getValue(checkAccountSQL, checkAccountValues, 'count');
     if (count != 0) {
         return false;
     }
 
-    const sql = 'INSERT INTO "user" (email, password) VALUES ($1, $2)';
+    const sql = 'INSERT INTO account (email, password) VALUES ($1, $2)';
     const values = [email, hashedPassword];
     try {
         await query(sql, values);
         return true;
     } catch (err) {
-        if (err.constraint === 'user_email_key') {
+        if (err.constraint === 'account_email_key') {
             return false;
         }
         throw err;
     }
 }
 
-async function getUser(email) {
-    const sql = 'SELECT * FROM "user" WHERE email = $1';
+async function getAccount(email) {
+    const sql = 'SELECT * FROM account WHERE email = $1';
     const values = [email];
     return get(sql, values);
 }
 
 module.exports = {
-    addUser,
-    getUser,
+    addAccount,
+    getAccount,
 };

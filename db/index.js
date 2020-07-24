@@ -1,8 +1,8 @@
 const {initDb} = require('./core');
-const {addUser, getUser} = require('./auth.db');
+const {addAccount, getAccount} = require('./auth.db');
 
 module.exports = {
     initDb,
-    addUser,
-    getUser,
+    addAccount,
+    getAccount,
 };

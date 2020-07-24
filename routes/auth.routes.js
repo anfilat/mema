@@ -30,7 +30,7 @@ if (config.get('register') === 'yes') {
                 const {email, password} = req.body;
                 const hashedPassword = await bcrypt.hash(password, 10);
 
-                const ok = await db.addUser(email, hashedPassword);
+                const ok = await db.addAccount(email, hashedPassword);
 
                 if (ok) {
                     return res.status(201).json({message: 'Пользователь создан'});
@@ -62,25 +62,25 @@ router.post(
 
             const {email, password} = req.body;
 
-            const user = await db.getUser(email);
+            const account = await db.getAccount(email);
 
-            if (!user) {
+            if (!account) {
                 return res.status(400).json({message: 'Пользователь не найден'});
             }
 
-            const isMatch = await bcrypt.compare(password, user.password);
+            const isMatch = await bcrypt.compare(password, account.password);
 
             if (!isMatch) {
                 return res.status(400).json({message: 'Неверный пароль, попробуйте снова'});
             }
 
             const token = jwt.sign(
-                {userId: user.user_id},
+                {userId: account.account_id},
                 config.get('jwtSecret'),
                 {expiresIn: '1h'}
             );
 
-            res.json({token, userId: user.user_id});
+            res.json({token, userId: account.account_id});
         } catch (e) {
             res.status(500).json({message: 'Что-то пошло не так, попробуйте снова'});
         }

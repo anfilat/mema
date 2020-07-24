@@ -13,7 +13,7 @@ module.exports = (req, res, next) => {
             return res.status(401).json({message: 'Нет авторизации'});
         }
 
-        req.user = jwt.verify(token, config.get('jwtSecret'));
+        req.account = jwt.verify(token, config.get('jwtSecret'));
         next();
     } catch (e) {
         res.status(401).json({message: 'Нет авторизации'});
