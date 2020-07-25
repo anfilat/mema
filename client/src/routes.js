@@ -1,6 +1,7 @@
 import React from 'react';
 import {Switch, Route, Redirect} from 'react-router-dom';
-import {AuthPage} from './pages/AuthPage';
+import {LoginPage} from './pages/LoginPage';
+import {RegisterPage} from './pages/RegisterPage';
 import {NewPage} from './pages/NewPage';
 
 export const useRoutes = isAuthenticated => {
@@ -18,8 +19,13 @@ export const useRoutes = isAuthenticated => {
     return (
         <Switch>
             <Route path="/" exact>
-                <AuthPage/>
+                <LoginPage/>
             </Route>
+            {process.env.REACT_APP_REGISTER === 'yes' &&
+            <Route path="/register" exact>
+                <RegisterPage/>
+            </Route>
+            }
             <Redirect to="/"/>
         </Switch>
     );
