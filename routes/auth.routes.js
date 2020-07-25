@@ -14,10 +14,10 @@ if (config.get('register') === 'yes') {
         '/register',
         [
             body('email')
-                .isEmail().withMessage('Некорректный email'),
+                .isEmail().withMessage('Invalid email'),
             body('password')
-                .isLength({min: 6}).withMessage('Минимальная длина пароля 6 символов'),
-            stopOnError('Некорректные данные при регистрации'),
+                .isLength({min: 6}).withMessage('The minimum password length is 6 characters'),
+            stopOnError('Incorrect data'),
         ],
         async (req, res) => {
             const {email, password} = req.body;
@@ -28,11 +28,11 @@ if (config.get('register') === 'yes') {
             if (ok) {
                 return res
                     .status(201)
-                    .json({message: 'Пользователь создан'});
+                    .json({message: 'User created'});
             }
             res
                 .status(400)
-                .json({message: 'Такой пользователь уже существует'});
+                .json({message: 'The user already exists'});
         }
     );
 }
@@ -43,11 +43,11 @@ router.post(
     [
         body('email')
             .trim()
-            .not().isEmpty().withMessage('Введите email'),
+            .not().isEmpty().withMessage('Empty email'),
         body('password')
             .trim()
-            .not().isEmpty().withMessage('Введите пароль'),
-        stopOnError('Некорректные данные при входе в систему'),
+            .not().isEmpty().withMessage('Empty password'),
+        stopOnError('Incorrect data'),
     ],
     async (req, res) => {
         const {email, password} = req.body;
@@ -57,7 +57,7 @@ router.post(
         if (!account) {
             return res
                 .status(400)
-                .json({message: 'Пользователь не найден'});
+                .json({message: 'The user is not found'});
         }
 
         const isMatch = await bcrypt.compare(password, account.password);
@@ -65,7 +65,7 @@ router.post(
         if (!isMatch) {
             return res
                 .status(400)
-                .json({message: 'Неверный пароль, попробуйте снова'});
+                .json({message: 'Invalid password, try again'});
         }
 
         const token = jwt.sign(
@@ -79,9 +79,10 @@ router.post(
 );
 
 router.use((err, req, res, next) => {
+    console.error(err);
     res
         .status(500)
-        .json({message: 'Что-то пошло не так, попробуйте снова'});
+        .json({message: 'Something went wrong, try again'});
 });
 
 module.exports = router;

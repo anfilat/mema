@@ -16,16 +16,15 @@ export const useHttp = () => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.message || 'Что-то пошло не так');
+                throw new Error(data.message || 'Something went wrong');
             }
-
-            setLoading(false);
 
             return data;
         } catch (e) {
-            setLoading(false);
             setError(e.message);
             throw e;
+        } finally {
+            setLoading(false);
         }
     }, []);
 

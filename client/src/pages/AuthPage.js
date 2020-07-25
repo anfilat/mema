@@ -8,7 +8,8 @@ export const AuthPage = () => {
     const message = useMessage();
     const {loading, request, error, clearError} = useHttp();
     const [form, setForm] = useState({
-        email: '', password: ''
+        email: '',
+        password: '',
     });
 
     useEffect(() => {
@@ -21,7 +22,10 @@ export const AuthPage = () => {
     }, []);
 
     const changeHandler = event => {
-        setForm({...form, [event.target.name]: event.target.value});
+        setForm({
+            ...form,
+            [event.target.name]: event.target.value
+        });
     };
 
     const registerHandler = async () => {
@@ -43,14 +47,14 @@ export const AuthPage = () => {
     return (
         <div className="row">
             <div className="col s12 m10 offset-m1 l6 offset-l3">
-                <h1>TODO</h1>
+                <h1>Scrap Count</h1>
                 <div className="card blue darken-1">
                     <div className="card-content white-text">
-                        <span className="card-title">Авторизация</span>
+                        <span className="card-title">Login</span>
                         <div>
                             <div className="input-field">
                                 <input
-                                    placeholder="Введите email"
+                                    placeholder="Enter email"
                                     id="email"
                                     type="text"
                                     name="email"
@@ -63,7 +67,7 @@ export const AuthPage = () => {
 
                             <div className="input-field">
                                 <input
-                                    placeholder="Введите пароль"
+                                    placeholder="Enter password"
                                     id="password"
                                     type="password"
                                     name="password"
@@ -71,7 +75,7 @@ export const AuthPage = () => {
                                     value={form.password}
                                     onChange={changeHandler}
                                 />
-                                <label htmlFor="email">Пароль</label>
+                                <label htmlFor="email">Password</label>
                             </div>
                         </div>
                     </div>
@@ -82,7 +86,7 @@ export const AuthPage = () => {
                             disabled={loading}
                             onClick={loginHandler}
                         >
-                            Войти
+                            Login
                         </button>
                         {process.env.REACT_APP_REGISTER === 'yes' &&
                         <button
@@ -90,7 +94,7 @@ export const AuthPage = () => {
                             onClick={registerHandler}
                             disabled={loading}
                         >
-                            Регистрация
+                            Register
                         </button>
                         }
                     </div>
