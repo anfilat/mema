@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const {body} = require('express-validator');
+const config = require('config');
 const db = require('../db');
 
 exports.checkRegister = [
@@ -14,16 +15,21 @@ exports.register = async (req, res) => {
     const {email, password} = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const ok = await db.addAccount(email, hashedPassword);
+    const account = await db.addAccount(email, hashedPassword);
 
-    if (ok) {
+    if (!account) {
         return res
-            .status(201)
-            .json({message: 'User created'});
+            .status(400)
+            .json({message: 'The user already exists'});
     }
+
     res
-        .status(400)
-        .json({message: 'The user already exists'});
+        .status(201)
+        .json({
+            message: 'User created',
+            token: newToken(account),
+            userId: account.account_id,
+        });
 };
 
 exports.checkLogin = [
@@ -46,19 +52,26 @@ exports.login = async (req, res) => {
             .json({message: 'The user is not found'});
     }
 
-    const isMatch = await bcrypt.compare(password, account.password);
-
-    if (!isMatch) {
+    if (!await checkPassword(password, account)) {
         return res
             .status(400)
             .json({message: 'Invalid password, try again'});
     }
 
-    const token = jwt.sign(
+    res.json({
+        token: newToken(account),
+        userId: account.account_id,
+    });
+};
+
+async function checkPassword(password, account) {
+    return bcrypt.compare(password, account.password);
+}
+
+function newToken(account) {
+    return jwt.sign(
         {userId: account.account_id},
         config.get('jwtSecret'),
         {expiresIn: '1h'}
     );
-
-    res.json({token, userId: account.account_id});
-};
+}

@@ -5,17 +5,19 @@ async function addAccount(email, hashedPassword) {
     const checkAccountValues = [email];
     const count = await getValue(checkAccountSQL, checkAccountValues, 'count');
     if (count != 0) {
-        return false;
+        return null;
     }
 
-    const sql = 'INSERT INTO account (email, password) VALUES ($1, $2)';
+    const sql = 'INSERT INTO account (email, password) VALUES ($1, $2) RETURNING account_id';
     const values = [email, hashedPassword];
     try {
-        await query(sql, values);
-        return true;
+        const res = await query(sql, values);
+        return {
+            account_id: res.rows[0].account_id
+        };
     } catch (err) {
         if (err.constraint === 'account_email_key') {
-            return false;
+            return null;
         }
         throw err;
     }

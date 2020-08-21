@@ -1,11 +1,13 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {NavLink, useHistory} from 'react-router-dom'
 import {useHttp} from '../hooks/http.hook';
 import {useMessage} from '../hooks/message.hook';
+import {AuthContext} from '../context/AuthContext';
 
 import styles from './LoginPage.module.css';
 
 export const RegisterPage = () => {
+    const auth = useContext(AuthContext);
     const history = useHistory();
     const message = useMessage();
     const {loading, request, error, clearError} = useHttp();
@@ -35,6 +37,7 @@ export const RegisterPage = () => {
         try {
             const data = await request('/api/auth/register', 'POST', {...form});
             message(data.message);
+            auth.login(data.token, data.userId);
             history.push('/');
         } catch (e) {
         }
