@@ -1,4 +1,4 @@
-import React, {useContext, useEffect} from 'react';
+import React, {useContext} from 'react';
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
 import {useSnackbar} from 'notistack';
@@ -26,23 +26,18 @@ export const LoginPage = () => {
     const classes = useStyles();
     const auth = useContext(AuthContext);
     const {enqueueSnackbar} = useSnackbar();
-    const {loading, request, error, clearError} = useHttp();
+    const {loading, request} = useHttp();
     const [email, emailChangeHandler] = useBind('');
     const [password, passwordChangeHandler] = useBind('');
 
-    useEffect(() => {
-        if (error) {
-            enqueueSnackbar(error);
-            clearError();
-        }
-    }, [error, enqueueSnackbar, clearError]);
-
     async function loginHandler(event) {
         event.preventDefault();
-        try {
-            const data = await request('/api/auth/login', 'POST', {email, password});
+
+        const {ok, data, error} = await request('/api/auth/login', 'POST', {email, password});
+        if (ok) {
             auth.login(data.token, data.userId);
-        } catch (e) {
+        } else {
+            enqueueSnackbar(error);
         }
     }
 
