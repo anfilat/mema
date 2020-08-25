@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {useHistory} from 'react-router-dom'
+import {useHistory, Link as RouterLink} from 'react-router-dom'
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
 import {useSnackbar} from 'notistack';
@@ -85,7 +85,7 @@ export const RegisterPage = () => {
                         Register
                     </Button>
                     <Box display="flex" justifyContent="flex-end">
-                        <Link href="/" variant="body2">
+                        <Link component={RouterLink} to="/" variant="body2">
                             Already have an account? Login
                         </Link>
                     </Box>

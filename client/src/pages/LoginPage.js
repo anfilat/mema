@@ -1,4 +1,5 @@
 import React, {useContext} from 'react';
+import {Link as RouterLink} from 'react-router-dom'
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
 import {useSnackbar} from 'notistack';
@@ -82,7 +83,7 @@ export const LoginPage = () => {
                     </Button>
                     {process.env.REACT_APP_REGISTER === 'yes' &&
                     <Box display="flex" justifyContent="flex-end">
-                        <Link href="/register" variant="body2">
+                        <Link component={RouterLink} to="/register" variant="body2">
                             Don't have an account? Register
                         </Link>
                     </Box>
