@@ -1,9 +1,10 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect} from 'react';
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
 import {useSnackbar} from 'notistack';
 import {Copyright} from '../components/Copyright';
 import {useHttp} from '../hooks/http.hook';
+import {useBind} from '../hooks/bind.hook';
 import {AuthContext} from '../context/AuthContext';
 
 const useStyles = makeStyles(theme => ({
@@ -26,10 +27,8 @@ export const LoginPage = () => {
     const auth = useContext(AuthContext);
     const {enqueueSnackbar} = useSnackbar();
     const {loading, request, error, clearError} = useHttp();
-    const [form, setForm] = useState({
-        email: '',
-        password: '',
-    });
+    const [email, emailChangeHandler] = useBind('');
+    const [password, passwordChangeHandler] = useBind('');
 
     useEffect(() => {
         if (error) {
@@ -38,17 +37,10 @@ export const LoginPage = () => {
         }
     }, [error, enqueueSnackbar, clearError]);
 
-    function changeHandler(event) {
-        setForm({
-            ...form,
-            [event.target.name]: event.target.value
-        });
-    }
-
     async function loginHandler(event) {
         event.preventDefault();
         try {
-            const data = await request('/api/auth/login', 'POST', {...form});
+            const data = await request('/api/auth/login', 'POST', {email, password});
             auth.login(data.token, data.userId);
         } catch (e) {
         }
@@ -62,30 +54,26 @@ export const LoginPage = () => {
                 </Typography>
                 <form className={classes.form} noValidate onSubmit={loginHandler}>
                     <TextField
+                        label="Email Address"
                         variant="outlined"
                         margin="normal"
+                        autoComplete="email"
+                        value={email}
+                        onChange={emailChangeHandler}
                         required
                         fullWidth
-                        id="email"
-                        label="Email Address"
-                        name="email"
-                        autoComplete="email"
                         autoFocus
-                        value={form.email}
-                        onChange={changeHandler}
                     />
                     <TextField
-                        variant="outlined"
-                        margin="normal"
-                        required
-                        fullWidth
-                        name="password"
                         label="Password"
                         type="password"
-                        id="password"
+                        variant="outlined"
+                        margin="normal"
                         autoComplete="current-password"
-                        value={form.password}
-                        onChange={changeHandler}
+                        value={password}
+                        onChange={passwordChangeHandler}
+                        required
+                        fullWidth
                     />
                     <Button
                         type="submit"
