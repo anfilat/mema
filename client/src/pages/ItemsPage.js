@@ -1,11 +1,11 @@
 import React from 'react';
 import {Title} from '../components/Title';
 
-export const NewPage = () => {
+export const ItemsPage = () => {
     return (
         <>
-            <Title title="New"/>
-            <div>TODO New</div>
+            <Title title="Items"/>
+            <div>TODO Items</div>
         </>
     );
 };

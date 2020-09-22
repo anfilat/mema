@@ -4,6 +4,7 @@ import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/
 import {makeStyles} from '@material-ui/core/styles';
 import {useSnackbar} from 'notistack';
 import {Copyright} from '../components/Copyright';
+import {Title} from '../components/Title';
 import {useHttp} from '../hooks/http.hook';
 import {useBind} from '../hooks/bind.hook';
 import {AuthContext} from '../context/AuthContext';
@@ -44,6 +45,7 @@ export const LoginPage = () => {
 
     return (
         <Container component="main" maxWidth="xs">
+            <Title title="Login"/>
             <div className={classes.paper}>
                 <Typography component="h1" variant="h5">
                     Login
