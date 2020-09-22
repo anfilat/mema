@@ -5,8 +5,8 @@ export function Copyright() {
     return (
         <Typography variant="body2" color="textSecondary" align="center">
             {'Copyright © '}
-            <Link color="inherit" href="https://scrapcount.anfilat.com/">
-                Scrap Count
+            <Link color="inherit" href="https://mema.anfilat.com/">
+                MemA
             </Link>
             {' '}
             {new Date().getFullYear()}

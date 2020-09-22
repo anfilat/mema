@@ -4,7 +4,7 @@ import {Helmet} from "react-helmet";
 export const Title = ({title}) => {
     return (
         <Helmet>
-            <title>Scrap Count - {title}</title>
+            <title>MemA - {title}</title>
         </Helmet>
     );
 };
