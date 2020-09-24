@@ -52,4 +52,6 @@ Editor.builtinPlugins = [
 	TextTransformation
 ];
 
+window.Editor = Editor;
+
 export default Editor;

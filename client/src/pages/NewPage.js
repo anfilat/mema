@@ -4,7 +4,7 @@ import {Box, Container} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {Title} from '../components/Title';
 import {useBindLocalStorage} from '../hooks/bindLocalStorage.hook';
-const Editor = require('../ckeditor/build/ckeditor');
+import 'ckeditor5-custom-build/build/ckeditor';
 
 const useStyles = makeStyles(theme => ({
     editor: {
@@ -48,7 +48,7 @@ export const NewPage = () => {
             <Container component="main" maxWidth="md">
                 <Box mt={2} className={classes.editor}>
                     <CKEditor
-                        editor={ Editor }
+                        editor={ window.Editor || window.ClassicEditor }
                         config={config}
                         data={content}
                         onChange={changeHandler}
