@@ -52,6 +52,12 @@ export const NewPage = () => {
                         config={config}
                         data={content}
                         onChange={changeHandler}
+                        onInit={editor => {
+                            editor.editing.view.focus();
+                            editor.model.change(writer => {
+                                writer.setSelection(writer.createPositionAt(editor.model.document.getRoot(), 'end'));
+                            });
+                        }}
                     />
                 </Box>
             </Container>
