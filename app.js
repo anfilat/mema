@@ -14,6 +14,12 @@ app.use(express.json({extended: true}));
 
 app.use('/api/auth', require('./routes/auth.routes'));
 
+app.use('/api/', (req, res, next) => {
+    res
+        .status(404)
+        .send('404 - Not Found\n');
+});
+
 if (process.env.NODE_ENV === 'production') {
     app.use('/', express.static(path.join(__dirname, 'client', 'build')));
 
