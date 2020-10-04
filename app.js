@@ -1,11 +1,14 @@
 const path = require('path');
 const express = require('express');
 require('express-async-errors');
+const morgan = require('morgan');
 const config = require('config');
 const db = require('./db');
 
 const app = express();
 app.disable('x-powered-by');
+
+app.use(morgan('common'));
 
 app.use(express.json({extended: true}));
 
