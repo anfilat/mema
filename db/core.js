@@ -3,7 +3,7 @@ const {Pool} = require('pg');
 
 let pool = null;
 
-const initDb = async () => {
+function initDb() {
     pool = new Pool({
         connectionString: config.get('pgconnect'),
     });
@@ -12,7 +12,7 @@ const initDb = async () => {
         console.error('Unexpected error on idle client', err);
         process.exit(1);
     });
-};
+}
 
 async function query(sql, values) {
     return pool.query(sql, values);
