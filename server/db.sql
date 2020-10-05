@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS mem (
     mem_id serial PRIMARY KEY,
     text_id int NOT NULL,
     account_id int NOT NULL,
-    title text,
     create_time timestamp NOT NULL,
     last_change_time timestamp NOT NULL,
 
