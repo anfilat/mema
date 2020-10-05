@@ -1,6 +1,7 @@
 const {query, get, getValue} = require('./core');
+const {hashPassword} = require('../utils/password');
 
-async function addAccount(email, hashedPassword) {
+async function addAccount(email, password) {
     const checkAccountSQL = 'SELECT Count(*) AS count FROM account WHERE email = $1';
     const checkAccountValues = [email];
     const count = await getValue(checkAccountSQL, checkAccountValues, 'count');
@@ -9,6 +10,7 @@ async function addAccount(email, hashedPassword) {
     }
 
     const sql = 'INSERT INTO account (email, password) VALUES ($1, $2) RETURNING account_id';
+    const hashedPassword = await hashPassword(password);
     const values = [email, hashedPassword];
     try {
         const res = await query(sql, values);

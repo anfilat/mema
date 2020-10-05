@@ -1,8 +1,8 @@
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const {body} = require('express-validator');
 const config = require('config');
 const db = require('../db');
+const {checkPassword} = require('../utils/password');
 
 exports.checkRegister = [
     body('email')
@@ -13,9 +13,8 @@ exports.checkRegister = [
 
 exports.register = async (req, res) => {
     const {email, password} = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const account = await db.addAccount(email, hashedPassword);
+    const account = await db.addAccount(email, password);
 
     if (!account) {
         return res
@@ -52,7 +51,7 @@ exports.login = async (req, res) => {
             .json({message: 'The user is not found'});
     }
 
-    if (!await checkPassword(password, account)) {
+    if (!await checkPassword(password, account.password)) {
         return res
             .status(400)
             .json({message: 'Invalid password, try again'});
@@ -63,10 +62,6 @@ exports.login = async (req, res) => {
         userId: account.account_id,
     });
 };
-
-async function checkPassword(password, account) {
-    return bcrypt.compare(password, account.password);
-}
 
 function newToken(account) {
     return jwt.sign(
