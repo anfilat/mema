@@ -19,10 +19,10 @@ app.use('/api/', (req, res, next) => {
         .send('404 - Not Found\n');
 });
 
-app.use('/', express.static(path.join(__dirname, 'client', 'build')));
+app.use('/', express.static(path.join(__dirname, '..', 'client', 'build')));
 
 app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+    res.sendFile(path.resolve(__dirname, '..', 'client', 'build', 'index.html'));
 });
 
 db.initDb();
