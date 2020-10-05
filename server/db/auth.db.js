@@ -13,7 +13,7 @@ async function addAccount(email, hashedPassword) {
     try {
         const res = await query(sql, values);
         return {
-            account_id: res.rows[0].account_id
+            account_id: +res.rows[0].account_id
         };
     } catch (err) {
         if (err.constraint === 'account_email_key') {

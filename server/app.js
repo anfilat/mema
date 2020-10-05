@@ -2,7 +2,6 @@ const path = require('path');
 const express = require('express');
 require('express-async-errors');
 const morgan = require('morgan');
-const db = require('./db');
 
 const app = express();
 app.disable('x-powered-by');
@@ -24,7 +23,5 @@ app.use('/', express.static(path.join(__dirname, '..', 'client', 'build')));
 app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '..', 'client', 'build', 'index.html'));
 });
-
-db.initDb();
 
 module.exports = app;

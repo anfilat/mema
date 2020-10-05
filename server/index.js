@@ -1,5 +1,8 @@
 const config = require('config');
 const app = require('./app');
+const db = require('./db');
+
+db.initDb();
 
 const PORT = config.get('port') ?? 5000;
 
