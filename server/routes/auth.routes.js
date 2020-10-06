@@ -27,11 +27,4 @@ router.post(
     auth.login
 );
 
-router.use((err, req, res, next) => {
-    console.error(err);
-    res
-        .status(500)
-        .json({message: 'Something went wrong, try again'});
-});
-
 module.exports = router;
