@@ -1,9 +1,12 @@
-import React, {useRef} from 'react';
+import React, {useContext, useRef} from 'react';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
+import {useSnackbar} from 'notistack';
 import {Title} from '../components/Title';
 import {useBindLocalStorage} from '../hooks/bindLocalStorage.hook';
+import {AuthContext} from '../context/AuthContext'
+import {useHttp} from '../hooks/http.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
 
 const useStyles = makeStyles(theme => ({
@@ -37,6 +40,9 @@ const config = {
 export const NewPage = () => {
     const classes = useStyles();
     const editorInstance = useRef(null);
+    const {enqueueSnackbar} = useSnackbar();
+    const auth = useContext(AuthContext)
+    const {loading, request} = useHttp();
     const [content, setContent] = useBindLocalStorage('newData', 'content', '');
 
     function initEditor(editor) {
@@ -50,6 +56,26 @@ export const NewPage = () => {
 
     function clickReset() {
         setContent('');
+        focusEditor(editorInstance.current);
+    }
+
+    async function clickSave() {
+        const {ok, data, error} = await request('/api/item/add', 'POST', {
+            text: content
+        }, {
+            Authorization: `Bearer ${auth.token}`
+        });
+        if (ok) {
+            console.log(data.itemId);
+            enqueueSnackbar(data.message, {
+                variant: 'success',
+            });
+        } else {
+            enqueueSnackbar(error, {
+                variant: 'error',
+            });
+        }
+
         focusEditor(editorInstance.current);
     }
 
@@ -84,6 +110,7 @@ export const NewPage = () => {
                             variant="contained"
                             color="primary"
                             onClick={clickReset}
+                            disabled={loading}
                         >
                             Reset
                         </Button>
@@ -92,6 +119,8 @@ export const NewPage = () => {
                         <Button
                             variant="contained"
                             color="primary"
+                            onClick={clickSave}
+                            disabled={loading}
                         >
                             Save
                         </Button>

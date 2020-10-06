@@ -39,7 +39,9 @@ export const LoginPage = () => {
         if (ok) {
             auth.login(data.token, data.userId);
         } else {
-            enqueueSnackbar(error);
+            enqueueSnackbar(error, {
+                variant: 'error',
+            });
         }
     }
 

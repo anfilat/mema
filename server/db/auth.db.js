@@ -1,21 +1,29 @@
-const {query, get, getValue} = require('./core');
+const {get, getValue} = require('./core');
 const {hashPassword} = require('../utils/password');
 
 async function addAccount(email, password) {
-    const checkAccountSQL = 'SELECT Count(*) AS count FROM account WHERE email = $1';
+    const checkAccountSQL = `
+        SELECT Count(*) AS count
+        FROM account
+        WHERE email = $1
+    `;
     const checkAccountValues = [email];
     const count = await getValue(checkAccountSQL, checkAccountValues, 'count');
     if (count != 0) {
         return null;
     }
 
-    const sql = 'INSERT INTO account (email, password) VALUES ($1, $2) RETURNING account_id';
+    const addAccountSQL = `
+        INSERT INTO account (email, password)
+        VALUES ($1, $2)
+        RETURNING account_id
+    `;
     const hashedPassword = await hashPassword(password);
-    const values = [email, hashedPassword];
+    const addAccountValues = [email, hashedPassword];
     try {
-        const res = await query(sql, values);
+        const accountId = await getValue(addAccountSQL, addAccountValues, 'account_id');
         return {
-            account_id: +res.rows[0].account_id
+            account_id: +accountId
         };
     } catch (err) {
         if (err.constraint === 'account_email_key') {

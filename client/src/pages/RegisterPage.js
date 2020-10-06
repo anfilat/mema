@@ -38,11 +38,15 @@ export const RegisterPage = () => {
 
         const {ok, data, error} = await request('/api/auth/register', 'POST', {email, password});
         if (ok) {
-            enqueueSnackbar(data.message);
+            enqueueSnackbar(data.message, {
+                variant: 'success',
+            });
             auth.login(data.token, data.userId);
             history.push('/');
         } else {
-            enqueueSnackbar(error);
+            enqueueSnackbar(error, {
+                variant: 'error',
+            });
         }
     }
 
