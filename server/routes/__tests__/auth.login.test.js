@@ -1,8 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
-const db = require('../../db');
 
-const getAccountSQL = 'SELECT * FROM account WHERE email = $1';
 const getAccountResult = {
     rowCount: 1,
     rows: [{
@@ -16,60 +14,65 @@ const getAccountNotFoundResult = {
     rows: [],
 };
 
-test('login', async () => {
-    const pool = db.initFakeDb();
-    pool.add(getAccountSQL, ['string'], getAccountResult);
+describe('login', () => {
+    const query = app._db.query;
 
-    await request(app)
-        .post('/api/auth/login')
-        .send({
-            email: 'test@test.com',
-            password: '123456'
-        })
-        .expect(200)
-        .expect(({body}) => {
-            expect(body).toHaveProperty('token');
-            expect(body).toHaveProperty('userId', 1);
-        });
-});
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
 
-test('login with wrong password', async () => {
-    const pool = db.initFakeDb();
-    pool.add(getAccountSQL, ['string'], getAccountResult);
+    test('success', () => {
+        query.mockResolvedValueOnce(getAccountResult);
 
-    await request(app)
-        .post('/api/auth/login')
-        .send({
-            email: 'test@test.com',
-            password: '123'
-        })
-        .expect(400)
-        .expect(({body}) => {
-            expect(body).toHaveProperty('message', 'Invalid password, try again');
-        });
-});
+        return request(app)
+            .post('/api/auth/login')
+            .send({
+                email: 'test@test.com',
+                password: '123456'
+            })
+            .expect(200)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('token');
+                expect(body).toHaveProperty('userId', 1);
+            });
+    });
 
-test('login as not registered user', async () => {
-    const pool = db.initFakeDb();
-    pool.add(getAccountSQL, ['string'], getAccountNotFoundResult);
+    test('with wrong password', () => {
+        query.mockResolvedValueOnce(getAccountResult);
 
-    await request(app)
-        .post('/api/auth/login')
-        .send({
-            email: 'test@test.com',
-            password: '123456'
-        })
-        .expect(400)
-        .expect(({body}) => {
-            expect(body).toHaveProperty('message', 'The user is not found');
-        });
-});
+        return request(app)
+            .post('/api/auth/login')
+            .send({
+                email: 'test@test.com',
+                password: '123'
+            })
+            .expect(400)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('message', 'Invalid password, try again');
+            });
+    });
 
-test('login without auth data', async () => {
-    await request(app)
-        .post('/api/auth/login')
-        .expect(400)
-        .expect(({body}) => {
-            expect(body).toHaveProperty('message', 'Incorrect data');
-        });
+    test('as not registered user', () => {
+        query.mockResolvedValueOnce(getAccountNotFoundResult);
+
+        return request(app)
+            .post('/api/auth/login')
+            .send({
+                email: 'test@test.com',
+                password: '123456'
+            })
+            .expect(400)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('message', 'The user is not found');
+            });
+    });
+
+    test('without auth data', () => {
+        return request(app)
+            .post('/api/auth/login')
+            .expect(400)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('message', 'Incorrect data');
+            });
+    });
 });

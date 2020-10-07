@@ -4,6 +4,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 const setupAPI = require('./app.api');
 const setupStatic = require('./app.static');
+const db = require('./db');
 
 const app = express();
 
@@ -15,5 +16,7 @@ app.use(express.json({extended: true}));
 
 setupAPI(app);
 setupStatic(app);
+
+app._db = db.initDb();
 
 module.exports = app;

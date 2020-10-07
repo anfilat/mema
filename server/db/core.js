@@ -1,6 +1,4 @@
 const {Pool} = require('pg');
-const PgMock2 = require('pgmock2').default;
-const {getPool} = require('pgmock2');
 
 let pool = null;
 
@@ -13,11 +11,6 @@ function initDb() {
         console.error('Unexpected error on pg:', err);
         process.exit(1);
     });
-}
-
-function initFakeDb() {
-    const pg = new PgMock2();
-    pool = getPool(pg);
 
     return pool;
 }
@@ -70,7 +63,6 @@ async function transaction(func) {
 
 module.exports = {
     initDb,
-    initFakeDb,
     query,
     get,
     getValue,
