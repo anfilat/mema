@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const config = require('config');
 
 module.exports = (req, res, next) => {
     if (req.method === 'OPTIONS') {
@@ -15,7 +14,7 @@ module.exports = (req, res, next) => {
                 .json({message: 'Unauthorized'});
         }
 
-        req.account = jwt.verify(token, config.get('jwtSecret'));
+        req.account = jwt.verify(token, process.env.APP_JWT_SECRET);
         next();
     } catch (e) {
         res

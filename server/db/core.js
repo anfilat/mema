@@ -1,4 +1,3 @@
-const config = require('config');
 const {Pool} = require('pg');
 const PgMock2 = require('pgmock2').default;
 const {getPool} = require('pgmock2');
@@ -7,7 +6,7 @@ let pool = null;
 
 function initDb() {
     pool = new Pool({
-        connectionString: config.get('pgconnect'),
+        connectionString: process.env.APP_PG_CONNECT,
     });
 
     pool.on('error', (err) => {

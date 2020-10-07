@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const {body} = require('express-validator');
-const config = require('config');
 const db = require('../db');
 const {checkPassword} = require('../utils/password');
 
@@ -66,7 +65,7 @@ exports.login = async (req, res) => {
 function newToken(account) {
     return jwt.sign(
         {userId: account.account_id},
-        config.get('jwtSecret'),
+        process.env.APP_JWT_SECRET,
         {expiresIn: '1h'}
     );
 }

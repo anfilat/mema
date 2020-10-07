@@ -1,7 +1,0 @@
-{
-  "port": 5000,
-  "jwtSecret": "supersecret",
-  "baseUrl": "http://localhost:5000",
-  "pgconnect": "postgresql://mema:mema@localhost:5432/mema",
-  "register": "yes"
-}

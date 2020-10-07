@@ -1,10 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const config = require('config');
 const {Pool} = require('pg');
 
 pool = new Pool({
-    connectionString: config.get('pgconnect'),
+    connectionString: process.env.APP_PG_CONNECT,
 });
 
 pool.on('error', (err) => {

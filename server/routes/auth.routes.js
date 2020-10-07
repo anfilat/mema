@@ -1,12 +1,11 @@
 const {Router} = require('express');
-const config = require('config');
 const auth = require('./auth');
 const {stopOnError} = require('./util');
 
 const router = Router();
 
 // /api/auth/register
-if (config.get('register') === 'yes') {
+if (process.env.APP_REGISTER === 'yes') {
     router.post(
         '/register',
         [
