@@ -5,7 +5,7 @@ import {makeStyles} from '@material-ui/core/styles';
 import {useSnackbar} from 'notistack';
 import {Copyright} from '../components/Copyright';
 import {Title} from '../components/Title';
-import {useHttp} from '../hooks/http.hook';
+import {useNotAuthHttp} from '../hooks/notAuthHttp.hook';
 import {useBind} from '../hooks/bind.hook';
 import {AuthContext} from '../context/AuthContext';
 
@@ -28,7 +28,7 @@ export const LoginPage = () => {
     const classes = useStyles();
     const auth = useContext(AuthContext);
     const {enqueueSnackbar} = useSnackbar();
-    const {loading, request} = useHttp();
+    const {loading, request} = useNotAuthHttp();
     const [email, emailChangeHandler] = useBind('');
     const [password, passwordChangeHandler] = useBind('');
 

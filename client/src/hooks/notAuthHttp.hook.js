@@ -1,8 +1,6 @@
-import {useState, useCallback, useContext} from 'react';
-import {AuthContext} from "../context/AuthContext";
+import {useState, useCallback} from 'react';
 
-export function useHttp() {
-    const auth = useContext(AuthContext);
+export function useNotAuthHttp() {
     const [loading, setLoading] = useState(false);
 
     const request = useCallback(async function(url, method = 'GET', body = null, headers = {}) {
@@ -13,7 +11,6 @@ export function useHttp() {
 
         setLoading(true);
         try {
-            headers['Authorization'] = `Bearer ${auth.token}`;
             if (body) {
                 body = JSON.stringify(body);
                 headers['Content-Type'] = 'application/json';
@@ -39,7 +36,7 @@ export function useHttp() {
             data,
             error,
         };
-    }, [auth.token]);
+    }, []);
 
     return {loading, request};
 }

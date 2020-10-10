@@ -1,11 +1,10 @@
-import React, {useContext, useRef} from 'react';
+import React, {useRef} from 'react';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {useSnackbar} from 'notistack';
 import {Title} from '../components/Title';
 import {useBindLocalStorage} from '../hooks/bindLocalStorage.hook';
-import {AuthContext} from '../context/AuthContext'
 import {useHttp} from '../hooks/http.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
 
@@ -41,13 +40,12 @@ export const NewPage = () => {
     const classes = useStyles();
     const editorInstance = useRef(null);
     const {enqueueSnackbar} = useSnackbar();
-    const auth = useContext(AuthContext)
     const {loading, request} = useHttp();
     const [content, setContent] = useBindLocalStorage('newData', 'content', '');
 
     function initEditor(editor) {
         editorInstance.current = editor;
-        focusEditor(editor);
+        focusEditor({toEnd: true});
     }
 
     function changeEditor(event, editor) {
@@ -56,14 +54,12 @@ export const NewPage = () => {
 
     function clickReset() {
         setContent('');
-        focusEditor(editorInstance.current);
+        focusEditor();
     }
 
     async function clickSave() {
         const {ok, data, error} = await request('/api/item/add', 'POST', {
             text: content
-        }, {
-            Authorization: `Bearer ${auth.token}`
         });
         if (ok) {
             console.log(data.itemId);
@@ -76,14 +72,17 @@ export const NewPage = () => {
             });
         }
 
-        focusEditor(editorInstance.current);
+        focusEditor();
     }
 
-    function focusEditor(editor) {
+    function focusEditor({toEnd} = {toEnd: false}) {
+        const editor = editorInstance.current;
         editor.editing.view.focus();
-        editor.model.change(writer => {
-            writer.setSelection(writer.createPositionAt(editor.model.document.getRoot(), 'end'));
-        });
+        if (toEnd) {
+            editor.model.change(writer => {
+                writer.setSelection(writer.createPositionAt(editor.model.document.getRoot(), 'end'));
+            });
+        }
     }
 
     return (
