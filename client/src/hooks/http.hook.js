@@ -7,7 +7,7 @@ export function useHttp() {
     const auth = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
 
-    const request = useCallback(async function(url, method = 'GET', body = null, headers = {}) {
+    const request = useCallback(async function(url, body = null, headers = {}) {
         let ok = false;
         let status;
         let data = null;
@@ -21,7 +21,11 @@ export function useHttp() {
                 headers['Content-Type'] = 'application/json';
             }
 
-            let response = await fetch(url, {method, body, headers});
+            let response = await fetch(url, {
+                method: 'POST',
+                body,
+                headers
+            });
 
             if (response.status === 401 && auth.refreshToken) {
                 if (!refreshRequest) {
@@ -39,7 +43,11 @@ export function useHttp() {
                     const data = await resp.json();
                     auth.login(data.authToken, data.refreshToken, data.userId);
                     headers['Authorization'] = `Bearer ${data.authToken}`;
-                    response = await fetch(url, {method, body, headers});
+                    response = await fetch(url, {
+                        method: 'POST',
+                        body,
+                        headers
+                    });
                 }
             }
 

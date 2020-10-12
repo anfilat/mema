@@ -38,7 +38,7 @@ export const Navbar = () => {
         event.preventDefault();
 
         auth.logout();
-        await request('/api/auth/logout', 'POST');
+        await request('/api/auth/logout');
         history.push('/');
     }
 

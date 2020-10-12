@@ -58,7 +58,7 @@ export const NewPage = () => {
     }
 
     async function clickSave() {
-        const {ok, data, error} = await request('/api/item/add', 'POST', {
+        const {ok, data, error} = await request('/api/item/add', {
             text: content
         });
         if (ok) {

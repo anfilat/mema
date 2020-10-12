@@ -36,7 +36,7 @@ export const RegisterPage = () => {
     async function registerHandler(event) {
         event.preventDefault();
 
-        const {ok, data, error} = await request('/api/auth/register', 'POST', {email, password});
+        const {ok, data, error} = await request('/api/auth/register', {email, password});
         if (ok) {
             enqueueSnackbar(data.message, {
                 variant: 'success',

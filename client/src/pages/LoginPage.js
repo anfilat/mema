@@ -35,7 +35,7 @@ export const LoginPage = () => {
     async function loginHandler(event) {
         event.preventDefault();
 
-        const {ok, data, error} = await request('/api/auth/login', 'POST', {email, password});
+        const {ok, data, error} = await request('/api/auth/login', {email, password});
         if (ok) {
             auth.login(data.authToken, data.refreshToken, data.userId);
         } else {
