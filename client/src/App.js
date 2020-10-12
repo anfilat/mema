@@ -9,8 +9,8 @@ import {Navbar} from './components/Navbar';
 import {Loader} from './components/Loader';
 
 function App() {
-    const {token, login, logout, userId, ready} = useAuth();
-    const isAuthenticated = !!token;
+    const {authToken, refreshToken, login, logout, userId, ready} = useAuth();
+    const isAuthenticated = !!userId;
     const routes = useRoutes(isAuthenticated);
     let content;
 
@@ -27,7 +27,7 @@ function App() {
 
     return (
         <AuthContext.Provider value={{
-            token, login, logout, userId, isAuthenticated
+            authToken, refreshToken, login, logout, userId, isAuthenticated
         }}>
             <CssBaseline />
             <SnackbarProvider maxSnack={3} anchorOrigin={{

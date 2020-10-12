@@ -37,7 +37,7 @@ export const LoginPage = () => {
 
         const {ok, data, error} = await request('/api/auth/login', 'POST', {email, password});
         if (ok) {
-            auth.login(data.token, data.userId);
+            auth.login(data.authToken, data.refreshToken, data.userId);
         } else {
             enqueueSnackbar(error, {
                 variant: 'error',

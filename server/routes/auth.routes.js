@@ -1,4 +1,5 @@
 const {Router} = require('express');
+const authCheck = require('../middleware/auth.middleware')
 const auth = require('./auth');
 const {stopOnError} = require('./util');
 
@@ -24,6 +25,23 @@ router.post(
         stopOnError('Incorrect data'),
     ],
     auth.login
+);
+
+// /api/auth/logout
+router.post(
+    '/logout',
+    authCheck,
+    auth.logout
+);
+
+// /api/auth/refresh
+router.post(
+    '/refresh',
+    [
+        ...auth.checkRefresh,
+        stopOnError('Incorrect data'),
+    ],
+    auth.refresh
 );
 
 module.exports = router;

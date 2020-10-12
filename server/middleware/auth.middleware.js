@@ -1,24 +1,16 @@
-const jwt = require('jsonwebtoken');
+const {verifyToken} = require('../utils/jwt');
 
 module.exports = (req, res, next) => {
-    if (req.method === 'OPTIONS') {
-        return next();
-    }
+    const token = req.headers.authorization?.split(' ')[1]; // "Bearer TOKEN"
+    const account = token ? verifyToken(token) : null;
 
-    try {
-        const token = req.headers.authorization?.split(' ')[1]; // "Bearer TOKEN"
-
-        if (!token) {
-            return res
-                .status(401)
-                .json({message: 'Unauthorized'});
-        }
-
-        req.account = jwt.verify(token, process.env.APP_JWT_SECRET);
-        next();
-    } catch (e) {
-        res
+    if (!account) {
+        return res
             .status(401)
             .json({message: 'Unauthorized'});
     }
+
+    req.account = account;
+
+    next();
 };

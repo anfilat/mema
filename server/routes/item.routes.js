@@ -1,5 +1,5 @@
 const {Router} = require('express');
-const auth = require('../middleware/auth.middleware')
+const authCheck = require('../middleware/auth.middleware')
 const item = require('./item');
 const {stopOnError} = require('./util');
 
@@ -8,7 +8,7 @@ const router = Router();
 // /api/item/add
 router.post(
     '/add',
-    auth,
+    authCheck,
     [
         ...item.checkAdd,
         stopOnError('Empty text'),

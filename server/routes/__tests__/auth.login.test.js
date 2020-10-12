@@ -32,12 +32,13 @@ describe('login', () => {
             })
             .expect(200)
             .expect(({body}) => {
-                expect(body).toHaveProperty('token');
+                expect(body).toHaveProperty('authToken');
+                expect(body).toHaveProperty('refreshToken');
                 expect(body).toHaveProperty('userId', 1);
             });
     });
 
-    test('with wrong password', () => {
+    test('fail on wrong password', () => {
         query.mockResolvedValueOnce(getAccountResult);
 
         return request(app)
@@ -46,13 +47,13 @@ describe('login', () => {
                 email: 'test@test.com',
                 password: '123'
             })
-            .expect(400)
+            .expect(403)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Invalid password, try again');
             });
     });
 
-    test('as not registered user', () => {
+    test('fail as not registered user', () => {
         query.mockResolvedValueOnce(getAccountNotFoundResult);
 
         return request(app)
@@ -61,13 +62,13 @@ describe('login', () => {
                 email: 'test@test.com',
                 password: '123456'
             })
-            .expect(400)
+            .expect(403)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'The user is not found');
             });
     });
 
-    test('without auth data', () => {
+    test('fail without auth data', () => {
         return request(app)
             .post('/api/auth/login')
             .expect(400)

@@ -41,7 +41,7 @@ export const RegisterPage = () => {
             enqueueSnackbar(data.message, {
                 variant: 'success',
             });
-            auth.login(data.token, data.userId);
+            auth.login(data.authToken, data.refreshToken, data.userId);
             history.push('/');
         } else {
             enqueueSnackbar(error, {

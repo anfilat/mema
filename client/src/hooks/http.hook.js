@@ -13,7 +13,7 @@ export function useHttp() {
 
         setLoading(true);
         try {
-            headers['Authorization'] = `Bearer ${auth.token}`;
+            headers['Authorization'] = `Bearer ${auth.authToken}`;
             if (body) {
                 body = JSON.stringify(body);
                 headers['Content-Type'] = 'application/json';
@@ -39,7 +39,7 @@ export function useHttp() {
             data,
             error,
         };
-    }, [auth.token]);
+    }, [auth.authToken]);
 
     return {loading, request};
 }

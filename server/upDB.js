@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const {Pool} = require('pg');
+require('dotenv').config();
 
-pool = new Pool({
+const pool = new Pool({
     connectionString: process.env.APP_PG_CONNECT,
 });
 

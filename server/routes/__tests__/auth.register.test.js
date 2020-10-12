@@ -34,12 +34,13 @@ describe('register', () => {
             .expect(201)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'User created');
-                expect(body).toHaveProperty('token');
+                expect(body).toHaveProperty('authToken');
+                expect(body).toHaveProperty('refreshToken');
                 expect(body).toHaveProperty('userId', 1);
             });
     });
 
-    test('with race', () => {
+    test('fail on race', () => {
         query.mockResolvedValueOnce(checkEmailNotFoundResult);
         query.mockRejectedValueOnce({constraint: 'account_email_key'});
 
@@ -55,7 +56,7 @@ describe('register', () => {
             });
     });
 
-    test('with exists email', () => {
+    test('fail on exists email', () => {
         query.mockResolvedValueOnce(checkEmailResult);
 
         return request(app)
@@ -70,7 +71,7 @@ describe('register', () => {
             });
     });
 
-    test('with wrong email and password', () => {
+    test('fail on wrong email and password', () => {
         return request(app)
             .post('/api/auth/register')
             .send({

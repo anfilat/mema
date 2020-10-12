@@ -4,6 +4,7 @@ import { makeStyles, withStyles } from '@material-ui/core/styles';
 import {AppBar, Toolbar, Box, IconButton, Menu, MenuItem, Button} from '@material-ui/core';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import {AuthContext} from '../context/AuthContext';
+import {useHttp} from "../hooks/http.hook";
 
 const useStyles = makeStyles({
     toolbar: {
@@ -21,6 +22,7 @@ export const Navbar = () => {
     const history = useHistory();
     const classes = useStyles();
     const auth = useContext(AuthContext);
+    const {loading, request} = useHttp();
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
 
@@ -32,9 +34,11 @@ export const Navbar = () => {
         setAnchorEl(null);
     }
 
-    function handleLogout(event) {
+    async function handleLogout(event) {
         event.preventDefault();
+
         auth.logout();
+        await request('/api/auth/logout', 'POST');
         history.push('/');
     }
 
@@ -81,7 +85,11 @@ export const Navbar = () => {
                     open={open}
                     onClose={handleMenuClose}
                 >
-                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                    <MenuItem
+                        onClick={handleLogout}
+                        disabled={loading}>
+                        Logout
+                    </MenuItem>
                 </Menu>
             </Toolbar>
         </AppBar>

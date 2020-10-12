@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
 const {body} = require('express-validator');
 const db = require('../db');
 const {checkPassword} = require('../utils/password');
+const {newTokenPair} = require('../utils/jwt');
 
 exports.checkRegister = [
     body('email')
@@ -21,12 +21,17 @@ exports.register = async (req, res) => {
             .json({message: 'The user already exists'});
     }
 
+    const userId = account.account_id;
+    const {authToken, refreshToken} = newTokenPair(userId);
+    await db.addToken(userId, refreshToken);
+
     res
         .status(201)
         .json({
             message: 'User created',
-            token: newToken(account),
-            userId: account.account_id,
+            authToken,
+            refreshToken,
+            userId,
         });
 };
 
@@ -46,26 +51,62 @@ exports.login = async (req, res) => {
 
     if (!account) {
         return res
-            .status(400)
+            .status(403)
             .json({message: 'The user is not found'});
     }
 
     if (!await checkPassword(password, account.password)) {
         return res
-            .status(400)
+            .status(403)
             .json({message: 'Invalid password, try again'});
     }
 
+    const userId = account.account_id;
+    const {authToken, refreshToken} = newTokenPair(userId);
+    await db.addToken(userId, refreshToken);
+
     res.json({
-        token: newToken(account),
-        userId: account.account_id,
+        authToken,
+        refreshToken,
+        userId,
     });
 };
 
-function newToken(account) {
-    return jwt.sign(
-        {userId: account.account_id},
-        process.env.APP_JWT_SECRET,
-        {expiresIn: '1h'}
-    );
-}
+exports.logout = async (req, res) => {
+    const userId = req.account.userId;
+    await db.delAccountTokens(userId);
+
+    res.json({
+        ok: true,
+    });
+};
+
+exports.checkRefresh = [
+    body('refreshToken')
+        .trim()
+        .not().isEmpty().withMessage('Empty refreshToken'),
+];
+
+exports.refresh = async (req, res) => {
+    const {refreshToken: oldRefreshToken} = req.body;
+
+    const dbToken = await db.getToken(oldRefreshToken);
+
+    if (!dbToken) {
+        return res
+            .status(403)
+            .json({message: 'Invalid refresh token'});
+    }
+
+    await db.delToken(oldRefreshToken);
+
+    const userId = dbToken.account_id;
+    const {authToken, refreshToken} = newTokenPair(userId);
+    await db.addToken(userId, refreshToken);
+
+    res.json({
+        authToken,
+        refreshToken,
+        userId,
+    });
+};

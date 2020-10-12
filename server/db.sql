@@ -1,9 +1,14 @@
 CREATE TABLE IF NOT EXISTS account (
     account_id serial PRIMARY KEY,
-    email VARCHAR(64) NOT NULL,
-    password VARCHAR(64),
+    email VARCHAR(128) NOT NULL,
+    password VARCHAR(128),
 
     CONSTRAINT account_email_key UNIQUE (email)
+);
+
+CREATE TABLE IF NOT EXISTS token (
+    token CHAR(36) PRIMARY KEY,
+    account_id int NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS text (
