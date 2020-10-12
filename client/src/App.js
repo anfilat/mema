@@ -30,7 +30,7 @@ function App() {
             authToken, refreshToken, login, logout, userId, isAuthenticated
         }}>
             <CssBaseline />
-            <SnackbarProvider maxSnack={3} anchorOrigin={{
+            <SnackbarProvider hideIconVariant maxSnack={3} autoHideDuration={1000} anchorOrigin={{
                 vertical: 'top',
                 horizontal: 'right',
             }}>
