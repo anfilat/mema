@@ -2,6 +2,8 @@ const {get, getValue} = require('./core');
 const {hashPassword} = require('../utils/password');
 
 async function addAccount(email, password) {
+    email = email.toLowerCase();
+
     const checkAccountSQL = `
         SELECT Count(*) AS count
         FROM account
@@ -34,6 +36,8 @@ async function addAccount(email, password) {
 }
 
 async function getAccount(email) {
+    email = email.toLowerCase();
+
     const sql = 'SELECT * FROM account WHERE email = $1';
     const values = [email];
     return get(sql, values);

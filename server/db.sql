@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS account (
 
 CREATE TABLE IF NOT EXISTS token (
     token CHAR(36) PRIMARY KEY,
-    account_id int NOT NULL
+    account_id int NOT NULL,
+
+    CONSTRAINT token_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id)
 );
 
 CREATE TABLE IF NOT EXISTS text (
@@ -35,5 +37,7 @@ CREATE TABLE IF NOT EXISTS mem_text (
     mem_id int NOT NULL,
     text_id int NOT NULL,
 
-    PRIMARY KEY (mem_id, text_id)
+    PRIMARY KEY (mem_id, text_id),
+    CONSTRAINT mem_text_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id),
+    CONSTRAINT mem_text_text_id_fk FOREIGN KEY (text_id) REFERENCES text(text_id)
 );
