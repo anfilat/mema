@@ -7,7 +7,7 @@ export function useHttp() {
     const auth = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
 
-    const request = useCallback(async function(url, body = null, headers = {}) {
+    const request = useCallback(async function(url, body = null, autoLogout = true) {
         let ok = false;
         let status;
         let data = null;
@@ -15,39 +15,30 @@ export function useHttp() {
 
         setLoading(true);
         try {
+            const method = 'POST';
+            const headers = {};
+
             headers['Authorization'] = `Bearer ${auth.authToken}`;
             if (body) {
                 body = JSON.stringify(body);
                 headers['Content-Type'] = 'application/json';
             }
 
-            let response = await fetch(url, {
-                method: 'POST',
-                body,
-                headers
-            });
+            let response = await fetch(url, {method, body, headers});
 
             if (response.status === 401 && auth.refreshToken) {
                 if (!refreshRequest) {
-                    refreshRequest = fetch('/api/auth/refresh', {
-                        method: 'POST',
-                        body: JSON.stringify({refreshToken: auth.refreshToken}),
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    });
+                    refreshRequest = fetch('/api/auth/refresh', refreshOptions(auth.refreshToken));
                 }
                 const resp = await refreshRequest;
                 refreshRequest = null;
+
                 if (resp.ok) {
                     const data = await resp.json();
                     auth.login(data.authToken, data.refreshToken, data.userId);
+
                     headers['Authorization'] = `Bearer ${data.authToken}`;
-                    response = await fetch(url, {
-                        method: 'POST',
-                        body,
-                        headers
-                    });
+                    response = await fetch(url, {method, body, headers});
                 }
             }
 
@@ -63,6 +54,10 @@ export function useHttp() {
         }
         setLoading(false);
 
+        if (status === 401 && autoLogout) {
+            auth.logout();
+        }
+
         return {
             ok: ok && !error,
             status,
@@ -72,4 +67,14 @@ export function useHttp() {
     }, [auth]);
 
     return {loading, request};
+}
+
+function refreshOptions(refreshToken) {
+    return {
+        method: 'POST',
+        body: JSON.stringify({refreshToken}),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
 }

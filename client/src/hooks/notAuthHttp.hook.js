@@ -3,7 +3,7 @@ import {useState, useCallback} from 'react';
 export function useNotAuthHttp() {
     const [loading, setLoading] = useState(false);
 
-    const request = useCallback(async function(url, body = null, headers = {}) {
+    const request = useCallback(async function(url, body = null) {
         let ok = false;
         let status;
         let data = null;
@@ -11,16 +11,15 @@ export function useNotAuthHttp() {
 
         setLoading(true);
         try {
+            const method = 'POST';
+            const headers = {};
+
             if (body) {
                 body = JSON.stringify(body);
                 headers['Content-Type'] = 'application/json';
             }
 
-            const response = await fetch(url, {
-                method: 'POST',
-                body,
-                headers
-            });
+            const response = await fetch(url, {method, body, headers});
 
             ok = response.ok;
             status = response.status;
