@@ -1,4 +1,8 @@
+const bodyParser = require('body-parser');
+
 module.exports = function setupAPI(app) {
+    app.use('/api/', bodyParser.json({extended: true}));
+
     app.use('/api/auth', require('./routes/auth.routes'));
     app.use('/api/item', require('./routes/item.routes'));
 

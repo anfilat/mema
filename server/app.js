@@ -12,8 +12,6 @@ app.disable('x-powered-by');
 
 app.use(morgan('common'));
 
-app.use(express.json({extended: true}));
-
 setupAPI(app);
 setupStatic(app);
 
