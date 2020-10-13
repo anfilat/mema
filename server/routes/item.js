@@ -18,3 +18,18 @@ exports.add = async (req, res) => {
             itemId,
         });
 }
+
+exports.checkDell = [
+    body('itemId')
+        .notEmpty()
+        .withMessage('No item id'),
+];
+
+exports.del = async (req, res) => {
+    const {itemId} = req.body;
+    await db.delItem(req.account.userId, itemId);
+
+    res.json({
+        message: 'Item deleted',
+    });
+}

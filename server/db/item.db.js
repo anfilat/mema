@@ -29,6 +29,17 @@ async function addItem(userId, text) {
     return memId;
 }
 
+async function delItem(userId, memId) {
+    const delMemSQL = `
+        DELETE
+        FROM text
+        WHERE text_id IN (SELECT text_id FROM mem_text WHERE mem_id = $1 AND account_id = $2)
+    `;
+    const delMemValues = [userId, memId];
+    await query(delMemSQL, delMemValues);
+}
+
 module.exports = {
     addItem,
+    delItem,
 };

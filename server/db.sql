@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS token (
     token CHAR(36) PRIMARY KEY,
     account_id int NOT NULL,
 
-    CONSTRAINT token_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id)
+    CONSTRAINT token_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS text (
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS text (
     text TEXT,
     time timestamptz NOT NULL,
 
-    CONSTRAINT text_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id)
+    CONSTRAINT text_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS mem (
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS mem (
     create_time timestamptz NOT NULL,
     last_change_time timestamptz NOT NULL,
 
-    CONSTRAINT mem_text_id_fk FOREIGN KEY (text_id) REFERENCES text(text_id),
-    CONSTRAINT mem_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id)
+    CONSTRAINT mem_text_id_fk FOREIGN KEY (text_id) REFERENCES text(text_id) ON DELETE CASCADE,
+    CONSTRAINT mem_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS mem_text (
@@ -38,6 +38,6 @@ CREATE TABLE IF NOT EXISTS mem_text (
     text_id int NOT NULL,
 
     PRIMARY KEY (mem_id, text_id),
-    CONSTRAINT mem_text_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id),
-    CONSTRAINT mem_text_text_id_fk FOREIGN KEY (text_id) REFERENCES text(text_id)
+    CONSTRAINT mem_text_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id) ON DELETE CASCADE,
+    CONSTRAINT mem_text_text_id_fk FOREIGN KEY (text_id) REFERENCES text(text_id) ON DELETE CASCADE
 );

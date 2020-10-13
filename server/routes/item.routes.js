@@ -16,4 +16,15 @@ router.post(
     item.add
 );
 
+// /api/item/del
+router.post(
+    '/del',
+    authCheck,
+    [
+        ...item.checkDell,
+        stopOnError('Incorrect data'),
+    ],
+    item.del
+);
+
 module.exports = router;
