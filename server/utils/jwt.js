@@ -5,7 +5,7 @@ function newTokenPair(userId) {
     const authToken = jwt.sign(
         {userId},
         process.env.APP_JWT_SECRET,
-        {expiresIn: process.env.APP_JWT_EXPIRES}
+        {expiresIn: +process.env.APP_JWT_EXPIRES}
     );
     const refreshToken = uuid.v4();
 

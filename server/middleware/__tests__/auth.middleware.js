@@ -45,7 +45,7 @@ describe('auth middleware with expired token', () => {
 
     test('fail on expired token', () => {
         const now = +new Date('2020-10-01');
-        const shift = +process.env.APP_JWT_EXPIRES;
+        const shift = +process.env.APP_JWT_EXPIRES * 1000;
         jest.setSystemTime(now);
         const {authToken} = newTokenPair(1);
         const authHeader = `Bearer ${authToken}`;
