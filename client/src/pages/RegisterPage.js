@@ -2,12 +2,12 @@ import React, {useContext} from 'react';
 import {useHistory, Link as RouterLink} from 'react-router-dom'
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
-import {useSnackbar} from 'notistack';
 import {Copyright} from '../components/Copyright';
 import {Title} from '../components/Title';
 import {useNotAuthHttp} from '../hooks/notAuthHttp.hook';
 import {useBind} from '../hooks/bind.hook';
 import {AuthContext} from '../context/AuthContext';
+import {useSnackbarEx} from '../hooks/snackbarEx.hook';
 
 const useStyles = makeStyles(theme => ({
     paper: {
@@ -28,7 +28,7 @@ export const RegisterPage = () => {
     const classes = useStyles();
     const auth = useContext(AuthContext);
     const history = useHistory();
-    const {enqueueSnackbar} = useSnackbar();
+    const {showSuccess, showError} = useSnackbarEx();
     const {loading, request} = useNotAuthHttp();
     const [email, emailChangeHandler] = useBind('');
     const [password, passwordChangeHandler] = useBind('');
@@ -38,15 +38,11 @@ export const RegisterPage = () => {
 
         const {ok, data, error} = await request('/api/auth/register', {email, password});
         if (ok) {
-            enqueueSnackbar(data.message, {
-                variant: 'success',
-            });
+            showSuccess(data.message);
             auth.login(data.authToken, data.refreshToken, data.userId);
             history.push('/');
         } else {
-            enqueueSnackbar(error, {
-                variant: 'error',
-            });
+            showError(error);
         }
     }
 

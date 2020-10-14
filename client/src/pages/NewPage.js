@@ -2,10 +2,10 @@ import React, {useRef, useState} from 'react';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import {useSnackbar} from 'notistack';
 import {Title} from '../components/Title';
 import {useBindLocalStorage} from '../hooks/bindLocalStorage.hook';
 import {useHttp} from '../hooks/http.hook';
+import {useSnackbarEx} from '../hooks/snackbarEx.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
 
 const useStyles = makeStyles(theme => ({
@@ -39,7 +39,7 @@ const config = {
 export const NewPage = () => {
     const classes = useStyles();
     const editorInstance = useRef(null);
-    const {enqueueSnackbar} = useSnackbar();
+    const {showSuccess, showError} = useSnackbarEx();
     const {loading, request} = useHttp();
     const [text, setText] = useBindLocalStorage('newPageText', '');
     const [itemId, setItemId] = useBindLocalStorage('newPageItemId', null);
@@ -79,13 +79,9 @@ export const NewPage = () => {
             setItemId(data.itemId);
             setTextId(data.textId);
 
-            enqueueSnackbar(data.message, {
-                variant: 'success',
-            });
+            showSuccess(data.message);
         } else {
-            enqueueSnackbar(error, {
-                variant: 'error',
-            });
+            showError(error);
         }
     }
 
@@ -96,16 +92,12 @@ export const NewPage = () => {
             textId,
         });
         if (ok) {
-            enqueueSnackbar(data.message, {
-                variant: 'success',
-            });
+            showSuccess(data.message);
         } else {
             if (data.outdated) {
                 setOutdated(true);
             }
-            enqueueSnackbar(error, {
-                variant: 'error',
-            });
+            showError(error);
         }
     }
 

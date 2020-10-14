@@ -2,12 +2,12 @@ import React, {useContext} from 'react';
 import {Link as RouterLink} from 'react-router-dom'
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
-import {useSnackbar} from 'notistack';
 import {Copyright} from '../components/Copyright';
 import {Title} from '../components/Title';
 import {useNotAuthHttp} from '../hooks/notAuthHttp.hook';
 import {useBind} from '../hooks/bind.hook';
 import {AuthContext} from '../context/AuthContext';
+import {useSnackbarEx} from '../hooks/snackbarEx.hook';
 
 const useStyles = makeStyles(theme => ({
     paper: {
@@ -27,7 +27,7 @@ const useStyles = makeStyles(theme => ({
 export const LoginPage = () => {
     const classes = useStyles();
     const auth = useContext(AuthContext);
-    const {enqueueSnackbar} = useSnackbar();
+    const {showError} = useSnackbarEx();
     const {loading, request} = useNotAuthHttp();
     const [email, emailChangeHandler] = useBind('');
     const [password, passwordChangeHandler] = useBind('');
@@ -39,9 +39,7 @@ export const LoginPage = () => {
         if (ok) {
             auth.login(data.authToken, data.refreshToken, data.userId);
         } else {
-            enqueueSnackbar(error, {
-                variant: 'error',
-            });
+            showError(error);
         }
     }
 
