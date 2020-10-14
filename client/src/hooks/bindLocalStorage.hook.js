@@ -1,17 +1,18 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 
-export function useBindLocalStorage(varName, initialValue) {
-    const data = JSON.parse(localStorage.getItem(varName));
+export function useBindLocalStorage(key, initialValue) {
+    const [value, setValue] = useState(() => {
+        try {
+            const data = JSON.parse(localStorage.getItem(key));
+            return data && data.value ? data.value : initialValue;
+        } catch {
+            return initialValue;
+        }
+    });
 
-    const [value, setValue] = useState(data && data.value ? data.value : initialValue);
+    useEffect(() => {
+        localStorage.setItem(key, JSON.stringify({value}));
+    }, [key, value]);
 
-    function handler(val) {
-        setValue(val);
-
-        localStorage.setItem(varName, JSON.stringify({
-            value: val,
-        }));
-    }
-
-    return [value, handler];
+    return [value, setValue];
 }
