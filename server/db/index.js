@@ -1,6 +1,6 @@
 const {initDb} = require('./core');
 const {addAccount, getAccount} = require('./auth.db');
-const {addItem, delItem} = require('./item.db');
+const {addItem, resaveItem, delItem} = require('./item.db');
 const {addToken, getToken, delToken, delAccountTokens} = require('./jwt.db');
 
 module.exports = {
@@ -10,6 +10,7 @@ module.exports = {
     getAccount,
 
     addItem,
+    resaveItem,
     delItem,
 
     addToken,

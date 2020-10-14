@@ -16,6 +16,17 @@ router.post(
     item.add
 );
 
+// /api/item/resave
+router.post(
+    '/resave',
+    authCheck,
+    [
+        ...item.checkResave,
+        stopOnError('Incorrect data'),
+    ],
+    item.resave
+);
+
 // /api/item/del
 router.post(
     '/del',

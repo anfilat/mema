@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../../app');
 const {newTokenPair} = require('../../utils/jwt');
 
-describe('item add', () => {
+describe('item resave', () => {
     const query = app._db.query;
     const {authToken} = newTokenPair(1);
     const authHeader = `Bearer ${authToken}`;
@@ -19,19 +19,16 @@ describe('item add', () => {
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{text_id: textId}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{mem_id: itemId}],
             });
 
         await request(app)
-            .post('/api/item/add')
+            .post('/api/item/resave')
             .set('Authorization', authHeader)
             .send({
                 text: 'Some text',
+                itemId,
             })
-            .expect(201)
+            .expect(200)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
                 expect(body).toHaveProperty('itemId', itemId);
@@ -40,26 +37,13 @@ describe('item add', () => {
         expect(query.mock.calls.length).toBe(3);
     });
 
-    test('fail without text', () => {
+    test('fail without data', () => {
         return request(app)
-            .post('/api/item/add')
+            .post('/api/item/resave')
             .set('Authorization', authHeader)
             .expect(400)
             .expect(({body}) => {
-                expect(body).toHaveProperty('message', 'Empty text');
-            });
-    });
-
-    test('fail on empty text', () => {
-        return request(app)
-            .post('/api/item/add')
-            .set('Authorization', authHeader)
-            .send({
-                text: '  ',
-            })
-            .expect(400)
-            .expect(({body}) => {
-                expect(body).toHaveProperty('message', 'Empty text');
+                expect(body).toHaveProperty('message', 'Incorrect data');
             });
     });
 });

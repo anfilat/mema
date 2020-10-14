@@ -26,14 +26,46 @@ async function addItem(userId, text) {
     const memTextValues = [memId, textId];
     await query(memTextSQL, memTextValues);
 
-    return memId;
+    return {
+        memId,
+        textId,
+    };
+}
+
+async function resaveItem(userId, memId, text) {
+    const now = new Date();
+
+    const textSQL = `
+        INSERT INTO text (account_id, text, time)
+        VALUES ($1, $2, $3)
+        RETURNING text_id
+    `;
+    const textValues = [userId, text, now];
+    const textId = await getValue(textSQL, textValues, 'text_id');
+
+    const memSQL = `
+        UPDATE mem
+        SET text_id = $1, last_change_time = $2
+        WHERE account_id = $3 AND mem_id = $4
+    `;
+    const memValues = [textId, now, userId, memId];
+    await query(memSQL, memValues);
+
+    const memTextSQL = `
+        INSERT INTO mem_text (mem_id, text_id)
+        VALUES ($1, $2)
+    `;
+    const memTextValues = [memId, textId];
+    await query(memTextSQL, memTextValues);
+
+    return textId;
 }
 
 async function delItem(userId, memId) {
     const delMemSQL = `
         DELETE
         FROM text
-        WHERE text_id IN (SELECT text_id FROM mem_text WHERE mem_id = $1 AND account_id = $2)
+        WHERE text_id IN (SELECT text_id FROM mem_text WHERE account_id = $1 AND mem_id = $2)
     `;
     const delMemValues = [userId, memId];
     await query(delMemSQL, delMemValues);
@@ -41,5 +73,6 @@ async function delItem(userId, memId) {
 
 module.exports = {
     addItem,
+    resaveItem,
     delItem,
 };
