@@ -27,6 +27,17 @@ router.post(
     item.resave
 );
 
+// /api/item/update
+router.post(
+    '/update',
+    authCheck,
+    [
+        ...item.checkUpdate,
+        stopOnError('Incorrect data'),
+    ],
+    item.update
+);
+
 // /api/item/del
 router.post(
     '/del',

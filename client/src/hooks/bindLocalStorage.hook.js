@@ -1,17 +1,17 @@
 import {useState} from 'react';
 
-export function useBindLocalStorage(formName, varName, initialValue) {
-    const data = JSON.parse(localStorage.getItem(formName));
+export function useBindLocalStorage(varName, initialValue) {
+    const data = JSON.parse(localStorage.getItem(varName));
 
-    const [value, setValue] = useState(data && data[varName] ? data[varName] : initialValue);
+    const [value, setValue] = useState(data && data.value ? data.value : initialValue);
 
-    function changeHandler(val) {
+    function handler(val) {
         setValue(val);
 
-        localStorage.setItem(formName, JSON.stringify({
-            [varName]: val,
+        localStorage.setItem(varName, JSON.stringify({
+            value: val,
         }));
     }
 
-    return [value, changeHandler];
+    return [value, handler];
 }

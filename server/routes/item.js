@@ -40,6 +40,36 @@ exports.resave = async (req, res) => {
     });
 }
 
+exports.checkUpdate = [
+    body('itemId')
+        .notEmpty()
+        .withMessage('No item id'),
+    body('textId')
+        .notEmpty()
+        .withMessage('No text id'),
+    body('text')
+        .custom(value => typeof value === 'string' && value.trim() !== '')
+        .withMessage('Empty text'),
+];
+
+exports.update = async (req, res) => {
+    const {itemId, textId, text} = req.body;
+    const ok = await db.updateItem(req.account.userId, itemId, textId, text);
+
+    if (ok) {
+        res.json({
+            message: 'Text saved',
+        });
+    } else {
+        res
+            .status(400)
+            .json({
+                message: 'Outdated',
+                outdated: true,
+            });
+    }
+}
+
 exports.checkDell = [
     body('itemId')
         .notEmpty()

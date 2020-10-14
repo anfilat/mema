@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
@@ -41,7 +41,10 @@ export const NewPage = () => {
     const editorInstance = useRef(null);
     const {enqueueSnackbar} = useSnackbar();
     const {loading, request} = useHttp();
-    const [content, setContent] = useBindLocalStorage('newData', 'content', '');
+    const [text, setText] = useBindLocalStorage('newPageText', '');
+    const [itemId, setItemId] = useBindLocalStorage('newPageItemId', null);
+    const [textId, setTextId] = useBindLocalStorage('newPageTextId', null);
+    const [outdated, setOutdated] = useState(false);
 
     function initEditor(editor) {
         editorInstance.current = editor;
@@ -49,20 +52,33 @@ export const NewPage = () => {
     }
 
     function changeEditor(event, editor) {
-        setContent(editor.getData());
+        setText(editor.getData());
     }
 
     function clickReset() {
-        setContent('');
+        setText('');
+        setItemId(null);
+        setTextId(null);
         focusEditor();
     }
 
     async function clickSave() {
+        if (!itemId) {
+            await addItem();
+        } else {
+            await updateItem();
+        }
+        focusEditor();
+    }
+
+    async function addItem() {
         const {ok, data, error} = await request('/api/item/add', {
-            text: content
+            text
         });
         if (ok) {
-            console.log(data.itemId);
+            setItemId(data.itemId);
+            setTextId(data.textId);
+
             enqueueSnackbar(data.message, {
                 variant: 'success',
             });
@@ -71,8 +87,26 @@ export const NewPage = () => {
                 variant: 'error',
             });
         }
+    }
 
-        focusEditor();
+    async function updateItem() {
+        const {ok, data, error} = await request('/api/item/update', {
+            text,
+            itemId,
+            textId,
+        });
+        if (ok) {
+            enqueueSnackbar(data.message, {
+                variant: 'success',
+            });
+        } else {
+            if (data.outdated) {
+                setOutdated(true);
+            }
+            enqueueSnackbar(error, {
+                variant: 'error',
+            });
+        }
     }
 
     function focusEditor({toEnd} = {toEnd: false}) {
@@ -93,9 +127,10 @@ export const NewPage = () => {
                     <CKEditor
                         editor={ window.Editor || window.ClassicEditor }
                         config={config}
-                        data={content}
+                        data={text}
                         onInit={initEditor}
                         onChange={changeEditor}
+                        disabled={outdated}
                     />
                 </Box>
                 <Grid
@@ -109,7 +144,7 @@ export const NewPage = () => {
                             variant="contained"
                             color="primary"
                             onClick={clickReset}
-                            disabled={loading}
+                            disabled={loading || outdated}
                         >
                             Reset
                         </Button>
@@ -119,7 +154,7 @@ export const NewPage = () => {
                             variant="contained"
                             color="primary"
                             onClick={clickSave}
-                            disabled={loading}
+                            disabled={loading || outdated}
                         >
                             Save
                         </Button>

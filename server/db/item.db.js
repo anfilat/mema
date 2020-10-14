@@ -61,6 +61,39 @@ async function resaveItem(userId, memId, text) {
     return textId;
 }
 
+async function updateItem(userId, memId, textId, text) {
+    const getMemSQL = `
+        SELECT text_id
+        FROM mem
+        WHERE account_id = $1 AND mem_id = $2
+    `;
+    const getMemValues = [userId, memId];
+    const currentTextId = await getValue(getMemSQL, getMemValues, 'text_id');
+
+    if (currentTextId !== textId) {
+        return false;
+    }
+
+    const now = new Date();
+    const textSQL = `
+        UPDATE text
+        SET text = $1, time = $2
+        WHERE account_id = $3 AND text_id = $4
+    `;
+    const textValues = [text, now, userId, textId];
+    await query(textSQL, textValues);
+
+    const memSQL = `
+        UPDATE mem
+        SET last_change_time = $1
+        WHERE account_id = $2 AND mem_id = $3
+    `;
+    const memValues = [now, userId, memId];
+    await query(memSQL, memValues);
+
+    return true;
+}
+
 async function delItem(userId, memId) {
     const delMemSQL = `
         DELETE
@@ -74,5 +107,6 @@ async function delItem(userId, memId) {
 module.exports = {
     addItem,
     resaveItem,
+    updateItem,
     delItem,
 };
