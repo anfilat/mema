@@ -36,7 +36,6 @@ function refreshCookie(req, res, next) {
 }
 
 function setCookie(res, token) {
-    console.log(setCookie, token);
     res
         .cookie('token', token, {
             httpOnly: true,
