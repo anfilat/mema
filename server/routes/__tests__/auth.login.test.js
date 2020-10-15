@@ -1,4 +1,5 @@
 const request = require('supertest');
+const Cookies = require('expect-cookies');
 const app = require('../../app');
 
 const getAccountResult = {
@@ -31,9 +32,8 @@ describe('login', () => {
                 password: '123456'
             })
             .expect(200)
+            .expect(Cookies.set({name: 'token', options: ['httponly', 'samesite']}))
             .expect(({body}) => {
-                expect(body).toHaveProperty('authToken');
-                expect(body).toHaveProperty('refreshToken');
                 expect(body).toHaveProperty('userId', 1);
             });
     });

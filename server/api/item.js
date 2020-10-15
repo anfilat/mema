@@ -9,7 +9,7 @@ exports.checkAdd = [
 
 exports.add = async (req, res) => {
     const {text} = req.body;
-    const {memId: itemId, textId} = await db.addItem(req.account.userId, text);
+    const {memId: itemId, textId} = await db.addItem(req.userData.userId, text);
 
     res
         .status(201)
@@ -31,7 +31,7 @@ exports.checkResave = [
 
 exports.resave = async (req, res) => {
     const {itemId, text} = req.body;
-    const textId = await db.resaveItem(req.account.userId, itemId, text);
+    const textId = await db.resaveItem(req.userData.userId, itemId, text);
 
     res.json({
         message: 'Text saved',
@@ -54,7 +54,7 @@ exports.checkUpdate = [
 
 exports.update = async (req, res) => {
     const {itemId, textId, text} = req.body;
-    const ok = await db.updateItem(req.account.userId, itemId, textId, text);
+    const ok = await db.updateItem(req.userData.userId, itemId, textId, text);
 
     if (ok) {
         res.json({
@@ -78,7 +78,7 @@ exports.checkDell = [
 
 exports.del = async (req, res) => {
     const {itemId} = req.body;
-    await db.delItem(req.account.userId, itemId);
+    await db.delItem(req.userData.userId, itemId);
 
     res.json({
         message: 'Item deleted',

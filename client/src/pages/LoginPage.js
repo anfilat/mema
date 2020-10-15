@@ -4,7 +4,7 @@ import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/
 import {makeStyles} from '@material-ui/core/styles';
 import {Copyright} from '../components/Copyright';
 import {Title} from '../components/Title';
-import {useNotAuthHttp} from '../hooks/notAuthHttp.hook';
+import {useHttp} from '../hooks/http.hook';
 import {useBind} from '../hooks/bind.hook';
 import {AuthContext} from '../context/AuthContext';
 import {useSnackbarEx} from '../hooks/snackbarEx.hook';
@@ -28,16 +28,16 @@ export const LoginPage = () => {
     const classes = useStyles();
     const auth = useContext(AuthContext);
     const {showError} = useSnackbarEx();
-    const {loading, request} = useNotAuthHttp();
+    const {loading, request} = useHttp();
     const [email, emailChangeHandler] = useBind('');
     const [password, passwordChangeHandler] = useBind('');
 
     async function loginHandler(event) {
         event.preventDefault();
 
-        const {ok, data, error} = await request('/api/auth/login', {email, password});
+        const {ok, data, error} = await request('/api/auth/login', {email, password}, false);
         if (ok) {
-            auth.login(data.authToken, data.refreshToken, data.userId);
+            auth.login(data.userId);
         } else {
             showError(error);
         }

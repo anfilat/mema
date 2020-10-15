@@ -1,11 +1,8 @@
 const request = require('supertest');
 const app = require('../../app');
-const {newTokenPair} = require('../../utils/jwt');
 
 describe('item update', () => {
     const query = app._db.query;
-    const {authToken} = newTokenPair(1);
-    const authHeader = `Bearer ${authToken}`;
 
     afterEach(() => {
         jest.clearAllMocks();
@@ -18,12 +15,19 @@ describe('item update', () => {
         query
             .mockResolvedValueOnce({
                 rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
                 rows: [{text_id: textId}],
             });
 
         await request(app)
             .post('/api/item/update')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .send({
                 text: 'Some text',
                 itemId,
@@ -33,7 +37,7 @@ describe('item update', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
             });
-        expect(query.mock.calls.length).toBe(3);
+        expect(query.mock.calls.length).toBe(4);
     });
 
     test('fail on outdated textId', async () => {
@@ -43,12 +47,19 @@ describe('item update', () => {
         query
             .mockResolvedValueOnce({
                 rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
                 rows: [{text_id: textId + 1}],
             });
 
         await request(app)
             .post('/api/item/update')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .send({
                 text: 'Some text',
                 itemId,
@@ -59,13 +70,22 @@ describe('item update', () => {
                 expect(body).toHaveProperty('message', 'Outdated');
                 expect(body).toHaveProperty('outdated', true);
             });
-        expect(query.mock.calls.length).toBe(1);
+        expect(query.mock.calls.length).toBe(2);
     });
 
     test('fail without data', () => {
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            });
+
         return request(app)
             .post('/api/item/update')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .expect(400)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Incorrect data');

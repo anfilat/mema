@@ -1,18 +1,6 @@
 const request = require('supertest');
+const Cookies = require('expect-cookies');
 const app = require('../../app');
-
-const checkEmailResult = {
-    rowCount: 1,
-    rows: [{count: '1'}],
-};
-const checkEmailNotFoundResult = {
-    rowCount: 1,
-    rows: [{count: '0'}],
-};
-const addAccountResult = {
-    rowCount: 1,
-    rows: [{account_id: '1'}],
-};
 
 describe('register', () => {
     const query = app._db.query;
@@ -22,8 +10,14 @@ describe('register', () => {
     });
 
     test('success', () => {
-        query.mockResolvedValueOnce(checkEmailNotFoundResult);
-        query.mockResolvedValueOnce(addAccountResult);
+        query.mockResolvedValueOnce({
+            rowCount: 1,
+            rows: [{count: '0'}],
+        });
+        query.mockResolvedValueOnce({
+            rowCount: 1,
+            rows: [{account_id: '1'}],
+        });
 
         return request(app)
             .post('/api/auth/register')
@@ -32,17 +26,21 @@ describe('register', () => {
                 password: '123456'
             })
             .expect(201)
+            .expect(Cookies.set({name: 'token', options: ['httponly', 'samesite']}))
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'User created');
-                expect(body).toHaveProperty('authToken');
-                expect(body).toHaveProperty('refreshToken');
                 expect(body).toHaveProperty('userId', 1);
             });
     });
 
     test('fail on race', () => {
-        query.mockResolvedValueOnce(checkEmailNotFoundResult);
-        query.mockRejectedValueOnce({constraint: 'account_email_key'});
+        query.mockResolvedValueOnce({
+            rowCount: 1,
+            rows: [{count: '0'}],
+        });
+        query.mockRejectedValueOnce({
+            constraint: 'account_email_key'
+        });
 
         return request(app)
             .post('/api/auth/register')
@@ -57,7 +55,10 @@ describe('register', () => {
     });
 
     test('fail on exists email', () => {
-        query.mockResolvedValueOnce(checkEmailResult);
+        query.mockResolvedValueOnce({
+            rowCount: 1,
+            rows: [{count: '1'}],
+        });
 
         return request(app)
             .post('/api/auth/register')

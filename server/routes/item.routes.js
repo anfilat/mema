@@ -1,5 +1,5 @@
 const {Router} = require('express');
-const item = require('./item');
+const item = require('../api/item');
 const {stopOnError} = require('./util');
 
 const router = Router();

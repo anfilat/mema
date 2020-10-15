@@ -1,5 +1,5 @@
 const {get, getValue} = require('./core');
-const {hashPassword} = require('../utils/password');
+const {hashPassword} = require('../helpers/password');
 
 async function addAccount(email, password) {
     email = email.toLowerCase();

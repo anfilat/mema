@@ -8,13 +8,13 @@ export function useSnackbarEx() {
         enqueueSnackbar(message, {
             variant: 'success',
         });
-    }, []);
+    }, [enqueueSnackbar]);
 
     const showError = useCallback(function(message) {
         enqueueSnackbar(message, {
             variant: 'error',
         });
-    }, []);
+    }, [enqueueSnackbar]);
 
     return {showSuccess, showError};
 }

@@ -1,7 +1,7 @@
 const {body} = require('express-validator');
 const db = require('../db');
-const {checkPassword} = require('../utils/password');
-const {newTokenPair} = require('../utils/jwt');
+const {checkPassword} = require('../helpers/password');
+const {newToken, setCookie, delCookie} = require('../helpers/token');
 
 exports.checkRegister = [
     body('email')
@@ -22,15 +22,12 @@ exports.register = async (req, res) => {
     }
 
     const userId = account.account_id;
-    const {authToken, refreshToken} = newTokenPair(userId);
-    await db.addToken(userId, refreshToken);
-
+    const token = await newToken(userId);
+    setCookie(res, token);
     res
         .status(201)
         .json({
             message: 'User created',
-            authToken,
-            refreshToken,
             userId,
         });
 };
@@ -62,51 +59,19 @@ exports.login = async (req, res) => {
     }
 
     const userId = account.account_id;
-    const {authToken, refreshToken} = newTokenPair(userId);
-    await db.addToken(userId, refreshToken);
-
-    res.json({
-        authToken,
-        refreshToken,
-        userId,
-    });
+    const token = await newToken(userId);
+    setCookie(res, token);
+    res
+        .json({
+            userId,
+        });
 };
 
 exports.logout = async (req, res) => {
-    const userId = req.account.userId;
-    await db.delAccountTokens(userId);
+    await db.delToken(req.userData.token);
+    delCookie(res);
 
     res.json({
         ok: true,
-    });
-};
-
-exports.checkRefresh = [
-    body('refreshToken')
-        .trim()
-        .not().isEmpty().withMessage('Empty refreshToken'),
-];
-
-exports.refresh = async (req, res) => {
-    const {refreshToken: oldRefreshToken} = req.body;
-
-    const dbToken = await db.getToken(oldRefreshToken);
-
-    if (!dbToken) {
-        return res
-            .status(403)
-            .json({message: 'Invalid refresh token'});
-    }
-
-    await db.delToken(oldRefreshToken);
-
-    const userId = dbToken.account_id;
-    const {authToken, refreshToken} = newTokenPair(userId);
-    await db.addToken(userId, refreshToken);
-
-    res.json({
-        authToken,
-        refreshToken,
-        userId,
     });
 };

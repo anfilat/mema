@@ -1,8 +1,6 @@
 import {useState, useCallback, useContext} from 'react';
 import {AuthContext} from "../context/AuthContext";
 
-let refreshRequest = null;
-
 export function useHttp() {
     const auth = useContext(AuthContext);
     const [loading, setLoading] = useState(false);
@@ -18,29 +16,12 @@ export function useHttp() {
             const method = 'POST';
             const headers = {};
 
-            headers['Authorization'] = `Bearer ${auth.authToken}`;
             if (body) {
                 body = JSON.stringify(body);
                 headers['Content-Type'] = 'application/json';
             }
 
-            let response = await fetch(url, {method, body, headers});
-
-            if (response.status === 401 && auth.refreshToken) {
-                if (!refreshRequest) {
-                    refreshRequest = fetch('/api/auth/refresh', refreshOptions(auth.refreshToken));
-                }
-                const resp = await refreshRequest;
-                refreshRequest = null;
-
-                if (resp.ok) {
-                    const data = await resp.json();
-                    auth.login(data.authToken, data.refreshToken, data.userId);
-
-                    headers['Authorization'] = `Bearer ${data.authToken}`;
-                    response = await fetch(url, {method, body, headers});
-                }
-            }
+            const response = await fetch(url, {method, body, headers});
 
             ok = response.ok;
             status = response.status;
@@ -67,14 +48,4 @@ export function useHttp() {
     }, [auth]);
 
     return {loading, request};
-}
-
-function refreshOptions(refreshToken) {
-    return {
-        method: 'POST',
-        body: JSON.stringify({refreshToken}),
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    };
 }

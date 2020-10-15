@@ -1,11 +1,8 @@
 const request = require('supertest');
 const app = require('../../app');
-const {newTokenPair} = require('../../utils/jwt');
 
 describe('item add', () => {
     const query = app._db.query;
-    const {authToken} = newTokenPair(1);
-    const authHeader = `Bearer ${authToken}`;
 
     afterEach(() => {
         jest.clearAllMocks();
@@ -18,6 +15,13 @@ describe('item add', () => {
         query
             .mockResolvedValueOnce({
                 rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
                 rows: [{text_id: textId}],
             })
             .mockResolvedValueOnce({
@@ -27,7 +31,7 @@ describe('item add', () => {
 
         await request(app)
             .post('/api/item/add')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .send({
                 text: 'Some text',
             })
@@ -37,13 +41,22 @@ describe('item add', () => {
                 expect(body).toHaveProperty('itemId', itemId);
                 expect(body).toHaveProperty('textId', textId);
             });
-        expect(query.mock.calls.length).toBe(3);
+        expect(query.mock.calls.length).toBe(4);
     });
 
     test('fail without text', () => {
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            })
+
         return request(app)
             .post('/api/item/add')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .expect(400)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Empty text');
@@ -51,9 +64,18 @@ describe('item add', () => {
     });
 
     test('fail on empty text', () => {
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            })
+
         return request(app)
             .post('/api/item/add')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .send({
                 text: '  ',
             })

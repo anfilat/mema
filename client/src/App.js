@@ -9,7 +9,7 @@ import {Navbar} from './components/Navbar';
 import {Loader} from './components/Loader';
 
 function App() {
-    const {authToken, refreshToken, login, logout, userId, ready} = useAuth();
+    const {login, logout, userId, ready} = useAuth();
     const isAuthenticated = !!userId;
     const routes = useRoutes(isAuthenticated);
     let content;
@@ -27,7 +27,7 @@ function App() {
 
     return (
         <AuthContext.Provider value={{
-            authToken, refreshToken, login, logout, userId, isAuthenticated
+            login, logout, userId, isAuthenticated
         }}>
             <CssBaseline />
             <SnackbarProvider hideIconVariant maxSnack={3} autoHideDuration={1000} anchorOrigin={{

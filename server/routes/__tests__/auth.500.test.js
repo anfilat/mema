@@ -9,7 +9,7 @@ describe('internal exception', () => {
     });
 
     test('success', () => {
-        query.mockRejectedValueOnce(new Error());
+        query.mockRejectedValueOnce(new Error('Oh'));
 
         return request(app)
             .post('/api/auth/login')

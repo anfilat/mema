@@ -72,9 +72,7 @@ export const NewPage = () => {
     }
 
     async function addItem() {
-        const {ok, data, error} = await request('/api/item/add', {
-            text
-        });
+        const {ok, data, error} = await request('/api/item/add', {text});
         if (ok) {
             setItemId(data.itemId);
             setTextId(data.textId);

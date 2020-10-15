@@ -1,11 +1,8 @@
 const request = require('supertest');
 const app = require('../../app');
-const {newTokenPair} = require('../../utils/jwt');
 
 describe('item resave', () => {
     const query = app._db.query;
-    const {authToken} = newTokenPair(1);
-    const authHeader = `Bearer ${authToken}`;
 
     afterEach(() => {
         jest.clearAllMocks();
@@ -18,12 +15,19 @@ describe('item resave', () => {
         query
             .mockResolvedValueOnce({
                 rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
                 rows: [{text_id: textId}],
             });
 
         await request(app)
             .post('/api/item/resave')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .send({
                 text: 'Some text',
                 itemId,
@@ -34,13 +38,22 @@ describe('item resave', () => {
                 expect(body).toHaveProperty('itemId', itemId);
                 expect(body).toHaveProperty('textId', textId);
             });
-        expect(query.mock.calls.length).toBe(3);
+        expect(query.mock.calls.length).toBe(4);
     });
 
     test('fail without data', () => {
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
+            });
+
         return request(app)
             .post('/api/item/resave')
-            .set('Authorization', authHeader)
+            .set('Cookie', 'token=someToken')
             .expect(400)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Incorrect data');
