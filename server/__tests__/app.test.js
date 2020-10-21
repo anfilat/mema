@@ -17,6 +17,15 @@ test('get some page html', () => {
         .expect(({text}) => expect(text).toMatchSnapshot());
 });
 
+test('check health', () => {
+    return request(app)
+        .get('/api/health')
+        .expect(200)
+        .expect(({body}) => {
+            expect(body).toHaveProperty('status', 'ok');
+        });
+});
+
 test('api wrong endpoint', () => {
     return request(app)
         .get('/api/wrong')
