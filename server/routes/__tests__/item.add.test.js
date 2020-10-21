@@ -21,6 +21,10 @@ describe('item add', () => {
                 }],
             })
             .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{text_id: textId}],
             })
@@ -41,7 +45,6 @@ describe('item add', () => {
                 expect(body).toHaveProperty('itemId', itemId);
                 expect(body).toHaveProperty('textId', textId);
             });
-        expect(query.mock.calls.length).toBe(4);
     });
 
     test('fail without text', () => {

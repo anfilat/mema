@@ -21,6 +21,10 @@ describe('item update', () => {
                 }],
             })
             .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{text_id: textId}],
             });
@@ -37,7 +41,6 @@ describe('item update', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
             });
-        expect(query.mock.calls.length).toBe(4);
     });
 
     test('fail on outdated textId', async () => {
@@ -51,6 +54,10 @@ describe('item update', () => {
                     account_id: 1,
                     token: 'someToken'
                 }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
             })
             .mockResolvedValueOnce({
                 rowCount: 1,
@@ -70,7 +77,6 @@ describe('item update', () => {
                 expect(body).toHaveProperty('message', 'Outdated');
                 expect(body).toHaveProperty('outdated', true);
             });
-        expect(query.mock.calls.length).toBe(2);
     });
 
     test('fail without data', () => {

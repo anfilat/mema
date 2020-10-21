@@ -41,7 +41,6 @@ describe('item get', () => {
                 expect(body).toHaveProperty('text', text);
                 expect(body).toHaveProperty('textId', textId);
             });
-        expect(query.mock.calls.length).toBe(3);
     });
 
     test('fail without data', () => {
@@ -89,6 +88,5 @@ describe('item get', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Item not found');
             });
-        expect(query.mock.calls.length).toBe(2);
     });
 });

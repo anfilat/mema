@@ -61,10 +61,29 @@ async function transaction(func) {
     }
 }
 
+async function getClient() {
+    return pool.connect();
+}
+
+async function clientQuery(client, sql, values) {
+    return client.query(sql, values);
+}
+
+async function clientGetValue(client, sql, values, name) {
+    const res = await client.query(sql, values);
+    if (res.rowCount === 0) {
+        return null;
+    }
+    return res.rows[0][name];
+}
+
 module.exports = {
     initDb,
     query,
     get,
     getValue,
     transaction,
+    getClient,
+    clientQuery,
+    clientGetValue,
 };

@@ -10,14 +10,15 @@ describe('register', () => {
     });
 
     test('success', () => {
-        query.mockResolvedValueOnce({
-            rowCount: 1,
-            rows: [{count: '0'}],
-        });
-        query.mockResolvedValueOnce({
-            rowCount: 1,
-            rows: [{account_id: '1'}],
-        });
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{count: '0'}],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{account_id: '1'}],
+            });
 
         return request(app)
             .post('/api/auth/register')
@@ -34,13 +35,14 @@ describe('register', () => {
     });
 
     test('fail on race', () => {
-        query.mockResolvedValueOnce({
-            rowCount: 1,
-            rows: [{count: '0'}],
-        });
-        query.mockRejectedValueOnce({
-            constraint: 'account_email_key'
-        });
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{count: '0'}],
+            })
+            .mockRejectedValueOnce({
+                constraint: 'account_email_key'
+            });
 
         return request(app)
             .post('/api/auth/register')
@@ -55,10 +57,11 @@ describe('register', () => {
     });
 
     test('fail on exists email', () => {
-        query.mockResolvedValueOnce({
-            rowCount: 1,
-            rows: [{count: '1'}],
-        });
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{count: '1'}],
+            });
 
         return request(app)
             .post('/api/auth/register')

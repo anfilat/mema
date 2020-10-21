@@ -28,7 +28,6 @@ describe('item del', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Item deleted');
             });
-        expect(query.mock.calls.length).toBe(2);
     });
 
     test('fail without itemId', () => {

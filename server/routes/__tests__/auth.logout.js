@@ -21,6 +21,5 @@ describe('logout', () => {
             .post('/api/auth/logout')
             .set('Cookie', 'token=someToken')
             .expect(200);
-        expect(query.mock.calls.length).toBe(2);
     });
 });
