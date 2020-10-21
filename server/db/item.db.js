@@ -32,6 +32,36 @@ async function addItem(userId, text) {
     };
 }
 
+async function getItem(userId, memId) {
+    const memSQL = `
+        SELECT text_id
+        FROM mem
+        WHERE account_id = $1 AND mem_id = $2
+    `;
+    const memValues = [userId, memId];
+    const textId = await getValue(memSQL, memValues, 'text_id');
+
+    if (!textId) {
+        return {
+          ok: false,
+        };
+    }
+
+    const textSQL = `
+        SELECT text
+        FROM text
+        WHERE account_id = $1 AND text_id = $2
+    `;
+    const textValues = [userId, textId];
+    const text = await getValue(textSQL, textValues, 'text');
+
+    return {
+      ok: true,
+      text,
+      textId,
+    };
+}
+
 async function resaveItem(userId, memId, text) {
     const now = new Date();
 
@@ -106,6 +136,7 @@ async function delItem(userId, memId) {
 
 module.exports = {
     addItem,
+    getItem,
     resaveItem,
     updateItem,
     delItem,

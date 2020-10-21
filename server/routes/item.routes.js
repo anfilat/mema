@@ -14,6 +14,16 @@ router.post(
     item.add
 );
 
+// /api/item/get
+router.post(
+    '/get',
+    [
+        ...item.checkGet,
+        stopOnError('Incorrect data'),
+    ],
+    item.get
+);
+
 // /api/item/resave
 router.post(
     '/resave',

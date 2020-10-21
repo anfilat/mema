@@ -23,6 +23,10 @@ const useStyles = makeStyles(theme => ({
             }
         }
     },
+    lastButtons: {
+        'flex-basis': 0,
+        'flex-grow': 1,
+    }
 }));
 
 const config = {
@@ -59,6 +63,7 @@ export const NewPage = () => {
         setText('');
         setItemId(null);
         setTextId(null);
+        setOutdated(false);
         focusEditor();
     }
 
@@ -99,6 +104,17 @@ export const NewPage = () => {
         }
     }
 
+    async function clickGetLatest() {
+        const {ok, data, error} = await request('/api/item/get', {itemId});
+        if (ok) {
+            setText(data.text);
+            setTextId(data.textId);
+            setOutdated(false);
+        } else {
+            showError(error);
+        }
+    }
+
     function focusEditor({toEnd} = {toEnd: false}) {
         const editor = editorInstance.current;
         editor.editing.view.focus();
@@ -125,29 +141,46 @@ export const NewPage = () => {
                 </Box>
                 <Grid
                     container
-                    direction="row"
-                    justify="flex-end"
+                    justify="space-between"
                     spacing={2}
                 >
-                    <Grid item>
+                    {outdated && <Grid item>
                         <Button
                             variant="contained"
                             color="primary"
-                            onClick={clickReset}
-                            disabled={loading || outdated}
+                            onClick={clickGetLatest}
+                            disabled={loading}
                         >
-                            Reset
+                            Get latest
                         </Button>
-                    </Grid>
-                    <Grid item>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={clickSave}
-                            disabled={loading || outdated}
-                        >
-                            Save
-                        </Button>
+                    </Grid>}
+                    <Grid
+                        item
+                        container
+                        justify="flex-end"
+                        spacing={2}
+                        className={classes.lastButtons}
+                    >
+                        <Grid item>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={clickReset}
+                                disabled={loading || outdated}
+                            >
+                                Reset
+                            </Button>
+                        </Grid>
+                        <Grid item>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={clickSave}
+                                disabled={loading || outdated}
+                            >
+                                Save
+                            </Button>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Container>

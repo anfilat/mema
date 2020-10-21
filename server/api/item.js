@@ -20,6 +20,30 @@ exports.add = async (req, res) => {
         });
 }
 
+exports.checkGet = [
+    body('itemId')
+        .notEmpty()
+        .withMessage('No item id'),
+];
+
+exports.get = async (req, res) => {
+    const {itemId} = req.body;
+    const {text, textId, ok} = await db.getItem(req.userData.userId, itemId);
+
+    if (ok) {
+        res.json({
+            text,
+            textId,
+        });
+    } else {
+        res
+            .status(400)
+            .json({
+                message: 'Item not found',
+            });
+    }
+}
+
 exports.checkResave = [
     body('itemId')
         .notEmpty()
