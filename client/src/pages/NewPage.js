@@ -9,9 +9,15 @@ import {useSnackbarEx} from '../hooks/snackbarEx.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
 
 const useStyles = makeStyles(theme => ({
+    main: {
+        height: `calc(100vh - 64px - ${theme.spacing(2)}px)`,
+        display: 'flex',
+        'flex-direction': 'column',
+    },
     editor: {
+        'flex-grow': 1,
         '& .ck-editor': {
-            height: `calc(100vh - 64px - ${theme.spacing(6)}px - 36px)`,
+            height: '100%',
             display: 'flex',
             'flex-direction': 'column',
             '& .ck-editor__main': {
@@ -128,7 +134,7 @@ export const NewPage = () => {
     return (
         <>
             <Title title="New"/>
-            <Container component="main" maxWidth="md">
+            <Container component="main" maxWidth="md" className={classes.main}>
                 <Box mt={2} mb={2} className={classes.editor}>
                     <CKEditor
                         editor={ window.Editor || window.ClassicEditor }
