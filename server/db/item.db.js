@@ -154,7 +154,8 @@ async function delItem(userId, memId) {
     const delMemSQL = `
         DELETE
         FROM text
-        WHERE text_id IN (SELECT text_id FROM mem_text WHERE account_id = $1 AND mem_id = $2)
+        WHERE account_id = $1
+          AND text_id IN (SELECT text_id FROM mem_text WHERE mem_id = $2)
     `;
     const delMemValues = [userId, memId];
     await query(delMemSQL, delMemValues);

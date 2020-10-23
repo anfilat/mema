@@ -8,7 +8,9 @@ module.exports = function setupAPI(app) {
         cookieParser()
     );
 
-    app.use('/api/auth', require('./routes/auth.routes'));
+    app.use('/api/auth',
+        require('./routes/auth.routes')
+    );
 
     app.use('/api/item',
         checkAuth,
@@ -16,7 +18,15 @@ module.exports = function setupAPI(app) {
         require('./routes/item.routes')
     );
 
-    app.get('/api/health', handlerHealth);
+    app.use('/api/tag',
+        checkAuth,
+        refreshCookie,
+        require('./routes/tag.routes')
+    );
+
+    app.get('/api/health',
+        handlerHealth
+    );
 
     app.use('/api/',
         handler404,

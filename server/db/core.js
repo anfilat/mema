@@ -35,6 +35,11 @@ async function getValue(sql, values, name) {
     return res.rows[0][name];
 }
 
+async function getValueArray(sql, values, name) {
+    const res = await pool.query(sql, values);
+    return res.rows.map(item => item[name]);
+}
+
 async function transaction(func) {
     const client = await pool.connect();
 
@@ -82,6 +87,7 @@ module.exports = {
     query,
     get,
     getValue,
+    getValueArray,
     transaction,
     getClient,
     clientQuery,
