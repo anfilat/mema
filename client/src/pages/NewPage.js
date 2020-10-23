@@ -3,6 +3,7 @@ import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {Title} from '../components/Title';
+import {Tags} from '../components/Tags';
 import {useBindLocalStorage} from '../hooks/bindLocalStorage.hook';
 import {useEditor} from '../hooks/editor.hook';
 import {useHttp} from '../hooks/http.hook';
@@ -55,6 +56,7 @@ export const NewPage = () => {
     const [text, setText] = useBindLocalStorage('newPageText', '');
     const [itemId, setItemId] = useBindLocalStorage('newPageItemId', null);
     const [textId, setTextId] = useBindLocalStorage('newPageTextId', null);
+    const [tags, setTags] = useBindLocalStorage('newPageTags', []);
     const [outdated, setOutdated] = useState(false);
 
     function changeEditor(event, editor) {
@@ -63,6 +65,7 @@ export const NewPage = () => {
 
     function clickReset() {
         setText('');
+        setTags([]);
         setItemId(null);
         setTextId(null);
         setOutdated(false);
@@ -129,6 +132,12 @@ export const NewPage = () => {
                         onInit={initEditor}
                         onChange={changeEditor}
                         disabled={outdated}
+                    />
+                </Box>
+                <Box mb={2}>
+                    <Tags
+                        value={tags}
+                        onChange={setTags}
                     />
                 </Box>
                 <Grid
