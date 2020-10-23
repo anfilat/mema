@@ -1,9 +1,10 @@
-import React, {useRef, useState} from 'react';
+import React, {useState} from 'react';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {Title} from '../components/Title';
 import {useBindLocalStorage} from '../hooks/bindLocalStorage.hook';
+import {useEditor} from '../hooks/editor.hook';
 import {useHttp} from '../hooks/http.hook';
 import {useSnackbarEx} from '../hooks/snackbarEx.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
@@ -48,18 +49,13 @@ const config = {
 
 export const NewPage = () => {
     const classes = useStyles();
-    const editorInstance = useRef(null);
+    const {initEditor, focusEditor} = useEditor();
     const {showSuccess, showError} = useSnackbarEx();
     const {loading, request} = useHttp();
     const [text, setText] = useBindLocalStorage('newPageText', '');
     const [itemId, setItemId] = useBindLocalStorage('newPageItemId', null);
     const [textId, setTextId] = useBindLocalStorage('newPageTextId', null);
     const [outdated, setOutdated] = useState(false);
-
-    function initEditor(editor) {
-        editorInstance.current = editor;
-        focusEditor({toEnd: true});
-    }
 
     function changeEditor(event, editor) {
         setText(editor.getData());
@@ -118,16 +114,6 @@ export const NewPage = () => {
             setOutdated(false);
         } else {
             showError(error);
-        }
-    }
-
-    function focusEditor({toEnd} = {toEnd: false}) {
-        const editor = editorInstance.current;
-        editor.editing.view.focus();
-        if (toEnd) {
-            editor.model.change(writer => {
-                writer.setSelection(writer.createPositionAt(editor.model.document.getRoot(), 'end'));
-            });
         }
     }
 
