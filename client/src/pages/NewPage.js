@@ -82,7 +82,10 @@ export const NewPage = () => {
     }
 
     async function addItem() {
-        const {ok, data, error} = await request('/api/item/add', {text});
+        const {ok, data, error} = await request('/api/item/add', {
+            text,
+            tags,
+        });
         if (ok) {
             setItemId(data.itemId);
             setTextId(data.textId);
@@ -96,6 +99,7 @@ export const NewPage = () => {
     async function updateItem() {
         const {ok, data, error} = await request('/api/item/update', {
             text,
+            tags,
             itemId,
             textId,
         });

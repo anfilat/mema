@@ -56,8 +56,19 @@ CREATE TABLE IF NOT EXISTS tag (
     tag VARCHAR(200) NOT NULL,
     time timestamptz NOT NULL,
 
-    CONSTRAINT tag_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE
+    CONSTRAINT tag_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE,
+    CONSTRAINT tag_account_id_tag UNIQUE (account_id, tag)
 );
 
-CREATE INDEX IF NOT EXISTS tag_account_id_idx ON tag(account_id);
 CREATE INDEX IF NOT EXISTS tag_trgm_tag ON tag USING gin (tag gin_trgm_ops);
+
+CREATE TABLE IF NOT EXISTS mem_tag (
+    mem_id int NOT NULL,
+    tag_id int NOT NULL,
+
+    PRIMARY KEY (mem_id, tag_id),
+    CONSTRAINT mem_tag_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id) ON DELETE CASCADE,
+    CONSTRAINT mem_tag_tag_id_fk FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS mem_tag_mem_id_idx ON mem_tag(mem_id);

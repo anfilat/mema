@@ -5,11 +5,14 @@ exports.checkAdd = [
     body('text')
         .custom(value => typeof value === 'string' && value.trim() !== '')
         .withMessage('Empty text'),
+    body('tags')
+        .custom(value => value == null || Array.isArray(value))
+        .withMessage('Tags are not array'),
 ];
 
 exports.add = async (req, res) => {
-    const {text} = req.body;
-    const {memId: itemId, textId} = await db.addItem(req.userData.userId, text);
+    const {text, tags} = req.body;
+    const {memId: itemId, textId} = await db.addItem(req.userData.userId, text, tags);
 
     res
         .status(201)

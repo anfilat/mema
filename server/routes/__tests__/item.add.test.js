@@ -19,6 +19,73 @@ describe('item add', () => {
                     account_id: 1,
                     token: 'someToken'
                 }],
+            });
+        query
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{text_id: textId}],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{mem_id: itemId}],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            });
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{tag_id: 1}],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            });
+        query
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{tag_id: 2}],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            });
+
+        await request(app)
+            .post('/api/item/add')
+            .set('Cookie', 'token=someToken')
+            .send({
+                text: 'Some text',
+                tags: ['old tag', 'new tag'],
+            })
+            .expect(201)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('message', 'Text saved');
+                expect(body).toHaveProperty('itemId', itemId);
+                expect(body).toHaveProperty('textId', textId);
+            });
+    });
+
+    test('success without tags', async () => {
+        const itemId = 2;
+        const textId = 1;
+
+        query
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{
+                    account_id: 1,
+                    token: 'someToken'
+                }],
             })
             .mockResolvedValueOnce({
                 rowCount: 0,

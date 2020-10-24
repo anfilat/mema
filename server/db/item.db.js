@@ -1,6 +1,7 @@
 const {query, getValue, transaction, getClient, clientGetValue, clientQuery} = require('./core');
+const {addTagsToMem} = require('./tag.db');
 
-async function addItem(userId, text) {
+async function addItem(userId, text, tags) {
     return transaction(async function(client) {
         const now = new Date();
 
@@ -26,6 +27,8 @@ async function addItem(userId, text) {
         `;
         const memTextValues = [memId, textId];
         await clientQuery(client, memTextSQL, memTextValues);
+
+        await addTagsToMem(client, userId, memId, tags);
 
         return {
             memId,
