@@ -2,30 +2,16 @@ const request = require('supertest');
 const Cookies = require('expect-cookies');
 const app = require('../../app');
 
-const getAccountResult = {
-    rowCount: 1,
-    rows: [{
-        account_id: 1,
-        email: 'test@test.com',
-        password: '$2a$10$OMl9d4gvfzicPEhXQ3diru0xT6Rpp0EKvMNWnW32CQ/1kjLr0fAB2'
-    }],
-};
-const getAccountNotFoundResult = {
-    rowCount: 0,
-    rows: [],
-};
-
 describe('login', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
-    test('success', () => {
-        query.mockResolvedValueOnce(getAccountResult);
-
-        return request(app)
+    test('success', async () => {
+        const query = app._db.query.bind(app._db);
+        const sql = 'SELECT count(*) AS count FROM token WHERE account_id = 1';
+        const tokensBefore = (await query(sql)).rows[0].count;
+        await request(app)
             .post('/api/auth/login')
             .send({
                 email: 'test@test.com',
@@ -36,11 +22,11 @@ describe('login', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('userId', 1);
             });
+        const tokensAfter = (await query(sql)).rows[0].count;
+        expect(tokensAfter - tokensBefore).toBe(1);
     });
 
     test('fail on wrong password', () => {
-        query.mockResolvedValueOnce(getAccountResult);
-
         return request(app)
             .post('/api/auth/login')
             .send({
@@ -54,12 +40,10 @@ describe('login', () => {
     });
 
     test('fail as not registered user', () => {
-        query.mockResolvedValueOnce(getAccountNotFoundResult);
-
         return request(app)
             .post('/api/auth/login')
             .send({
-                email: 'test@test.com',
+                email: 'some@test.com',
                 password: '123456'
             })
             .expect(403)

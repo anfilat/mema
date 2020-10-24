@@ -2,16 +2,11 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('internal exception', () => {
-    const query = app._db.query;
+    test('success', async () => {
+        app._db.switchToPgMock();
+        app._db.query.mockRejectedValueOnce(new Error(`Oh, it's ok`));
 
-    afterEach(() => {
-        jest.clearAllMocks();
-    });
-
-    test('success', () => {
-        query.mockRejectedValueOnce(new Error('Oh'));
-
-        return request(app)
+        await request(app)
             .post('/api/auth/login')
             .send({
                 email: 'test@test.com',
@@ -21,5 +16,8 @@ describe('internal exception', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Something went wrong, try again');
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 });

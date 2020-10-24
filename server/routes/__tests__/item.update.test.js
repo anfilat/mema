@@ -2,17 +2,16 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('item update', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
     test('success', async () => {
         const itemId = 2;
         const textId = 1;
 
-        query
+        app._db.switchToPgMock();
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -33,7 +32,7 @@ describe('item update', () => {
             .post('/api/item/update')
             .set('Cookie', 'token=someToken')
             .send({
-                text: 'Some text',
+                text: 'Other text',
                 itemId,
                 textId,
             })
@@ -41,13 +40,17 @@ describe('item update', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 
     test('fail on outdated textId', async () => {
         const itemId = 2;
         const textId = 1;
 
-        query
+        app._db.switchToPgMock();
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -77,18 +80,12 @@ describe('item update', () => {
                 expect(body).toHaveProperty('message', 'Outdated');
                 expect(body).toHaveProperty('outdated', true);
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 
     test('fail without data', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            });
-
         return request(app)
             .post('/api/item/update')
             .set('Cookie', 'token=someToken')

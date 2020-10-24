@@ -3,39 +3,33 @@ const Cookies = require('expect-cookies');
 const app = require('../../app');
 
 describe('register', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
-    test('success', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{count: '0'}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{account_id: '1'}],
-            });
-
-        return request(app)
+    test('success', async () => {
+        const query = app._db.query.bind(app._db);
+        const sql = 'SELECT count(*) AS count FROM account';
+        const accountsBefore = (await query(sql)).rows[0].count;
+        await request(app)
             .post('/api/auth/register')
             .send({
-                email: 'test@test.com',
+                email: 'some@test.com',
                 password: '123456'
             })
             .expect(201)
             .expect(Cookies.set({name: 'token', options: ['httponly', 'samesite']}))
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'User created');
-                expect(body).toHaveProperty('userId', 1);
+                expect(body).toHaveProperty('userId', 2);
             });
+        const accountsAfter = (await query(sql)).rows[0].count;
+        expect(accountsAfter - accountsBefore).toBe(1);
     });
 
-    test('fail on race', () => {
-        query
+    test('fail on race', async () => {
+        app._db.switchToPgMock();
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{count: '0'}],
@@ -44,7 +38,7 @@ describe('register', () => {
                 constraint: 'account_email_key'
             });
 
-        return request(app)
+        await request(app)
             .post('/api/auth/register')
             .send({
                 email: 'test@test.com',
@@ -54,15 +48,12 @@ describe('register', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'The user already exists');
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 
     test('fail on exists email', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{count: '1'}],
-            });
-
         return request(app)
             .post('/api/auth/register')
             .send({

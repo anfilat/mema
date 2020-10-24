@@ -2,10 +2,8 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('auth middleware', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
     test('fail without auth token', () => {
@@ -21,15 +19,9 @@ describe('auth middleware', () => {
     });
 
     test('fail on wrong token', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            })
-
         return request(app)
             .post('/api/item/add')
-            .set('Cookie', 'token=someToken')
+            .set('Cookie', 'token=wrongToken')
             .send({
                 text: 'Some text',
             })

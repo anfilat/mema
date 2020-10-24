@@ -21,6 +21,7 @@
   "devDependencies": {
     "expect-cookies": "^0.1.2",
     "jest": "^26.5.3",
+    "pg-mem": "^1.0.23",
     "supertest": "^5.0.0"
   }
 }

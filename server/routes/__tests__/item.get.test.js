@@ -2,57 +2,25 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('item get', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
     test('success', async () => {
-        const itemId = 2;
-        const textId = 1;
-        const text = 'Item text';
-
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{text_id: textId}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{text}],
-            });
-
         await request(app)
             .post('/api/item/get')
             .set('Cookie', 'token=someToken')
             .send({
-                itemId,
+                itemId: 1,
             })
             .expect(200)
             .expect(({body}) => {
-                expect(body).toHaveProperty('text', text);
-                expect(body).toHaveProperty('textId', textId);
+                expect(body).toHaveProperty('text', 'Some text');
+                expect(body).toHaveProperty('textId', 1);
             });
     });
 
     test('fail without data', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            });
-
         return request(app)
             .post('/api/item/get')
             .set('Cookie', 'token=someToken')
@@ -63,26 +31,11 @@ describe('item get', () => {
     });
 
     test('fail on missed itemId', async () => {
-        const itemId = 2;
-
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            });
-
         await request(app)
             .post('/api/item/get')
             .set('Cookie', 'token=someToken')
             .send({
-                itemId,
+                itemId: 2,
             })
             .expect(400)
             .expect(({body}) => {

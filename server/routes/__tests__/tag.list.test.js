@@ -2,14 +2,13 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('tag list', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
     test('success with text', async () => {
-        query
+        app._db.switchToPgMock();
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -32,22 +31,12 @@ describe('tag list', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('list', ['items', 'pitch', `it's`]);
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 
     test('success with empty text', async () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 3,
-                rows: [{tag: 'items'}, {tag: 'pitch'}, {tag: `it's`}],
-            });
-
         await request(app)
             .post('/api/tag/list')
             .set('Cookie', 'token=someToken')
@@ -56,20 +45,12 @@ describe('tag list', () => {
             })
             .expect(200)
             .expect(({body}) => {
-                expect(body).toHaveProperty('list', ['items', 'pitch', `it's`]);
+                expect(body).toHaveProperty('list');
+                expect(body.list.includes('something')).toBe(true);
             });
     });
 
     test('fail without data', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            });
-
         return request(app)
             .post('/api/tag/list')
             .set('Cookie', 'token=someToken')

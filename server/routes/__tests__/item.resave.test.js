@@ -2,58 +2,27 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('item resave', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
     test('success', async () => {
-        const itemId = 2;
-        const textId = 1;
-
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{text_id: textId}],
-            });
-
         await request(app)
             .post('/api/item/resave')
             .set('Cookie', 'token=someToken')
             .send({
                 text: 'Some text',
-                itemId,
+                itemId: 1,
             })
             .expect(200)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
-                expect(body).toHaveProperty('itemId', itemId);
-                expect(body).toHaveProperty('textId', textId);
+                expect(body).toHaveProperty('itemId', 1);
+                expect(body).toHaveProperty('textId', 2);
             });
     });
 
     test('fail without data', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            });
-
         return request(app)
             .post('/api/item/resave')
             .set('Cookie', 'token=someToken')

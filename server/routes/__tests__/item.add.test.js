@@ -2,17 +2,16 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('item add', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
     test('success', async () => {
         const itemId = 2;
         const textId = 1;
 
-        query
+        app._db.switchToPgMock();
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -20,7 +19,7 @@ describe('item add', () => {
                     token: 'someToken'
                 }],
             });
-        query
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 0,
                 rows: [],
@@ -37,7 +36,7 @@ describe('item add', () => {
                 rowCount: 0,
                 rows: [],
             });
-        query
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{tag_id: 1}],
@@ -46,7 +45,7 @@ describe('item add', () => {
                 rowCount: 0,
                 rows: [],
             });
-        query
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 0,
                 rows: [],
@@ -73,13 +72,17 @@ describe('item add', () => {
                 expect(body).toHaveProperty('itemId', itemId);
                 expect(body).toHaveProperty('textId', textId);
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 
     test('success without tags', async () => {
         const itemId = 2;
         const textId = 1;
 
-        query
+        app._db.switchToPgMock();
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -112,18 +115,12 @@ describe('item add', () => {
                 expect(body).toHaveProperty('itemId', itemId);
                 expect(body).toHaveProperty('textId', textId);
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 
     test('fail without text', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-
         return request(app)
             .post('/api/item/add')
             .set('Cookie', 'token=someToken')
@@ -134,15 +131,6 @@ describe('item add', () => {
     });
 
     test('fail on empty text', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-
         return request(app)
             .post('/api/item/add')
             .set('Cookie', 'token=someToken')

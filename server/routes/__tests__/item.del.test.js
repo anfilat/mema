@@ -2,14 +2,13 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('item del', () => {
-    const query = app._db.query;
-
-    afterEach(() => {
-        jest.clearAllMocks();
+    beforeEach(() => {
+        return app._db.refreshDb();
     });
 
     test('success', async () => {
-        query
+        app._db.switchToPgMock();
+        app._db.query
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -28,18 +27,12 @@ describe('item del', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Item deleted');
             });
+
+        jest.clearAllMocks();
+        app._db.switchToPgMem();
     });
 
     test('fail without itemId', () => {
-        query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            });
-
         return request(app)
             .post('/api/item/del')
             .set('Cookie', 'token=someToken')
