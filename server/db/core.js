@@ -82,6 +82,11 @@ async function clientGetValue(client, sql, values, name) {
     return res.rows[0][name];
 }
 
+async function clientGetValueArray(client, sql, values, name) {
+    const res = await client.query(sql, values);
+    return res.rows.map(item => item[name]);
+}
+
 module.exports = {
     initDb,
     query,
@@ -92,4 +97,5 @@ module.exports = {
     getClient,
     clientQuery,
     clientGetValue,
+    clientGetValueArray,
 };

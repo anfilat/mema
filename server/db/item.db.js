@@ -1,5 +1,5 @@
 const {query, getValue, transaction, getClient, clientGetValue, clientQuery} = require('./core');
-const {addTagsToMem} = require('./tag.db');
+const {addTagsToMem, changeTagsForMem} = require('./tag.db');
 
 async function addItem(userId, text, tags) {
     return transaction(async function(client) {
@@ -67,7 +67,7 @@ async function getItem(userId, memId) {
     };
 }
 
-async function resaveItem(userId, memId, text) {
+async function resaveItem(userId, memId, text, tags) {
     return transaction(async function(client) {
         const now = new Date();
 
@@ -96,11 +96,13 @@ async function resaveItem(userId, memId, text) {
         const memTextValues = [memId, textId];
         await clientQuery(client, memTextSQL, memTextValues);
 
+        await changeTagsForMem(client, userId, memId, tags);
+
         return textId;
     });
 }
 
-async function updateItem(userId, memId, textId, text) {
+async function updateItem(userId, memId, textId, text, tags) {
     const client = await getClient();
 
     try {
@@ -139,6 +141,8 @@ async function updateItem(userId, memId, textId, text) {
         `;
         const memValues = [now, userId, memId];
         await clientQuery(client, memSQL, memValues);
+
+        await changeTagsForMem(client, userId, memId, tags);
 
         await client.query('COMMIT');
         return true;

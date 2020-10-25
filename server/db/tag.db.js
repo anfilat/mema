@@ -1,4 +1,4 @@
-const {getValueArray, clientQuery, clientGetValue} = require('./core');
+const {getValueArray, clientQuery, clientGetValue, clientGetValueArray} = require('./core');
 
 const listLimit = 20;
 
@@ -36,18 +36,42 @@ async function addTagsToMem(client, userId, memId, tags) {
     `;
     for (const tag of tags) {
         const tagId = await tagToTagId(client, userId, tag);
+        ids.push(tagId);
+
         const values = [memId, tagId];
         await clientQuery(client, sql, values);
-        ids.push(tagId);
     }
 
-    const updateTimeSQL = `
-        UPDATE tag
-        SET time = $1
-        WHERE tag_id = ANY($2)
+    return updateTagsTime(client, ids);
+}
+
+async function changeTagsForMem(client, userId, memId, tags) {
+    if (tags == null || tags.length === 0) {
+        return deleteAllTagsForMem(client, memId);
+    }
+
+    let oldTagIds = await getTagIdsForMem(client, memId);
+
+    const ids = [];
+    const sql = `
+        INSERT INTO mem_tag (mem_id, tag_id)
+        VALUES ($1, $2)
     `;
-    const updateTimeValues = [new Date(), ids];
-    await clientQuery(client, updateTimeSQL, updateTimeValues);
+    for (const tag of tags) {
+        const tagId = await tagToTagId(client, userId, tag);
+        ids.push(tagId);
+
+        if (oldTagIds.includes(tagId)) {
+            oldTagIds = oldTagIds.filter(item => item !== tagId);
+        } else {
+            const values = [memId, tagId];
+            await clientQuery(client, sql, values);
+        }
+    }
+
+    await deleteTagsForMem(client, memId, oldTagIds);
+
+    return updateTagsTime(client, ids);
 }
 
 async function tagToTagId(client, userId, tag) {
@@ -83,7 +107,46 @@ async function getTagId(client, userId, tag) {
     return clientGetValue(client, sql, values, 'tag_id');
 }
 
+async function updateTagsTime(client, ids) {
+    const sql = `
+        UPDATE tag
+        SET time = $1
+        WHERE tag_id = ANY($2)
+    `;
+    const values = [new Date(), ids];
+    return clientQuery(client, sql, values);
+}
+
+async function deleteAllTagsForMem(client, memId) {
+    const sql = `
+        DELETE FROM mem_tag
+        WHERE mem_id = $1
+    `;
+    const values = [memId];
+    return clientQuery(client, sql, values);
+}
+
+async function deleteTagsForMem(client, memId, ids) {
+    const sql = `
+        DELETE FROM mem_tag
+        WHERE mem_id = $1
+          AND tag_id = ANY($2)
+    `;
+    const values = [memId, ids];
+    return clientQuery(client, sql, values);
+}
+
+async function getTagIdsForMem(client, memId) {
+    const sql = `
+        SELECT tag_id FROM mem_tag
+        WHERE mem_id = $1
+    `;
+    const values = [memId];
+    return clientGetValueArray(client, sql, values, 'tag_id');
+}
+
 module.exports = {
     listTags,
     addTagsToMem,
+    changeTagsForMem,
 };

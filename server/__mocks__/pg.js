@@ -182,4 +182,6 @@ const sqlInit = `
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'other', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'it', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'and it', now());
+    INSERT INTO mem_tag (mem_id, tag_id) VALUES (1, 1);
+    INSERT INTO mem_tag (mem_id, tag_id) VALUES (1, 2);
 `;

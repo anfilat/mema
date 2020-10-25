@@ -15,7 +15,8 @@ describe('tag list', () => {
             })
             .expect(200)
             .expect(({body}) => {
-                expect(body).toHaveProperty('list', ['and it', 'it']);
+                expect(body).toHaveProperty('list');
+                expect(body.list).toIncludeSameMembers(['and it', 'it']);
             });
     });
 
@@ -29,7 +30,7 @@ describe('tag list', () => {
             .expect(200)
             .expect(({body}) => {
                 expect(body).toHaveProperty('list');
-                expect(body.list.includes('something')).toBe(true);
+                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'and it']);
             });
     });
 

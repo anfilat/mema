@@ -54,11 +54,14 @@ exports.checkResave = [
     body('text')
         .custom(value => typeof value === 'string' && value.trim() !== '')
         .withMessage('Empty text'),
+    body('tags')
+        .custom(value => value == null || Array.isArray(value))
+        .withMessage('Tags are not array'),
 ];
 
 exports.resave = async (req, res) => {
-    const {itemId, text} = req.body;
-    const textId = await db.resaveItem(req.userData.userId, itemId, text);
+    const {itemId, text, tags} = req.body;
+    const textId = await db.resaveItem(req.userData.userId, itemId, text, tags);
 
     res.json({
         message: 'Text saved',
@@ -77,11 +80,14 @@ exports.checkUpdate = [
     body('text')
         .custom(value => typeof value === 'string' && value.trim() !== '')
         .withMessage('Empty text'),
+    body('tags')
+        .custom(value => value == null || Array.isArray(value))
+        .withMessage('Tags are not array'),
 ];
 
 exports.update = async (req, res) => {
-    const {itemId, textId, text} = req.body;
-    const ok = await db.updateItem(req.userData.userId, itemId, textId, text);
+    const {itemId, textId, text, tags} = req.body;
+    const ok = await db.updateItem(req.userData.userId, itemId, textId, text, tags);
 
     if (ok) {
         res.json({
