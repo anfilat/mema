@@ -24,6 +24,12 @@ module.exports = function setupAPI(app) {
         require('./routes/tag.routes')
     );
 
+    if (process.env.NODE_ENV === 'test') {
+        app.post('/api/crash', () => {
+            throw Error(`Oh, it's test only`);
+        });
+    }
+
     app.get('/api/health',
         handlerHealth
     );
