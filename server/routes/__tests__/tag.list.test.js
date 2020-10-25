@@ -7,20 +7,6 @@ describe('tag list', () => {
     });
 
     test('success with text', async () => {
-        app._db.switchToPgMock();
-        app._db.query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 3,
-                rows: [{tag: 'items'}, {tag: 'pitch'}, {tag: `it's`}],
-            });
-
         await request(app)
             .post('/api/tag/list')
             .set('Cookie', 'token=someToken')
@@ -29,11 +15,8 @@ describe('tag list', () => {
             })
             .expect(200)
             .expect(({body}) => {
-                expect(body).toHaveProperty('list', ['items', 'pitch', `it's`]);
+                expect(body).toHaveProperty('list', ['and it', 'it']);
             });
-
-        jest.clearAllMocks();
-        app._db.switchToPgMem();
     });
 
     test('success with empty text', async () => {

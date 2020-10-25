@@ -4,6 +4,36 @@ let pgMem;
 let pgMemPool;
 let backup;
 
+async function pgMemQuery(query, values) {
+    if (query.startsWith('BEGIN')) {
+        query = 'BEGIN';
+    }
+
+    query = query.replace(/similarity\(.*\).*,/, '');
+
+    const matchANY = query.match(/ANY\((.*)\)/);
+    if (matchANY) {
+        const value = values[parseInt(matchANY[1].substr(1), 10) - 1].join(',');
+        query = query.replace(/ANY\((.*)\)/, `ANY('{${value}}')`)
+    }
+
+    return new Promise((resolve, reject) => {
+        pgMemPool.query(query, values, (err, result) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(result);
+        });
+    });
+}
+
+function pgMemConnect() {
+    return Promise.resolve({
+        query: pgMemQuery,
+        release() {},
+    });
+}
+
 function createPgMem() {
     pgMem = newDb();
 
@@ -40,9 +70,9 @@ function createPgMock() {
 }
 
 function switchToPgMem() {
-    pool.query = pgMemPool.query.bind(pgMemPool);
-    pool.connect = pgMemPool.connect.bind(pgMemPool);
-    pool.on = pgMemPool.on.bind(pgMemPool);
+    pool.query = pgMemQuery;
+    pool.connect = pgMemConnect;
+    pool.on = pgMemPool.on;
 }
 
 function switchToPgMock() {

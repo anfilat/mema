@@ -7,102 +7,22 @@ describe('item add', () => {
     });
 
     test('success', async () => {
-        const itemId = 2;
-        const textId = 1;
-
-        app._db.switchToPgMock();
-        app._db.query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            });
-        app._db.query
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{text_id: textId}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{mem_id: itemId}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            });
-        app._db.query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{tag_id: 1}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            });
-        app._db.query
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{tag_id: 2}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            });
-
         await request(app)
             .post('/api/item/add')
             .set('Cookie', 'token=someToken')
             .send({
                 text: 'Some text',
-                tags: ['old tag', 'new tag'],
+                tags: ['something', 'new tag'],
             })
             .expect(201)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
-                expect(body).toHaveProperty('itemId', itemId);
-                expect(body).toHaveProperty('textId', textId);
+                expect(body).toHaveProperty('itemId', 2);
+                expect(body).toHaveProperty('textId', 2);
             });
-
-        jest.clearAllMocks();
-        app._db.switchToPgMem();
     });
 
     test('success without tags', async () => {
-        const itemId = 2;
-        const textId = 1;
-
-        app._db.switchToPgMock();
-        app._db.query
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{
-                    account_id: 1,
-                    token: 'someToken'
-                }],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 0,
-                rows: [],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{text_id: textId}],
-            })
-            .mockResolvedValueOnce({
-                rowCount: 1,
-                rows: [{mem_id: itemId}],
-            });
-
         await request(app)
             .post('/api/item/add')
             .set('Cookie', 'token=someToken')
@@ -112,12 +32,9 @@ describe('item add', () => {
             .expect(201)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
-                expect(body).toHaveProperty('itemId', itemId);
-                expect(body).toHaveProperty('textId', textId);
+                expect(body).toHaveProperty('itemId', 2);
+                expect(body).toHaveProperty('textId', 2);
             });
-
-        jest.clearAllMocks();
-        app._db.switchToPgMem();
     });
 
     test('fail without text', () => {
