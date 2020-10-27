@@ -13,6 +13,7 @@
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
     "express-validator": "^6.6.1",
+    "lodash": "^4.17.20",
     "morgan": "^1.10.0",
     "on-headers": "^1.0.2",
     "pg": "^8.4.1",
@@ -23,9 +24,12 @@
     "jest": "^26.5.3",
     "jest-extended": "^0.11.5",
     "pg-mem": "^1.0.23",
-    "supertest": "^5.0.0"
+    "supertest": "^5.0.0",
+    "wordlist-russian": "^1.0.0"
   },
   "jest": {
-    "setupFilesAfterEnv": ["jest-extended"]
+    "setupFilesAfterEnv": [
+      "jest-extended"
+    ]
   }
 }
