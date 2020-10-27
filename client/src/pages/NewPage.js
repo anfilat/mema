@@ -1,7 +1,9 @@
 import React, {useState} from 'react';
 import _ from 'lodash';
 import CKEditor from '@ckeditor/ckeditor5-react';
-import {Box, Button, Container, Grid} from "@material-ui/core";
+import {Box, Button, Container, Grid, Backdrop} from "@material-ui/core";
+import {SpeedDial, SpeedDialIcon, SpeedDialAction} from "@material-ui/lab";
+import {Delete as DeleteIcon, Update as UpdateIcon} from '@material-ui/icons';
 import {makeStyles} from "@material-ui/core/styles";
 import {Title} from '../components/Title';
 import {Tags} from '../components/Tags';
@@ -16,6 +18,7 @@ const useStyles = makeStyles(theme => ({
         height: `calc(100vh - 64px - ${theme.spacing(2)}px)`,
         display: 'flex',
         'flex-direction': 'column',
+        position: 'relative',
     },
     editor: {
         'flex-grow': 1,
@@ -35,7 +38,26 @@ const useStyles = makeStyles(theme => ({
     lastButtons: {
         'flex-basis': 0,
         'flex-grow': 1,
-    }
+    },
+    speedDial: {
+        position: 'absolute',
+        bottom: 0,
+        left: theme.spacing(2),
+    },
+    speedDialFab: {
+        width: '36px',
+        height: '36px',
+    },
+    speedDialActions: {
+        'padding-bottom': `${theme.spacing(5)}px !important`,
+    },
+    speedActionTooltip: {
+        'white-space': 'nowrap',
+    },
+    speedActionFab: {
+        width: '36px',
+        height: '36px',
+    },
 }));
 
 const config = {
@@ -61,7 +83,8 @@ export const NewPage = () => {
     const [outdated, setOutdated] = useState(false);
     const [savedText, setSavedText] = useBindLocalStorage('newPageSavedText', '');
     const [savedTags, setSavedTags] = useBindLocalStorage('newPageSavedTags', []);
-    const isUpdate = !!itemId;
+    const [openSpeedDial, setOpenSpeedDial] = React.useState(false);
+    const inEditing = !!itemId;
     const blockSave = (text.trim() === '') ||
         (text === savedText && _.isEqual(tags, savedTags));
 
@@ -81,7 +104,7 @@ export const NewPage = () => {
     }
 
     async function clickSave() {
-        if (isUpdate) {
+        if (inEditing) {
             await updateItem();
         } else {
             await addItem();
@@ -127,6 +150,11 @@ export const NewPage = () => {
     }
 
     async function clickGetLatest() {
+        if (loading) {
+            return;
+        }
+
+        setOpenSpeedDial(false);
         const {ok, data, error} = await request('/api/item/get', {itemId});
         if (ok) {
             setText(data.text);
@@ -137,10 +165,34 @@ export const NewPage = () => {
         }
     }
 
+    async function clickDelete() {
+        if (loading) {
+            return;
+        }
+
+        setOpenSpeedDial(false);
+        const {ok, data, error} = await request('/api/item/del', {itemId});
+        if (ok) {
+            clickReset();
+            showSuccess(data.message);
+        } else {
+            showError(error);
+        }
+    }
+
+    function handleOpenSpeedDial() {
+        setOpenSpeedDial(true);
+    }
+
+    function handleCloseSpeedDial() {
+        setOpenSpeedDial(false);
+    }
+
     return (
         <>
             <Title title="New"/>
             <Container component="main" maxWidth="md" className={classes.main}>
+                <Backdrop open={openSpeedDial} />
                 <Box mt={2} mb={2} className={classes.editor}>
                     <CKEditor
                         editor={ window.Editor || window.ClassicEditor }
@@ -162,16 +214,43 @@ export const NewPage = () => {
                     justify="space-between"
                     spacing={2}
                 >
-                    {outdated && <Grid item>
-                        <Button
-                            variant="contained"
-                            color="primary"
+                    {(outdated || inEditing) && <SpeedDial
+                        ariaLabel="Actions"
+                        classes={{
+                            root: classes.speedDial,
+                            fab: classes.speedDialFab,
+                            actions: classes.speedDialActions,
+                        }}
+                        icon={<SpeedDialIcon />}
+                        onClose={handleCloseSpeedDial}
+                        onOpen={handleOpenSpeedDial}
+                        open={openSpeedDial}
+                    >
+                        {outdated && <SpeedDialAction
+                            key="GetLatest"
+                            icon={<UpdateIcon/>}
+                            tooltipTitle="Get latest"
+                            tooltipPlacement="right"
+                            tooltipOpen
+                            classes={{
+                                fab: classes.speedActionFab,
+                                tooltipPlacementRight: classes.speedActionTooltip,
+                            }}
                             onClick={clickGetLatest}
-                            disabled={loading}
-                        >
-                            Get latest
-                        </Button>
-                    </Grid>}
+                        />}
+                        (inEditing && <SpeedDialAction
+                            key="Delete"
+                            icon={<DeleteIcon/>}
+                            tooltipTitle="Delete"
+                            tooltipPlacement="right"
+                            tooltipOpen
+                            classes={{
+                                fab: classes.speedActionFab,
+                                tooltipPlacementRight: classes.speedActionTooltip,
+                            }}
+                            onClick={clickDelete}
+                        />}
+                    </SpeedDial>}
                     <Grid
                         item
                         container
@@ -196,7 +275,7 @@ export const NewPage = () => {
                                 onClick={clickSave}
                                 disabled={blockSave || loading || outdated}
                             >
-                                {isUpdate ? 'Update' : 'Save'}
+                                {inEditing ? 'Update' : 'Save'}
                             </Button>
                         </Grid>
                     </Grid>
