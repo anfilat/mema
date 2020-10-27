@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import _ from 'lodash';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
@@ -58,6 +59,11 @@ export const NewPage = () => {
     const [textId, setTextId] = useBindLocalStorage('newPageTextId', null);
     const [tags, setTags] = useBindLocalStorage('newPageTags', []);
     const [outdated, setOutdated] = useState(false);
+    const [savedText, setSavedText] = useBindLocalStorage('newPageSavedText', '');
+    const [savedTags, setSavedTags] = useBindLocalStorage('newPageSavedTags', []);
+    const isUpdate = !!itemId;
+    const blockSave = (text.trim() === '') ||
+        (text === savedText && _.isEqual(tags, savedTags));
 
     function changeEditor(event, editor) {
         setText(editor.getData());
@@ -66,6 +72,8 @@ export const NewPage = () => {
     function clickReset() {
         setText('');
         setTags([]);
+        setSavedText('');
+        setSavedTags([]);
         setItemId(null);
         setTextId(null);
         setOutdated(false);
@@ -73,10 +81,10 @@ export const NewPage = () => {
     }
 
     async function clickSave() {
-        if (!itemId) {
-            await addItem();
-        } else {
+        if (isUpdate) {
             await updateItem();
+        } else {
+            await addItem();
         }
         focusEditor();
     }
@@ -89,6 +97,8 @@ export const NewPage = () => {
         if (ok) {
             setItemId(data.itemId);
             setTextId(data.textId);
+            setSavedText(text);
+            setSavedTags(tags);
 
             showSuccess(data.message);
         } else {
@@ -104,6 +114,9 @@ export const NewPage = () => {
             textId,
         });
         if (ok) {
+            setSavedText(text);
+            setSavedTags(tags);
+
             showSuccess(data.message);
         } else {
             if (data.outdated) {
@@ -171,7 +184,7 @@ export const NewPage = () => {
                                 variant="contained"
                                 color="primary"
                                 onClick={clickReset}
-                                disabled={loading || outdated}
+                                disabled={loading}
                             >
                                 Reset
                             </Button>
@@ -181,9 +194,9 @@ export const NewPage = () => {
                                 variant="contained"
                                 color="primary"
                                 onClick={clickSave}
-                                disabled={loading || outdated}
+                                disabled={blockSave || loading || outdated}
                             >
-                                Save
+                                {isUpdate ? 'Update' : 'Save'}
                             </Button>
                         </Grid>
                     </Grid>

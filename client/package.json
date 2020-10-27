@@ -9,6 +9,7 @@
     "@material-ui/lab": "^4.0.0-alpha.56",
     "ckeditor5-custom-build": "file:./src/ckeditor",
     "fontsource-roboto": "^3.0.3",
+    "lodash": "^4.17.20",
     "notistack": "^1.0.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
