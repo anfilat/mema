@@ -48,8 +48,6 @@ CREATE TABLE IF NOT EXISTS mem_text (
     CONSTRAINT mem_text_text_id_fk FOREIGN KEY (text_id) REFERENCES text(text_id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS mem_text_mem_id_idx ON mem_text(mem_id);
-
 CREATE TABLE IF NOT EXISTS tag (
     tag_id serial PRIMARY KEY,
     account_id int NOT NULL,
@@ -70,5 +68,3 @@ CREATE TABLE IF NOT EXISTS mem_tag (
     CONSTRAINT mem_tag_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id) ON DELETE CASCADE,
     CONSTRAINT mem_tag_tag_id_fk FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE
 );
-
-CREATE INDEX IF NOT EXISTS mem_tag_mem_id_idx ON mem_tag(mem_id);

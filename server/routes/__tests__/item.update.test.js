@@ -30,6 +30,27 @@ describe('item update', () => {
         expect((await query(sqlMemTags)).rows[0].count).toBe(2);
     });
 
+    test('success with same tags', async () => {
+        const query = app._db.query.bind(app._db);
+
+        await request(app)
+            .post('/api/item/update')
+            .set('Cookie', 'token=someToken')
+            .send({
+                text: 'Other text',
+                tags: ['something', 'other'],
+                itemId: 1,
+                textId: 1,
+            })
+            .expect(200)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('message', 'Text saved');
+            });
+
+        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = 1`;
+        expect((await query(sqlMemTags)).rows[0].count).toBe(2);
+    });
+
     test('success without tags', async () => {
         const query = app._db.query.bind(app._db);
 

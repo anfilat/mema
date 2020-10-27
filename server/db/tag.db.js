@@ -29,19 +29,8 @@ async function addTagsToMem(client, userId, memId, tags) {
         return;
     }
 
-    const ids = [];
-    const sql = `
-        INSERT INTO mem_tag (mem_id, tag_id)
-        VALUES ($1, $2)
-    `;
-    for (const tag of tags) {
-        const tagId = await tagToTagId(client, userId, tag);
-        ids.push(tagId);
-
-        const values = [memId, tagId];
-        await clientQuery(client, sql, values);
-    }
-
+    const {newTagIds, ids} = await getNewTags(client, userId, tags);
+    await clientQuery(client, insertTagsToMemSQL(newTagIds), insertTagsToMemValues(newTagIds, memId));
     return updateTagsTime(client, ids);
 }
 
@@ -50,13 +39,19 @@ async function changeTagsForMem(client, userId, memId, tags) {
         return deleteAllTagsForMem(client, memId);
     }
 
-    let oldTagIds = await getTagIdsForMem(client, memId);
+    let oldIds = await getTagIdsForMem(client, memId);
+    const {oldTagIds, newTagIds, ids} = await getNewTags(client, userId, tags, oldIds);
+    await deleteTagsForMem(client, memId, oldTagIds);
+    if (newTagIds.length > 0) {
+        await clientQuery(client, insertTagsToMemSQL(newTagIds), insertTagsToMemValues(newTagIds, memId));
+    }
+    return updateTagsTime(client, ids);
+}
 
+async function getNewTags(client, userId, tags, oldIds = []) {
     const ids = [];
-    const sql = `
-        INSERT INTO mem_tag (mem_id, tag_id)
-        VALUES ($1, $2)
-    `;
+    const newTagIds = [];
+    let oldTagIds = oldIds;
     for (const tag of tags) {
         const tagId = await tagToTagId(client, userId, tag);
         ids.push(tagId);
@@ -64,14 +59,26 @@ async function changeTagsForMem(client, userId, memId, tags) {
         if (oldTagIds.includes(tagId)) {
             oldTagIds = oldTagIds.filter(item => item !== tagId);
         } else {
-            const values = [memId, tagId];
-            await clientQuery(client, sql, values);
+            newTagIds.push(tagId);
         }
     }
+    return {ids, oldTagIds, newTagIds};
+}
 
-    await deleteTagsForMem(client, memId, oldTagIds);
+function insertTagsToMemSQL(ids) {
+    const sqlValues = [];
+    for (let i = 0; i < ids.length; i++) {
+        sqlValues.push(`($${i * 2 + 1}, $${i * 2 + 2})`);
+    }
+    return 'INSERT INTO mem_tag (mem_id, tag_id) VALUES ' + sqlValues.join(', ');
+}
 
-    return updateTagsTime(client, ids);
+function insertTagsToMemValues(ids, memId) {
+    const values = [];
+    for (let i = 0; i < ids.length; i++) {
+        values.push(memId, ids[i]);
+    }
+    return values;
 }
 
 async function tagToTagId(client, userId, tag) {
@@ -127,6 +134,10 @@ async function deleteAllTagsForMem(client, memId) {
 }
 
 async function deleteTagsForMem(client, memId, ids) {
+    if (ids.length === 0) {
+        return;
+    }
+
     const sql = `
         DELETE FROM mem_tag
         WHERE mem_id = $1

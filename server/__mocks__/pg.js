@@ -147,8 +147,6 @@ const sqlInit = `
     ALTER TABLE mem_text ADD CONSTRAINT mem_text_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id);
     ALTER TABLE mem_text ADD CONSTRAINT mem_text_text_id_fk FOREIGN KEY (text_id) REFERENCES text(text_id);
 
-    CREATE INDEX mem_text_mem_id_idx ON mem_text(mem_id);
-
     CREATE TABLE tag (
         tag_id serial PRIMARY KEY,
         account_id int NOT NULL,
@@ -169,8 +167,6 @@ const sqlInit = `
 
     ALTER TABLE mem_tag ADD CONSTRAINT mem_tag_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id);
     ALTER TABLE mem_tag ADD CONSTRAINT mem_tag_tag_id_fk FOREIGN KEY (tag_id) REFERENCES tag(tag_id);
-
-    CREATE INDEX mem_tag_mem_id_idx ON mem_tag(mem_id);
 
 
     INSERT INTO account (email, password) VALUES ('test@test.com', '$2b$10$Buow0yAuljN7cs8vmrtGFOMHd9/78dx7cYuPYop.aA5WdcDX380Ri');
