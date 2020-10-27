@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const {body} = require('express-validator');
 const db = require('../db');
 
@@ -12,7 +13,7 @@ exports.checkAdd = [
 
 exports.add = async (req, res) => {
     const {text, tags} = req.body;
-    const {memId: itemId, textId} = await db.addItem(req.userData.userId, text, tags);
+    const {memId: itemId, textId} = await db.addItem(req.userData.userId, text, cleanTags(tags));
 
     res
         .status(201)
@@ -61,7 +62,7 @@ exports.checkResave = [
 
 exports.resave = async (req, res) => {
     const {itemId, text, tags} = req.body;
-    const textId = await db.resaveItem(req.userData.userId, itemId, text, tags);
+    const textId = await db.resaveItem(req.userData.userId, itemId, text, cleanTags(tags));
 
     res.json({
         message: 'Text saved',
@@ -87,7 +88,7 @@ exports.checkUpdate = [
 
 exports.update = async (req, res) => {
     const {itemId, textId, text, tags} = req.body;
-    const ok = await db.updateItem(req.userData.userId, itemId, textId, text, tags);
+    const ok = await db.updateItem(req.userData.userId, itemId, textId, text, cleanTags(tags));
 
     if (ok) {
         res.json({
@@ -116,4 +117,12 @@ exports.del = async (req, res) => {
     res.json({
         message: 'Item deleted',
     });
+}
+
+function cleanTags(tags) {
+    return _(tags)
+        .map(tag => tag.trim())
+        .compact()
+        .uniq()
+        .value();
 }

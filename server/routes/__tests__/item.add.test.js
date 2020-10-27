@@ -45,6 +45,27 @@ describe('item add', () => {
             });
     });
 
+    test('success with duplicate tags', async () => {
+        const query = app._db.query.bind(app._db);
+
+        await request(app)
+            .post('/api/item/add')
+            .set('Cookie', 'token=someToken')
+            .send({
+                text: 'Some text',
+                tags: [' tag ', '', 'tag'],
+            })
+            .expect(201)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('message', 'Text saved');
+                expect(body).toHaveProperty('itemId', 2);
+                expect(body).toHaveProperty('textId', 2);
+            });
+
+        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = 2`;
+        expect((await query(sqlMemTags)).rows[0].count).toBe(1);
+    });
+
     test('fail without text', () => {
         return request(app)
             .post('/api/item/add')
