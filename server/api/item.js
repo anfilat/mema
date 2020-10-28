@@ -32,12 +32,13 @@ exports.checkGet = [
 
 exports.get = async (req, res) => {
     const {itemId} = req.body;
-    const {text, textId, ok} = await db.getItem(req.userData.userId, itemId);
+    const {ok, textId, text, tags} = await db.getItem(req.userData.userId, itemId);
 
     if (ok) {
         res.json({
-            text,
             textId,
+            text,
+            tags,
         });
     } else {
         res

@@ -157,8 +157,15 @@ export const NewPage = () => {
         setOpenSpeedDial(false);
         const {ok, data, error} = await request('/api/item/get', {itemId});
         if (ok) {
-            setText(data.text);
-            setTextId(data.textId);
+            const {textId, text, tags} = data;
+
+            setTextId(textId);
+            setText(text);
+            setTags(tags);
+
+            setSavedText(text);
+            setSavedTags(tags);
+
             setOutdated(false);
         } else {
             showError(error);

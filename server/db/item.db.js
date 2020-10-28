@@ -1,8 +1,8 @@
 const {query, getValue, transaction, getClient, clientGetValue, clientQuery} = require('./core');
-const {addTagsToMem, changeTagsForMem} = require('./tag.db');
+const {getTagsForMem, addTagsToMem, changeTagsForMem} = require('./tag.db');
 
 async function addItem(userId, text, tags) {
-    return transaction(async function(client) {
+    return transaction(async function (client) {
         const now = new Date();
 
         const textSQL = `
@@ -41,34 +41,38 @@ async function getItem(userId, memId) {
     const memSQL = `
         SELECT text_id
         FROM mem
-        WHERE account_id = $1 AND mem_id = $2
+        WHERE account_id = $1
+          AND mem_id = $2
     `;
     const memValues = [userId, memId];
     const textId = await getValue(memSQL, memValues, 'text_id');
 
     if (!textId) {
         return {
-          ok: false,
+            ok: false,
         };
     }
 
     const textSQL = `
         SELECT text
         FROM text
-        WHERE account_id = $1 AND text_id = $2
+        WHERE account_id = $1
+          AND text_id = $2
     `;
     const textValues = [userId, textId];
     const text = await getValue(textSQL, textValues, 'text');
+    const tags = await getTagsForMem(userId, memId);
 
     return {
-      ok: true,
-      text,
-      textId,
+        ok: true,
+        textId,
+        text,
+        tags,
     };
 }
 
 async function resaveItem(userId, memId, text, tags) {
-    return transaction(async function(client) {
+    return transaction(async function (client) {
         const now = new Date();
 
         const textSQL = `
@@ -146,7 +150,7 @@ async function updateItem(userId, memId, textId, text, tags) {
 
         await client.query('COMMIT');
         return true;
-    } catch(e) {
+    } catch (e) {
         await client.query('ROLLBACK');
         if (e.code == 40001) {
             return false;
