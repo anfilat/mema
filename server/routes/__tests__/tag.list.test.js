@@ -12,11 +12,26 @@ describe('tag list', () => {
             .set('Cookie', 'token=someToken')
             .send({
                 text: 'it',
+                tags: [`and it`],
             })
             .expect(200)
             .expect(({body}) => {
                 expect(body).toHaveProperty('list');
-                expect(body.list).toIncludeSameMembers(['and it', 'it']);
+                expect(body.list).toIncludeSameMembers(['it\'s', 'it']);
+            });
+    });
+
+    test('success with text without previous tags', async () => {
+        await request(app)
+            .post('/api/tag/list')
+            .set('Cookie', 'token=someToken')
+            .send({
+                text: 'it',
+            })
+            .expect(200)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('list');
+                expect(body.list).toIncludeSameMembers(['and it', 'it\'s', 'it']);
             });
     });
 
@@ -26,11 +41,26 @@ describe('tag list', () => {
             .set('Cookie', 'token=someToken')
             .send({
                 text: '',
+                tags: [`and it`],
             })
             .expect(200)
             .expect(({body}) => {
                 expect(body).toHaveProperty('list');
-                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'and it']);
+                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'it\'s']);
+            });
+    });
+
+    test('success with empty text without previous tags', async () => {
+        await request(app)
+            .post('/api/tag/list')
+            .set('Cookie', 'token=someToken')
+            .send({
+                text: '',
+            })
+            .expect(200)
+            .expect(({body}) => {
+                expect(body).toHaveProperty('list');
+                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'and it', 'it\'s']);
             });
     });
 

@@ -2,25 +2,52 @@ const {getValueArray, clientQuery, clientGetValue, clientGetValueArray} = requir
 
 const listLimit = 20;
 
-async function listTags(userId, text) {
-    if (text) {
-        const sql = `
+async function listTags(userId, text, prevTags) {
+    const isPrevTags = prevTags.length > 0;
+    let sql;
+    let values;
+
+    if (text && isPrevTags) {
+        sql = `
             SELECT tag
-            FROM tag WHERE account_id = $1 AND tag ILIKE $2
+            FROM tag
+            WHERE account_id = $1
+              AND tag ILIKE $2
+              AND tag != ALL($3)
+            ORDER BY similarity(tag, $4) desc, time desc
+            LIMIT ${listLimit};
+        `;
+        values = [userId, `%${text}%`, prevTags, text];
+    } else if (text) {
+        sql = `
+            SELECT tag
+            FROM tag
+            WHERE account_id = $1
+              AND tag ILIKE $2
             ORDER BY similarity(tag, $3) desc, time desc
             LIMIT ${listLimit};
         `;
-        const values = [userId, `%${text}%`, text];
-        return getValueArray(sql, values, 'tag');
+        values = [userId, `%${text}%`, text];
+    } else if (isPrevTags) {
+        sql = `
+            SELECT tag
+            FROM tag
+            WHERE account_id = $1
+              AND tag != ALL($2)
+            ORDER BY time desc
+            LIMIT ${listLimit};
+        `;
+        values = [userId, prevTags];
+    } else {
+        sql = `
+            SELECT tag
+            FROM tag
+            WHERE account_id = $1
+            ORDER BY time desc
+            LIMIT ${listLimit};
+        `;
+        values = [userId];
     }
-
-    const sql = `
-        SELECT tag
-        FROM tag WHERE account_id = $1
-        ORDER BY time desc
-        LIMIT ${listLimit};
-    `;
-    const values = [userId];
     return getValueArray(sql, values, 'tag');
 }
 

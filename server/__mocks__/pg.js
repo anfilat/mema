@@ -13,8 +13,18 @@ async function pgMemQuery(query, values) {
 
     const matchANY = query.match(/ANY\((.*)\)/);
     if (matchANY) {
-        const value = values[parseInt(matchANY[1].substr(1), 10) - 1].join(',');
+        const value = values[parseInt(matchANY[1].substr(1), 10) - 1]
+            .map(val => `"${val}"`)
+            .join(',');
         query = query.replace(/ANY\((.*)\)/, `ANY('{${value}}')`)
+    }
+
+    const matchALL = query.match(/!= ALL\((.*)\)/);
+    if (matchALL) {
+        const value = values[parseInt(matchALL[1].substr(1), 10) - 1]
+            .map(val => `'${val}'`)
+            .join(', ');
+        query = query.replace(/!= ALL\((.*)\)/, `NOT IN(${value})`)
     }
 
     return new Promise((resolve, reject) => {
@@ -178,6 +188,7 @@ const sqlInit = `
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'other', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'it', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'and it', now());
+    INSERT INTO tag (account_id, tag, time) VALUES (1, 'it''s', now());
     INSERT INTO mem_tag (mem_id, tag_id) VALUES (1, 1);
     INSERT INTO mem_tag (mem_id, tag_id) VALUES (1, 2);
 `;

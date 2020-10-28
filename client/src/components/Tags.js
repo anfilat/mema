@@ -40,9 +40,10 @@ export function Tags(props) {
     }
 
     function filterOptions(options, params) {
-        const filtered = options.filter(value => !props.value.includes(value));
+        const filtered = [...options];
 
-        if (params.inputValue !== '' && !options.includes(params.inputValue)) {
+        const input = params.inputValue;
+        if (input !== '' && !options.includes(input) && !props.value.includes(input)) {
             filtered.push(params.inputValue);
         }
 
@@ -57,7 +58,10 @@ export function Tags(props) {
         let active = true;
 
         (async () => {
-            const {ok, data, error} = await request('/api/tag/list', {text: debouncedSearch});
+            const {ok, data, error} = await request('/api/tag/list', {
+                text: debouncedSearch,
+                tags: props.value,
+            });
 
             if (active) {
                 if (ok) {

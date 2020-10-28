@@ -1,6 +1,6 @@
-const _ = require('lodash');
 const {body} = require('express-validator');
 const db = require('../db');
+const {cleanTags} = require('../helpers/utils')
 
 exports.checkAdd = [
     body('text')
@@ -117,12 +117,4 @@ exports.del = async (req, res) => {
     res.json({
         message: 'Item deleted',
     });
-}
-
-function cleanTags(tags) {
-    return _(tags)
-        .map(tag => tag.trim())
-        .compact()
-        .uniq()
-        .value();
 }
