@@ -2,7 +2,16 @@ const {query, getValue, transaction, getClient, clientGetValue, clientQuery} = r
 const {getTagsForMem, addTagsToMem, changeTagsForMem} = require('./tag.db');
 
 async function addItem(userId, text, tags) {
-    return transaction(async function (client) {
+    while (true) {
+        const result = await tryAddItem(userId, text, tags);
+        if (result != null) {
+            return result;
+        }
+    }
+}
+
+async function tryAddItem(userId, text, tags) {
+    return transaction(async function (client, cancel) {
         const now = new Date();
 
         const textSQL = `
@@ -28,7 +37,11 @@ async function addItem(userId, text, tags) {
         const memTextValues = [memId, textId];
         await clientQuery(client, memTextSQL, memTextValues);
 
-        await addTagsToMem(client, userId, memId, tags);
+        const ok = await addTagsToMem(client, userId, memId, tags);
+        if (!ok) {
+            await cancel();
+            return null;
+        }
 
         return {
             memId,
@@ -71,8 +84,23 @@ async function getItem(userId, memId) {
     };
 }
 
-async function resaveItem(userId, memId, text, tags) {
-    return transaction(async function (client) {
+async function reSaveItem(userId, memId, text, tags) {
+    while (true) {
+        const result = await tryReSaveItem(userId, memId, text, tags);
+        if (result != null) {
+            return result;
+        }
+    }
+}
+
+async function tryReSaveItem(userId, memId, text, tags) {
+    return transaction(async function (client, cancel) {
+        const ok = await changeTagsForMem(client, userId, memId, tags);
+        if (!ok) {
+            await cancel();
+            return null;
+        }
+
         const now = new Date();
 
         const textSQL = `
@@ -100,13 +128,20 @@ async function resaveItem(userId, memId, text, tags) {
         const memTextValues = [memId, textId];
         await clientQuery(client, memTextSQL, memTextValues);
 
-        await changeTagsForMem(client, userId, memId, tags);
-
         return textId;
     });
 }
 
 async function updateItem(userId, memId, textId, text, tags) {
+    while (true) {
+        const result = await tryUpdateItem(userId, memId, textId, text, tags);
+        if (result != null) {
+            return result;
+        }
+    }
+}
+
+async function tryUpdateItem(userId, memId, textId, text, tags) {
     const client = await getClient();
 
     try {
@@ -122,8 +157,14 @@ async function updateItem(userId, memId, textId, text, tags) {
         const currentTextId = await clientGetValue(client, getMemSQL, getMemValues, 'text_id');
 
         if (currentTextId != textId) {
-            await client.query('COMMIT');
+            await client.query('ROLLBACK');
             return false;
+        }
+
+        const ok = await changeTagsForMem(client, userId, memId, tags);
+        if (!ok) {
+            await client.query('ROLLBACK');
+            return null;
         }
 
         const now = new Date();
@@ -146,14 +187,12 @@ async function updateItem(userId, memId, textId, text, tags) {
         const memValues = [now, userId, memId];
         await clientQuery(client, memSQL, memValues);
 
-        await changeTagsForMem(client, userId, memId, tags);
-
         await client.query('COMMIT');
         return true;
     } catch (e) {
         await client.query('ROLLBACK');
         if (e.code == 40001) {
-            return false;
+            return null;
         }
         throw e;
     } finally {
@@ -175,7 +214,7 @@ async function delItem(userId, memId) {
 module.exports = {
     addItem,
     getItem,
-    resaveItem,
+    reSaveItem,
     updateItem,
     delItem,
 };

@@ -1,4 +1,4 @@
-const {getValueArray, clientQuery, clientGetValue, clientGetValueArray} = require('./core');
+const {getValueArray, clientQuery, clientGetValueArray} = require('./core');
 
 const listLimit = 20;
 
@@ -65,34 +65,97 @@ async function getTagsForMem(userId, memId) {
 
 async function addTagsToMem(client, userId, memId, tags) {
     if (tags == null || tags.length === 0) {
-        return;
+        return true;
     }
 
-    const {newTagIds, ids} = await getNewTags(client, userId, tags);
+    const tagIds = await getTagIdsForTags(client, userId, tags);
+    if (tagIds === false) {
+        return false;
+    }
+    const {newTagIds, ids} = await getNewTags(client, userId, tagIds);
     await clientQuery(client, insertTagsToMemSQL(newTagIds), insertTagsToMemValues(newTagIds, memId));
-    return updateTagsTime(client, ids);
+    await updateTagsTime(client, ids);
+    return true;
 }
 
 async function changeTagsForMem(client, userId, memId, tags) {
     if (tags == null || tags.length === 0) {
-        return deleteAllTagsForMem(client, memId);
+        await deleteAllTagsForMem(client, memId);
+        return true;
     }
 
     let oldIds = await getTagIdsForMem(client, memId);
-    const {oldTagIds, newTagIds, ids} = await getNewTags(client, userId, tags, oldIds);
+    const tagIds = await getTagIdsForTags(client, userId, tags);
+    if (tagIds === false) {
+        return false;
+    }
+    const {oldTagIds, newTagIds, ids} = await getNewTags(client, userId, tagIds, oldIds);
     await deleteTagsForMem(client, memId, oldTagIds);
     if (newTagIds.length > 0) {
         await clientQuery(client, insertTagsToMemSQL(newTagIds), insertTagsToMemValues(newTagIds, memId));
     }
-    return updateTagsTime(client, ids);
+    await updateTagsTime(client, ids);
+    return true;
 }
 
-async function getNewTags(client, userId, tags, oldIds = []) {
+async function getTagIdsForMem(client, memId) {
+    const sql = `
+        SELECT tag_id FROM mem_tag
+        WHERE mem_id = $1
+    `;
+    const values = [memId];
+    return clientGetValueArray(client, sql, values, 'tag_id');
+}
+
+async function getTagIdsForTags(client, userId, tags) {
+    const getSQL = `
+        SELECT tag_id, tag
+        FROM tag
+        WHERE account_id = $1
+          AND tag = ANY($2);
+    `;
+    const getValues = [userId, tags];
+    const res = await clientQuery(client, getSQL, getValues);
+    const ids = [];
+    let missedTags = [...tags];
+    if (res.rowCount > 0) {
+        for (let i = 0; i < res.rowCount; i++) {
+            const {tag, tag_id} = res.rows[i];
+            ids.push(tag_id);
+            missedTags = missedTags.filter(item => item !== tag);
+        }
+    }
+    if (missedTags.length === 0) {
+        return ids;
+    }
+
+    const now = new Date();
+    const sqlValues = [];
+    const insertValues = [];
+    for (let i = 0; i < missedTags.length; i++) {
+        sqlValues.push(`($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`);
+        insertValues.push(userId, missedTags[i], now);
+    }
+    const insertSQL = 'INSERT INTO tag (account_id, tag, time) VALUES ' +
+        sqlValues.join(', ') +
+        'RETURNING *';
+    try {
+        const tagIds = await clientGetValueArray(client, insertSQL, insertValues, 'tag_id');
+        ids.push(...tagIds);
+    } catch (err) {
+        if (err.constraint === 'tag_account_id_tag') {
+            return false;
+        }
+        throw err;
+    }
+    return ids;
+}
+
+async function getNewTags(client, userId, tagIds, oldIds = []) {
     const ids = [];
     const newTagIds = [];
     let oldTagIds = oldIds;
-    for (const tag of tags) {
-        const tagId = await tagToTagId(client, userId, tag);
+    for (const tagId of tagIds) {
         ids.push(tagId);
 
         if (oldTagIds.includes(tagId)) {
@@ -118,39 +181,6 @@ function insertTagsToMemValues(ids, memId) {
         values.push(memId, ids[i]);
     }
     return values;
-}
-
-async function tagToTagId(client, userId, tag) {
-    const tagId = await getTagId(client, userId, tag);
-    if (tagId) {
-        return tagId;
-    }
-
-    try {
-        const sql = `
-            INSERT INTO tag (account_id, tag, time)
-            VALUES ($1, $2, $3)
-            RETURNING tag_id
-        `;
-        const values = [userId, tag, new Date()];
-        return clientGetValue(client, sql, values, 'tag_id');
-    } catch (err) {
-        if (err.constraint === 'tag_account_id_tag') {
-            return getTagId(client, userId, tag);
-        }
-        throw err;
-    }
-}
-
-async function getTagId(client, userId, tag) {
-    const sql = `
-        SELECT tag_id
-        FROM tag
-        WHERE account_id = $1
-          AND tag = $2
-    `;
-    const values = [userId, tag];
-    return clientGetValue(client, sql, values, 'tag_id');
 }
 
 async function updateTagsTime(client, ids) {
@@ -184,15 +214,6 @@ async function deleteTagsForMem(client, memId, ids) {
     `;
     const values = [memId, ids];
     return clientQuery(client, sql, values);
-}
-
-async function getTagIdsForMem(client, memId) {
-    const sql = `
-        SELECT tag_id FROM mem_tag
-        WHERE mem_id = $1
-    `;
-    const values = [memId];
-    return clientGetValueArray(client, sql, values, 'tag_id');
 }
 
 module.exports = {

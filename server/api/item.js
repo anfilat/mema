@@ -49,7 +49,7 @@ exports.get = async (req, res) => {
     }
 }
 
-exports.checkResave = [
+exports.checkReSave = [
     body('itemId')
         .notEmpty()
         .withMessage('No item id'),
@@ -61,9 +61,9 @@ exports.checkResave = [
         .withMessage('Tags are not array'),
 ];
 
-exports.resave = async (req, res) => {
+exports.reSave = async (req, res) => {
     const {itemId, text, tags} = req.body;
-    const textId = await db.resaveItem(req.userData.userId, itemId, text, cleanTags(tags));
+    const textId = await db.reSaveItem(req.userData.userId, itemId, text, cleanTags(tags));
 
     res.json({
         message: 'Text saved',

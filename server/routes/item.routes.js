@@ -28,10 +28,10 @@ router.post(
 router.post(
     '/resave',
     [
-        ...item.checkResave,
+        ...item.checkReSave,
         stopOnError('Incorrect data'),
     ],
-    item.resave
+    item.reSave
 );
 
 // /api/item/update
