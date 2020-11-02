@@ -9,22 +9,26 @@ async function pgMemQuery(query, values) {
         query = 'BEGIN';
     }
 
+    if (query.startsWith('SAVEPOINT')) {
+        return Promise.resolve();
+    }
+
     query = query.replace(/similarity\(.*\).*,/, '');
 
-    const matchANY = query.match(/ANY\((.*)\)/);
+    const matchANY = query.match(/ANY\s*\((.*)\)/);
     if (matchANY) {
         const value = values[parseInt(matchANY[1].substr(1), 10) - 1]
             .map(val => `"${val}"`)
             .join(',');
-        query = query.replace(/ANY\((.*)\)/, `ANY('{${value}}')`)
+        query = query.replace(/ANY\s*\((.*)\)/, `ANY('{${value}}')`)
     }
 
-    const matchALL = query.match(/!= ALL\((.*)\)/);
+    const matchALL = query.match(/!= ALL\s*\((.*)\)/);
     if (matchALL) {
         const value = values[parseInt(matchALL[1].substr(1), 10) - 1]
             .map(val => `'${val}'`)
             .join(', ');
-        query = query.replace(/!= ALL\((.*)\)/, `NOT IN(${value})`)
+        query = query.replace(/!= ALL\s*\((.*)\)/, `NOT IN(${value})`)
     }
 
     return new Promise((resolve, reject) => {
