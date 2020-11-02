@@ -75,7 +75,7 @@ export function Tags(props) {
         return () => {
             active = false;
         };
-    }, [open, debouncedSearch, request, showError]);
+    }, [open, debouncedSearch, request, showError, props.value]);
 
     React.useEffect(() => {
         if (!open) {
