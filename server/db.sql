@@ -19,12 +19,14 @@ CREATE TABLE IF NOT EXISTS text (
     text_id serial PRIMARY KEY,
     account_id int NOT NULL,
     text TEXT,
+    plain_text TEXT,
     time timestamptz NOT NULL,
 
     CONSTRAINT text_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS text_account_id_idx ON text(account_id);
+CREATE INDEX IF NOT EXISTS text_trgm_tag ON text USING gin (plain_text gin_trgm_ops);
 
 CREATE TABLE IF NOT EXISTS mem (
     mem_id serial PRIMARY KEY,

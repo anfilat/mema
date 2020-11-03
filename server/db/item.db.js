@@ -1,16 +1,18 @@
 const {query, getValue, transaction, getClient, clientGetValue, clientQuery} = require('./core');
 const {getTagsForMem, addTagsToMem, changeTagsForMem} = require('./tag.db');
+const {mdToPlain} = require('../helpers/md');
 
 async function addItem(userId, text, tags) {
     return transaction(async function (client) {
         const now = new Date();
+        const plainText = mdToPlain(text);
 
         const textSQL = `
-            INSERT INTO text (account_id, text, time)
-            VALUES ($1, $2, $3)
+            INSERT INTO text (account_id, text, plain_text, time)
+            VALUES ($1, $2, $3, $4)
             RETURNING text_id
         `;
-        const textValues = [userId, text, now];
+        const textValues = [userId, text, plainText, now];
         const textId = await clientGetValue(client, textSQL, textValues, 'text_id');
 
         const memSQL = `
@@ -74,13 +76,14 @@ async function getItem(userId, memId) {
 async function reSaveItem(userId, memId, text, tags) {
     return transaction(async function (client) {
         const now = new Date();
+        const plainText = mdToPlain(text);
 
         const textSQL = `
-            INSERT INTO text (account_id, text, time)
-            VALUES ($1, $2, $3)
+            INSERT INTO text (account_id, text, plain_text, time)
+            VALUES ($1, $2, $3, $4)
             RETURNING text_id
         `;
-        const textValues = [userId, text, now];
+        const textValues = [userId, text, plainText, now];
         const textId = await clientGetValue(client, textSQL, textValues, 'text_id');
 
         const memSQL = `
@@ -127,15 +130,17 @@ async function updateItem(userId, memId, textId, text, tags) {
         }
 
         const now = new Date();
+        const plainText = mdToPlain(text);
 
         const textSQL = `
             UPDATE text
             SET text = $1,
-                time = $2
-            WHERE account_id = $3
-              AND text_id = $4
+                plain_text = $2,
+                time = $3
+            WHERE account_id = $4
+              AND text_id = $5
         `;
-        const textValues = [text, now, userId, textId];
+        const textValues = [text, plainText, now, userId, textId];
         await clientQuery(client, textSQL, textValues);
 
         const memSQL = `

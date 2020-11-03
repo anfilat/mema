@@ -131,6 +131,7 @@ const sqlInit = `
         text_id serial PRIMARY KEY,
         account_id int NOT NULL,
         text TEXT,
+        plain_text TEXT,
         time timestamp NOT NULL
     );
 
@@ -185,7 +186,7 @@ const sqlInit = `
 
     INSERT INTO account (email, password) VALUES ('test@test.com', '$2b$10$Buow0yAuljN7cs8vmrtGFOMHd9/78dx7cYuPYop.aA5WdcDX380Ri');
     INSERT INTO token (token, account_id) VALUES ('someToken', 1);
-    INSERT INTO text (account_id, text, time) VALUES (1, 'Some text', now());
+    INSERT INTO text (account_id, text, plain_text, time) VALUES (1, 'Some text', 'Some text', now());
     INSERT INTO mem (account_id, text_id, create_time, last_change_time) VALUES (1, 1, now(), now());
     INSERT INTO mem_text (mem_id, text_id) VALUES (1, 1);
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'something', now());
