@@ -1,20 +1,11 @@
-import React from 'react';
-import {Container} from "@material-ui/core";
+import React, {useEffect, useState} from 'react';
+import {Container, CircularProgress} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
-import {mdToHtml} from '../utils';
+import {useHttp} from '../hooks/http.hook';
 import {Title} from '../components/Title';
 import {Item} from '../components/Item';
-
-const text = `
-Некий текст. Текст для *проверки* __работы__
-
-# Заголовок
-
-- Список
-- Пункт списка
-`;
-
-const html = mdToHtml(text);
+import {useSnackbarEx} from "../hooks/snackbarEx.hook";
+import {mdToHtml} from '../utils';
 
 const useStyles = makeStyles(theme => ({
     main: {
@@ -24,18 +15,66 @@ const useStyles = makeStyles(theme => ({
             'margin-bottom': `${theme.spacing(1)}px`,
         }
     },
+    loader: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 }));
 
 export const ItemsPage = () => {
     const classes = useStyles();
+    const {showError} = useSnackbarEx();
+    const {loading, request} = useHttp();
+    const [items, setItems] = useState([]);
+    let content;
+
+    useEffect(() => {
+        let active = true;
+
+        (async () => {
+            const {ok, data, error} = await request('/api/search/list', {
+                text: '',
+            });
+
+            if (active) {
+                if (ok) {
+                    setItems(data.list.map(({id, text, tags, time}) => ({
+                        id,
+                        html: mdToHtml(text),
+                        tags,
+                        time,
+                    })));
+                } else {
+                    showError(error);
+                }
+            }
+        })();
+
+        return () => {
+            active = false;
+        };
+    }, [request, showError]);
+
+    if (loading) {
+        content = <div className={classes.loader}>
+            <CircularProgress size={60} />
+        </div>;
+    } else {
+        content = <>
+            {items.map(({id, html, tags}) => <Item
+                text={html}
+                tags={tags}
+                key={id}
+            />)}
+        </>;
+    }
 
     return (
         <>
             <Title title="Items"/>
             <Container component="main" maxWidth="md" className={classes.main}>
-                <Item text={html} tags={['Тэгг', 'и вот она нарядная']} />
-                <Item text={html} tags={[]} />
-                <Item text={html} tags={['Как-то так']}/>
+                {content}
             </Container>
         </>
     );

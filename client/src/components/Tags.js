@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {TextField, CircularProgress} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
@@ -50,7 +50,7 @@ export function Tags(props) {
         return filtered;
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!open) {
             return;
         }
@@ -77,7 +77,7 @@ export function Tags(props) {
         };
     }, [open, debouncedSearch, request, showError, props.value]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!open) {
             setOptions([]);
         }
