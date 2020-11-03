@@ -21,8 +21,11 @@ export const Item = (props) => {
 
     return (
         <div className={classes.main}>
+            <div>
+                {renderTime(props.time)}
+            </div>
             <div
-                dangerouslySetInnerHTML={{__html: props.text}}
+                dangerouslySetInnerHTML={{__html: props.html}}
             />
             <div className={classes.tags}>
                 {props.tags.map(tag => <Chip label={tag} key={tag}/>)}
@@ -30,3 +33,14 @@ export const Item = (props) => {
         </div>
     );
 };
+
+function renderTime(time) {
+    const date = new Date(time);
+    const year = String(date.getFullYear()).padStart(4, '0');
+    const month = String(date.getMonth()).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}

@@ -62,9 +62,11 @@ export const ItemsPage = () => {
         </div>;
     } else {
         content = <>
-            {items.map(({id, html, tags}) => <Item
-                text={html}
+            {items.map(({id, html, tags, time}) => <Item
+                id={id}
+                html={html}
                 tags={tags}
+                time={time}
                 key={id}
             />)}
         </>;
