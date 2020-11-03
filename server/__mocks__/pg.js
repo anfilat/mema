@@ -186,14 +186,34 @@ const sqlInit = `
 
     INSERT INTO account (email, password) VALUES ('test@test.com', '$2b$10$Buow0yAuljN7cs8vmrtGFOMHd9/78dx7cYuPYop.aA5WdcDX380Ri');
     INSERT INTO token (token, account_id) VALUES ('someToken', 1);
-    INSERT INTO text (account_id, text, plain_text, time) VALUES (1, 'Some text', 'Some text', now());
-    INSERT INTO mem (account_id, text_id, create_time, last_change_time) VALUES (1, 1, now(), now());
-    INSERT INTO mem_text (mem_id, text_id) VALUES (1, 1);
+
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'something', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'other', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'it', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'and it', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'it''s', now());
+    INSERT INTO tag (account_id, tag, time) VALUES (1, 'todo', now());
+    INSERT INTO tag (account_id, tag, time) VALUES (1, 'перекат', now());
+
+    INSERT INTO text (account_id, text, plain_text, time) VALUES (1, 'Some text', 'Some text', now());
+    INSERT INTO mem (account_id, text_id, create_time, last_change_time) VALUES (1, 1, now(), now());
+    INSERT INTO mem_text (mem_id, text_id) VALUES (1, 1);
     INSERT INTO mem_tag (mem_id, tag_id) VALUES (1, 1);
     INSERT INTO mem_tag (mem_id, tag_id) VALUES (1, 2);
+
+    INSERT INTO text (account_id, text, plain_text, time) VALUES (1, 'Test words', 'Test words', now());
+    INSERT INTO mem (account_id, text_id, create_time, last_change_time) VALUES (1, 2, now(), now());
+    INSERT INTO mem_text (mem_id, text_id) VALUES (2, 2);
+    INSERT INTO mem_tag (mem_id, tag_id) VALUES (2, 6);
+    INSERT INTO mem_tag (mem_id, tag_id) VALUES (2, 7);
+    
+    INSERT INTO text (account_id, text, plain_text, time) VALUES (1, 'Another test words', 'Another test words', now());
+    INSERT INTO mem (account_id, text_id, create_time, last_change_time) VALUES (1, 3, now(), now());
+    INSERT INTO mem_text (mem_id, text_id) VALUES (3, 3);
+    INSERT INTO mem_tag (mem_id, tag_id) VALUES (3, 6);
+    INSERT INTO mem_tag (mem_id, tag_id) VALUES (3, 7);
+
+    INSERT INTO text (account_id, text, plain_text, time) VALUES (1, 'Прекрасный переход', 'Прекрасный переход', now());
+    INSERT INTO mem (account_id, text_id, create_time, last_change_time) VALUES (1, 4, now(), now());
+    INSERT INTO mem_text (mem_id, text_id) VALUES (4, 4);
 `;

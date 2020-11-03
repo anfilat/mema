@@ -46,7 +46,7 @@ describe('tag list', () => {
             .expect(200)
             .expect(({body}) => {
                 expect(body).toHaveProperty('list');
-                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'it\'s']);
+                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'it\'s', 'todo', 'перекат']);
             });
     });
 
@@ -60,12 +60,12 @@ describe('tag list', () => {
             .expect(200)
             .expect(({body}) => {
                 expect(body).toHaveProperty('list');
-                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'and it', 'it\'s']);
+                expect(body.list).toIncludeSameMembers(['something', 'other', 'it', 'and it', 'it\'s', 'todo', 'перекат']);
             });
     });
 
-    test('fail without data', () => {
-        return request(app)
+    test('fail without data', async () => {
+        await request(app)
             .post('/api/tag/list')
             .set('Cookie', 'token=someToken')
             .expect(400)

@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
+const {dataConst} = require('../../testHelpers');
 
 describe('item resave', () => {
     beforeEach(() => {
@@ -23,7 +24,7 @@ describe('item resave', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
                 expect(body).toHaveProperty('itemId', 1);
-                expect(body).toHaveProperty('textId', 2);
+                expect(body).toHaveProperty('textId', dataConst.lastTextId + 1);
             });
 
         expect((await query(sqlNewTag)).rowCount).toBe(1);
@@ -45,7 +46,7 @@ describe('item resave', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
                 expect(body).toHaveProperty('itemId', 1);
-                expect(body).toHaveProperty('textId', 2);
+                expect(body).toHaveProperty('textId', dataConst.lastTextId + 1);
             });
 
         const sqlMemTags = `SELECT tag_id FROM mem_tag WHERE mem_id = 1`;

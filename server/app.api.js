@@ -18,6 +18,12 @@ module.exports = function setupAPI(app) {
         require('./routes/item.routes')
     );
 
+    app.use('/api/search',
+        checkAuth,
+        refreshCookie,
+        require('./routes/search.routes')
+    );
+
     app.use('/api/tag',
         checkAuth,
         refreshCookie,

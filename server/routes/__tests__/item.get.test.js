@@ -35,7 +35,7 @@ describe('item get', () => {
             .post('/api/item/get')
             .set('Cookie', 'token=someToken')
             .send({
-                itemId: 2,
+                itemId: 777,
             })
             .expect(400)
             .expect(({body}) => {

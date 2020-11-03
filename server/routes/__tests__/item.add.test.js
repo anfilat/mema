@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
+const {dataConst} = require('../../testHelpers');
 
 describe('item add', () => {
     beforeEach(() => {
@@ -21,12 +22,12 @@ describe('item add', () => {
             .expect(201)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
-                expect(body).toHaveProperty('itemId', 2);
-                expect(body).toHaveProperty('textId', 2);
+                expect(body).toHaveProperty('itemId', dataConst.lastMemId + 1);
+                expect(body).toHaveProperty('textId', dataConst.lastTextId + 1);
             });
 
         expect((await query(sqlNewTag)).rowCount).toBe(1);
-        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = 2`;
+        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = ${dataConst.lastMemId + 1}`;
         expect((await query(sqlMemTags)).rows[0].count).toBe(2);
     });
 
@@ -40,8 +41,8 @@ describe('item add', () => {
             .expect(201)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
-                expect(body).toHaveProperty('itemId', 2);
-                expect(body).toHaveProperty('textId', 2);
+                expect(body).toHaveProperty('itemId', dataConst.lastMemId + 1);
+                expect(body).toHaveProperty('textId', dataConst.lastTextId + 1);
             });
     });
 
@@ -58,11 +59,11 @@ describe('item add', () => {
             .expect(201)
             .expect(({body}) => {
                 expect(body).toHaveProperty('message', 'Text saved');
-                expect(body).toHaveProperty('itemId', 2);
-                expect(body).toHaveProperty('textId', 2);
+                expect(body).toHaveProperty('itemId', dataConst.lastMemId + 1);
+                expect(body).toHaveProperty('textId', dataConst.lastTextId + 1);
             });
 
-        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = 2`;
+        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = ${dataConst.lastMemId + 1}`;
         expect((await query(sqlMemTags)).rows[0].count).toBe(1);
     });
 
