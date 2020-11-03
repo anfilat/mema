@@ -1,6 +1,6 @@
 import React from 'react';
 import {makeStyles} from "@material-ui/core/styles";
-import {Chip} from '@material-ui/core';
+import {Chip, Card, CardContent} from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
     main: {
@@ -20,17 +20,17 @@ export const Item = (props) => {
     const classes = useStyles();
 
     return (
-        <div className={classes.main}>
-            <div>
+        <Card variant="outlined">
+            <CardContent>
                 {renderTime(props.time)}
-            </div>
-            <div
-                dangerouslySetInnerHTML={{__html: props.html}}
-            />
-            <div className={classes.tags}>
-                {props.tags.map(tag => <Chip label={tag} key={tag}/>)}
-            </div>
-        </div>
+                <div
+                    dangerouslySetInnerHTML={{__html: props.html}}
+                />
+                <div className={classes.tags}>
+                    {props.tags.map(tag => <Chip label={tag} key={tag}/>)}
+                </div>
+            </CardContent>
+        </Card>
     );
 };
 
