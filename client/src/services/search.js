@@ -7,3 +7,7 @@ export function setSearch(value) {
 export function getSearch() {
     return searchStr;
 }
+
+export function clean() {
+    searchStr = '';
+}

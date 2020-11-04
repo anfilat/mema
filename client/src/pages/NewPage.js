@@ -83,7 +83,7 @@ export const NewPage = () => {
     const [outdated, setOutdated] = useState(false);
     const [savedText, setSavedText] = useBindLocalStorage('newPageSavedText', '');
     const [savedTags, setSavedTags] = useBindLocalStorage('newPageSavedTags', []);
-    const [openSpeedDial, setOpenSpeedDial] = React.useState(false);
+    const [openSpeedDial, setOpenSpeedDial] = useState(false);
     const inEditing = !!itemId;
     const blockSave = (text.trim() === '') ||
         (text === savedText && _.isEqual(tags, savedTags));

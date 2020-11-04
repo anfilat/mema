@@ -1,4 +1,5 @@
 import {useState, useCallback, useEffect} from 'react';
+import {clean} from '../services/search';
 
 const storageName = 'userData';
 
@@ -17,6 +18,7 @@ export const useAuth = () => {
     const logout = useCallback(() => {
         setUserId(null);
         localStorage.clear();
+        clean();
     }, []);
 
     useEffect(() => {
