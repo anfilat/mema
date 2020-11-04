@@ -4,8 +4,7 @@ import {Chip, Card, CardContent} from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
     main: {
-        padding: `${theme.spacing(1)}px`,
-        border: '1px solid #AAA',
+        marginBottom: `${theme.spacing(1)}px`,
     },
     tags: {
         display: 'flex',
@@ -20,7 +19,7 @@ export const Item = (props) => {
     const classes = useStyles();
 
     return (
-        <Card variant="outlined">
+        <Card variant="outlined" className={classes.main}>
             <CardContent>
                 {renderTime(props.time)}
                 <div
