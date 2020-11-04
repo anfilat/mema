@@ -1,15 +1,10 @@
 import React from 'react';
 import {useHistory} from 'react-router-dom';
-import { makeStyles, withStyles } from '@material-ui/core/styles';
-import {AppBar, Toolbar, Box, Button} from '@material-ui/core';
+import {withStyles} from '@material-ui/core/styles';
+import {AppBar, Toolbar, Button} from '@material-ui/core';
+import {Search} from './Search';
 import {AppMenu} from './AppMenu';
 import {getSearch} from '../services/search';
-
-const useStyles = makeStyles({
-    toolbar: {
-        flexGrow: 1,
-    },
-});
 
 const NavButton = withStyles((theme) => ({
     root: {
@@ -19,7 +14,6 @@ const NavButton = withStyles((theme) => ({
 
 export const Navbar = () => {
     const history = useHistory();
-    const classes = useStyles();
 
     function handleNewPage() {
         history.push('/new');
@@ -37,14 +31,13 @@ export const Navbar = () => {
     return (
         <AppBar position="sticky">
             <Toolbar>
-                <Box className={classes.toolbar}>
-                    <NavButton onClick={handleNewPage}>
-                        New
-                    </NavButton>
-                    <NavButton onClick={handleItemsPage}>
-                        Items
-                    </NavButton>
-                </Box>
+                <NavButton onClick={handleNewPage}>
+                    New
+                </NavButton>
+                <NavButton onClick={handleItemsPage}>
+                    Items
+                </NavButton>
+                <Search/>
                 <AppMenu/>
             </Toolbar>
         </AppBar>

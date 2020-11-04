@@ -1,7 +1,7 @@
 import React, {useContext, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 import {IconButton, Menu, MenuItem} from '@material-ui/core';
-import AccountCircle from '@material-ui/icons/AccountCircle';
+import {AccountCircle} from '@material-ui/icons';
 import {AuthContext} from '../context/AuthContext';
 import {useHttp} from "../hooks/http.hook";
 

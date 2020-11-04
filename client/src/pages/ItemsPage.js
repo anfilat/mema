@@ -4,7 +4,7 @@ import {Container, CircularProgress} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {Virtuoso} from 'react-virtuoso'
 import {useHttp} from '../hooks/http.hook';
-import {setSearch} from '../services/search';
+import {getSearch, setSearch} from '../services/search';
 import {Title} from '../components/Title';
 import {Item} from '../components/Item';
 import {useSnackbarEx} from "../hooks/snackbarEx.hook";
@@ -30,10 +30,18 @@ export const ItemsPage = () => {
     const [total, setTotal] = useState(0);
     const [loadMore, setLoadMore] = useState(true);
     const [allDataHere, setAllDataHere] = useState(false);
-    const search = new URLSearchParams(useLocation().search).get('search') ?? '';
+    const urlSearch = new URLSearchParams(useLocation().search).get('search') ?? '';
+    const search = getSearch();
     const title = search ? `Items: ${search}` : 'Items';
 
-    setSearch(search);
+    if (search !== urlSearch) {
+        setSearch(urlSearch);
+
+        setItems([]);
+        setTotal(0);
+        setLoadMore(true)
+        setAllDataHere(false);
+    }
 
     useEffect(() => {
         if (!loadMore) {
