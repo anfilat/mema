@@ -1,8 +1,10 @@
 import React, {useEffect, useState} from 'react';
+import {useLocation} from "react-router-dom";
 import {Container, CircularProgress} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {Virtuoso} from 'react-virtuoso'
 import {useHttp} from '../hooks/http.hook';
+import {setSearch} from '../services/search';
 import {Title} from '../components/Title';
 import {Item} from '../components/Item';
 import {useSnackbarEx} from "../hooks/snackbarEx.hook";
@@ -28,6 +30,10 @@ export const ItemsPage = () => {
     const [total, setTotal] = useState(0);
     const [loadMore, setLoadMore] = useState(true);
     const [allDataHere, setAllDataHere] = useState(false);
+    const search = new URLSearchParams(useLocation().search).get('search') ?? '';
+    const title = search ? `Items: ${search}` : 'Items';
+
+    setSearch(search);
 
     useEffect(() => {
         if (!loadMore) {
@@ -38,7 +44,7 @@ export const ItemsPage = () => {
 
         (async () => {
             const {ok, data, error} = await request('/api/search/list', {
-                text: '',
+                text: search,
                 offset: total,
                 limit: itemsLimit,
             });
@@ -56,7 +62,7 @@ export const ItemsPage = () => {
                     setTotal(total => total + newItems.length);
 
                     if (newItems.length < itemsLimit) {
-                        setAllDataHere(false);
+                        setAllDataHere(true);
                     }
                 } else {
                     showError(error);
@@ -67,7 +73,7 @@ export const ItemsPage = () => {
         return () => {
             active = false;
         };
-    }, [request, showError, loadMore, total]);
+    }, [search, loadMore, total, request, showError]);
 
     function loadNext() {
         if (allDataHere) {
@@ -100,7 +106,7 @@ export const ItemsPage = () => {
 
     return (
         <>
-            <Title title="Items"/>
+            <Title title={title}/>
             <Container component="main" maxWidth="md" className={classes.main}>
                 <Virtuoso
                     style={{ width: '100%', height: '100%' }}

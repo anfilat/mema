@@ -5,6 +5,7 @@ import {AppBar, Toolbar, Box, IconButton, Menu, MenuItem, Button} from '@materia
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import {AuthContext} from '../context/AuthContext';
 import {useHttp} from "../hooks/http.hook";
+import {getSearch} from '../services/search';
 
 const useStyles = makeStyles({
     toolbar: {
@@ -47,7 +48,12 @@ export const Navbar = () => {
     }
 
     function handleItemsPage() {
-        history.push('/items');
+        const search = getSearch();
+        if (search) {
+            history.push(`/items?search=${search}`);
+        } else {
+            history.push('/items');
+        }
     }
 
     return (
