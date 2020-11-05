@@ -1,6 +1,6 @@
-const _ = require('lodash');
 const {body} = require('express-validator');
 const db = require('../db');
+const {parseTerms} = require('../helpers/utils')
 
 exports.checkList = [
     body('text')
@@ -15,23 +15,11 @@ exports.checkList = [
 ];
 
 exports.list = async (req, res) => {
-    const {text, limit, offset} = req.body;
+    const {text, limit = 20, offset = 0} = req.body;
     const list = await db.listItems(req.userData.userId, parseTerms(text), limit, offset);
 
     res
         .json({
             list,
         });
-}
-
-const parseTermsRe = /\s*("[^"]+"|\S+)\s*/g;
-
-function parseTerms(text) {
-    return _.map(text.trim().match(parseTermsRe), term => {
-        term = term.trim();
-        if (term[0] === '"') {
-            return term.substring(1, term.length - 1);
-        }
-        return term;
-    });
 }

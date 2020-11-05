@@ -1,6 +1,6 @@
 const {query} = require('./core');
 
-async function listItems(userId, terms, limit = 20, offset = 0) {
+async function listItems(userId, terms, limit, offset) {
     let sql;
     let values;
 
