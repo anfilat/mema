@@ -1,5 +1,5 @@
 import React, {useContext} from 'react';
-import {Link as RouterLink} from 'react-router-dom'
+import {Link as RouterLink} from 'react-router-dom';
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {makeStyles} from '@material-ui/core/styles';
 import {Copyright} from '../components/Copyright';

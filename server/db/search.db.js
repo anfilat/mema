@@ -23,8 +23,7 @@ async function listItems(userId, terms, limit, offset) {
                    ARRAY_AGG(tag.tag)       AS tags,
                    ${sumPoints.join(' + ')} AS sim
             FROM mem
-                     INNER JOIN mem_text ON mem.mem_id = mem_text.mem_id
-                     LEFT JOIN text on mem_text.text_id = text.text_id
+                     LEFT JOIN text on mem.text_id = text.text_id
                      INNER JOIN mem_tag ON mem.mem_id = mem_tag.mem_id
                      LEFT JOIN tag on mem_tag.tag_id = tag.tag_id
             WHERE mem.account_id = $1
@@ -41,8 +40,7 @@ async function listItems(userId, terms, limit, offset) {
                    mem.last_change_time,
                    ARRAY_AGG(tag.tag) AS tags
             FROM mem
-                     INNER JOIN mem_text ON mem.mem_id = mem_text.mem_id
-                     LEFT JOIN text on mem_text.text_id = text.text_id
+                     LEFT JOIN text on mem.text_id = text.text_id
                      INNER JOIN mem_tag ON mem.mem_id = mem_tag.mem_id
                      LEFT JOIN tag on mem_tag.tag_id = tag.tag_id
             WHERE mem.account_id = $1

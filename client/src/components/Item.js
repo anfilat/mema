@@ -1,6 +1,7 @@
 import React from 'react';
+import {Link as RouterLink} from 'react-router-dom';
 import {makeStyles} from "@material-ui/core/styles";
-import {Chip, Card, CardContent} from '@material-ui/core';
+import {Chip, Card, CardContent, Box, Link} from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
     main: {
@@ -17,11 +18,17 @@ const useStyles = makeStyles(theme => ({
 
 export const Item = (props) => {
     const classes = useStyles();
+    const editLink = `/edit/${props.id}`;
 
     return (
         <Card variant="outlined" className={classes.main}>
             <CardContent>
-                {renderTime(props.time)}
+                <Box display="flex" justifyContent="space-between">
+                    {renderTime(props.time)}
+                    <Link component={RouterLink} to={editLink} variant="body2">
+                        Edit
+                    </Link>
+                </Box>
                 <div
                     dangerouslySetInnerHTML={{__html: props.html}}
                 />

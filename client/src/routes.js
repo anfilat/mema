@@ -4,6 +4,7 @@ import {LoginPage} from './pages/LoginPage';
 import {RegisterPage} from './pages/RegisterPage';
 import {NewPage} from './pages/NewPage';
 import {ItemsPage} from './pages/ItemsPage';
+import {EditPage} from './pages/EditPage';
 
 export const useRoutes = isAuthenticated => {
     if (isAuthenticated) {
@@ -14,6 +15,9 @@ export const useRoutes = isAuthenticated => {
                 </Route>
                 <Route path="/items" exact>
                     <ItemsPage/>
+                </Route>
+                <Route path="/edit/:id" exact>
+                    <EditPage/>
                 </Route>
                 <Redirect to="/new"/>
             </Switch>
