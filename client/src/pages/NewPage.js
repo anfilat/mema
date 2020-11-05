@@ -27,7 +27,8 @@ const useStyles = makeStyles(theme => ({
             display: 'flex',
             'flex-direction': 'column',
             '& .ck-editor__main': {
-                'flex-grow': 1,
+                flexGrow: 1,
+                flexBasis: 0,
                 overflow: 'auto',
                 '& .ck-content': {
                     height: '100%',
