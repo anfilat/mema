@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import _ from 'lodash';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid, Backdrop} from "@material-ui/core";
@@ -7,7 +7,7 @@ import {Delete as DeleteIcon, Update as UpdateIcon} from '@material-ui/icons';
 import {makeStyles} from "@material-ui/core/styles";
 import {Title} from '../components/Title';
 import {Tags} from '../components/Tags';
-import {useBindLocalStorage} from '../hooks/bindLocalStorage.hook';
+import {useLocalStorageVars} from '../hooks/bindLocalStorage.hook';
 import {useEditor} from '../hooks/editor.hook';
 import {useHttp} from '../hooks/http.hook';
 import {useSnackbarEx} from '../hooks/snackbarEx.hook';
@@ -71,34 +71,51 @@ const config = {
     ],
 };
 
+const initialVars = {
+    itemId: null,
+    textId: null,
+    text: '',
+    tags: [],
+    savedText: '',
+    savedTags: [],
+};
+
 export const NewPage = () => {
     const classes = useStyles();
     const {initEditor, focusEditor} = useEditor();
     const {showSuccess, showError} = useSnackbarEx();
     const {loading, request} = useHttp();
-    const [text, setText] = useBindLocalStorage('newPageText', '');
-    const [itemId, setItemId] = useBindLocalStorage('newPageItemId', null);
-    const [textId, setTextId] = useBindLocalStorage('newPageTextId', null);
-    const [tags, setTags] = useBindLocalStorage('newPageTags', []);
+    const [{
+        itemId,
+        textId,
+        text,
+        tags,
+        savedText,
+        savedTags,
+    }, changeVars, delVars] = useLocalStorageVars('newPage', initialVars);
     const [outdated, setOutdated] = useState(false);
-    const [savedText, setSavedText] = useBindLocalStorage('newPageSavedText', '');
-    const [savedTags, setSavedTags] = useBindLocalStorage('newPageSavedTags', []);
     const [openSpeedDial, setOpenSpeedDial] = useState(false);
     const inEditing = !!itemId;
-    const blockSave = (text.trim() === '') ||
-        (text === savedText && _.isEqual(tags, savedTags));
+    const isSaved = text === savedText && _.isEqual(tags, savedTags);
+    const blockSave = isSaved || (text.trim() === '');
+
+    useEffect(() => {
+        return () => {
+            if (isSaved) {
+                delVars();
+            }
+            console.log('the end');
+        };
+    });
 
     function changeEditor(event, editor) {
-        setText(editor.getData());
+        changeVars({
+            text: editor.getData(),
+        });
     }
 
     function clickReset() {
-        setText('');
-        setTags([]);
-        setSavedText('');
-        setSavedTags([]);
-        setItemId(null);
-        setTextId(null);
+        changeVars(initialVars);
         setOutdated(false);
         focusEditor();
     }
@@ -118,10 +135,12 @@ export const NewPage = () => {
             tags,
         });
         if (ok) {
-            setItemId(data.itemId);
-            setTextId(data.textId);
-            setSavedText(text);
-            setSavedTags(tags);
+            changeVars({
+                itemId: data.itemId,
+                textId: data.textId,
+                savedText: text,
+                savedTags: tags,
+            });
 
             showSuccess(data.message);
         } else {
@@ -137,8 +156,10 @@ export const NewPage = () => {
             textId,
         });
         if (ok) {
-            setSavedText(text);
-            setSavedTags(tags);
+            changeVars({
+                savedText: text,
+                savedTags: tags,
+            });
 
             showSuccess(data.message);
         } else {
@@ -159,12 +180,13 @@ export const NewPage = () => {
         if (ok) {
             const {textId, text, tags} = data;
 
-            setTextId(textId);
-            setText(text);
-            setTags(tags);
-
-            setSavedText(text);
-            setSavedTags(tags);
+            changeVars({
+                textId,
+                text,
+                tags,
+                savedText: text,
+                savedTags: tags,
+            });
 
             setOutdated(false);
         } else {
@@ -185,6 +207,12 @@ export const NewPage = () => {
         } else {
             showError(error);
         }
+    }
+
+    function setTags(tags) {
+        changeVars({
+            tags,
+        });
     }
 
     function handleOpenSpeedDial() {
