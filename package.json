@@ -6,9 +6,9 @@
     "start": "cd server && cross-env NODE_ENV=production node index.js",
     "server": "cd server && nodemon index.js",
     "server:install": "npm install --prefix server",
-    "client": "npm run start --prefix client",
+    "client": "cross-env REACT_APP_GIT_SHA=`git rev-parse --short HEAD` npm run start --prefix client",
     "client:install": "npm install --prefix client",
-    "client:build": "npm run build --prefix client",
+    "client:build": "cross-env REACT_APP_GIT_SHA=`git rev-parse --short HEAD` npm run build --prefix client",
     "dev": "cross-env NODE_ENV=development concurrently \"npm run server\" \"npm run client\"",
     "updatedb": "cd server && node upDB.js",
     "update": "npm install && npm run server:install && npm run client:install && npm run client:build && npm run updatedb"

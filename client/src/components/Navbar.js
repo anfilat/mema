@@ -31,6 +31,7 @@ export const Navbar = () => {
     return (
         <AppBar position="sticky">
             <Toolbar>
+                <AppMenu/>
                 <NavButton onClick={handleNewPage}>
                     New
                 </NavButton>
@@ -38,7 +39,6 @@ export const Navbar = () => {
                     Items
                 </NavButton>
                 <Search/>
-                <AppMenu/>
             </Toolbar>
         </AppBar>
     );

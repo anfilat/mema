@@ -1,16 +1,17 @@
 import React, {useContext, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 import {IconButton, Menu, MenuItem} from '@material-ui/core';
-import {AccountCircle} from '@material-ui/icons';
+import {Menu as MenuIcon} from '@material-ui/icons';
 import {AuthContext} from '../context/AuthContext';
 import {useHttp} from "../hooks/http.hook";
+import projectInfo from "../../package.json";
 
 export const AppMenu = () => {
     const history = useHistory();
     const auth = useContext(AuthContext);
     const {loading, request} = useHttp();
     const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
+    const isOpen = Boolean(anchorEl);
 
     function handleMenu(event) {
         setAnchorEl(event.currentTarget);
@@ -31,13 +32,13 @@ export const AppMenu = () => {
     return (
         <>
             <IconButton
-                aria-label="account of current user"
+                aria-label="show more"
                 aria-controls="menu-appbar"
                 aria-haspopup="true"
                 onClick={handleMenu}
                 color="inherit"
             >
-                <AccountCircle />
+                <MenuIcon />
             </IconButton>
             <Menu
                 id="menu-appbar"
@@ -51,13 +52,17 @@ export const AppMenu = () => {
                     vertical: 'top',
                     horizontal: 'right',
                 }}
-                open={open}
+                open={isOpen}
                 onClose={handleMenuClose}
             >
                 <MenuItem
                     onClick={handleLogout}
                     disabled={loading}>
                     Logout
+                </MenuItem>
+                <MenuItem
+                    onClick={handleMenuClose}>
+                    {`MemA ${projectInfo.version}-${process.env.REACT_APP_GIT_SHA}`}
                 </MenuItem>
             </Menu>
         </>
