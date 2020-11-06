@@ -1,5 +1,6 @@
 import React from 'react';
 import {useHistory} from 'react-router-dom';
+import {useHotkeys} from 'react-hotkeys-hook';
 import {withStyles} from '@material-ui/core/styles';
 import {AppBar, Toolbar, Button} from '@material-ui/core';
 import {Search} from './Search';
@@ -14,6 +15,21 @@ const NavButton = withStyles((theme) => ({
 
 export const Navbar = () => {
     const history = useHistory();
+
+    useHotkeys('alt+n,alt+i', (event, handler) => {
+        event.preventDefault();
+
+        switch (handler.key) {
+            case 'alt+n':
+                handleNewPage();
+                break;
+            case 'alt+i':
+                handleItemsPage();
+                break;
+        }
+    }, {
+        filter: () => true,
+    });
 
     function handleNewPage() {
         history.push('/new');

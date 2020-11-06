@@ -4,6 +4,7 @@ import {Container, CircularProgress} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import {Virtuoso} from 'react-virtuoso'
 import {useHttp} from '../hooks/http.hook';
+import {useMounted} from '../hooks/mounted.hook';
 import {getSearch, setSearch} from '../services/search';
 import {Title} from '../components/Title';
 import {Item} from '../components/Item';
@@ -26,6 +27,7 @@ export const ItemsPage = () => {
     const classes = useStyles();
     const {showError} = useSnackbarEx();
     const {request} = useHttp();
+    const mounted = useMounted();
     const [items, setItems] = useState([]);
     const [total, setTotal] = useState(0);
     const [loadMore, setLoadMore] = useState(true);
@@ -48,40 +50,34 @@ export const ItemsPage = () => {
             return;
         }
 
-        let active = true;
-
-        (async () => {
-            const {ok, data, error} = await request('/api/search/list', {
-                text: search,
-                offset: total,
-                limit: itemsLimit,
-            });
-
-            if (active) {
-                setLoadMore(false);
-                if (ok) {
-                    const newItems = data.list.map(({id, text, tags, time}) => ({
-                        id,
-                        html: mdToHtml(text),
-                        tags,
-                        time,
-                    }));
-                    setItems(items => items.concat(newItems));
-                    setTotal(total => total + newItems.length);
-
-                    if (newItems.length < itemsLimit) {
-                        setAllDataHere(true);
-                    }
-                } else {
-                    showError(error);
-                }
+        request('/api/search/list', {
+            text: search,
+            offset: total,
+            limit: itemsLimit,
+        }).then(({ok, data, error}) => {
+            if (!mounted.current) {
+                return;
             }
-        })();
 
-        return () => {
-            active = false;
-        };
-    }, [search, loadMore, total, request, showError]);
+            setLoadMore(false);
+            if (ok) {
+                const newItems = data.list.map(({id, text, tags, time}) => ({
+                    id,
+                    html: mdToHtml(text),
+                    tags,
+                    time,
+                }));
+                setItems(items => items.concat(newItems));
+                setTotal(total => total + newItems.length);
+
+                if (newItems.length < itemsLimit) {
+                    setAllDataHere(true);
+                }
+            } else {
+                showError(error);
+            }
+        });
+    }, [search, loadMore, total, request, showError, mounted]);
 
     function loadNext() {
         if (allDataHere) {

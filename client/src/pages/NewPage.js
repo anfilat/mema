@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import _ from 'lodash';
+import {useHotkeys} from 'react-hotkeys-hook';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid, Backdrop} from "@material-ui/core";
 import {SpeedDial, SpeedDialIcon, SpeedDialAction} from "@material-ui/lab";
@@ -10,6 +11,7 @@ import {Tags} from '../components/Tags';
 import {useLocalStorageVars} from '../hooks/bindLocalStorage.hook';
 import {useEditor} from '../hooks/editor.hook';
 import {useHttp} from '../hooks/http.hook';
+import {useMounted} from '../hooks/mounted.hook';
 import {useSnackbarEx} from '../hooks/snackbarEx.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
 
@@ -86,6 +88,7 @@ export const NewPage = () => {
     const {initEditor, focusEditor} = useEditor();
     const {showSuccess, showError} = useSnackbarEx();
     const {loading, request} = useHttp();
+    const mounted = useMounted();
     const [{
         itemId,
         textId,
@@ -94,6 +97,7 @@ export const NewPage = () => {
         savedText,
         savedTags,
     }, changeVars, delVars] = useLocalStorageVars('newPage', initialVars);
+    const [doSave, setDoSave] = useState(false);
     const [outdated, setOutdated] = useState(false);
     const [openSpeedDial, setOpenSpeedDial] = useState(false);
     const inEditing = !!itemId;
@@ -105,7 +109,6 @@ export const NewPage = () => {
             if (isSaved) {
                 delVars();
             }
-            console.log('the end');
         };
     });
 
@@ -121,55 +124,73 @@ export const NewPage = () => {
         focusEditor();
     }
 
-    async function clickSave() {
-        if (inEditing) {
-            await updateItem();
-        } else {
-            await addItem();
+    useHotkeys('ctrl+s', (event) => {
+        event.preventDefault();
+
+        if (blockSave || loading || outdated) {
+            return;
         }
+        setDoSave(true);
+    }, {
+        filter: () => true,
+    }, [blockSave, loading, outdated]);
+
+    function clickSave() {
         focusEditor();
+        setDoSave(true);
     }
 
-    async function addItem() {
-        const {ok, data, error} = await request('/api/item/add', {
-            text,
-            tags,
-        });
-        if (ok) {
-            changeVars({
-                itemId: data.itemId,
-                textId: data.textId,
-                savedText: text,
-                savedTags: tags,
-            });
-
-            showSuccess(data.message);
-        } else {
-            showError(error);
+    useEffect(() => {
+        if (!doSave) {
+            return;
         }
-    }
+        setDoSave(false);
 
-    async function updateItem() {
-        const {ok, data, error} = await request('/api/item/update', {
-            text,
-            tags,
-            itemId,
-            textId,
-        });
-        if (ok) {
-            changeVars({
-                savedText: text,
-                savedTags: tags,
+        if (inEditing) {
+            request('/api/item/update', {
+                text,
+                tags,
+                itemId,
+                textId,
+            }).then(({ok, data, error}) => {
+                if (!mounted.current) {
+                    return;
+                }
+
+                if (ok) {
+                    changeVars({
+                        savedText: text,
+                        savedTags: tags,
+                    });
+
+                    showSuccess(data.message);
+                } else {
+                    if (data.outdated) {
+                        setOutdated(true);
+                    }
+                    showError(error);
+                }
             });
-
-            showSuccess(data.message);
         } else {
-            if (data.outdated) {
-                setOutdated(true);
-            }
-            showError(error);
+            request('/api/item/add', {
+                text,
+                tags,
+            }).then(({ok, data, error}) => {
+                if (ok) {
+                    changeVars({
+                        itemId: data.itemId,
+                        textId: data.textId,
+                        savedText: text,
+                        savedTags: tags,
+                    });
+
+                    showSuccess(data.message);
+                } else {
+                    showError(error);
+                }
+            });
         }
-    }
+    }, [doSave, inEditing, itemId, textId, text, tags, request, showSuccess, showError, changeVars, mounted]);
 
     async function clickGetLatest() {
         if (loading) {

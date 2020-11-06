@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useParams, useHistory} from 'react-router-dom';
 import _ from 'lodash';
+import {useHotkeys} from 'react-hotkeys-hook';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid, Backdrop} from "@material-ui/core";
 import {SpeedDial, SpeedDialIcon, SpeedDialAction} from "@material-ui/lab";
@@ -11,6 +12,7 @@ import {Title} from '../components/Title';
 import {Tags} from '../components/Tags';
 import {useEditor} from '../hooks/editor.hook';
 import {useHttp} from '../hooks/http.hook';
+import {useMounted} from '../hooks/mounted.hook';
 import {useSnackbarEx} from '../hooks/snackbarEx.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
 
@@ -80,6 +82,7 @@ export const EditPage = () => {
     const {initEditor, focusEditor} = useEditor();
     const {showSuccess, showError} = useSnackbarEx();
     const {loading, request} = useHttp();
+    const mounted = useMounted();
     const [text, setText] = useState('');
     const [textId, setTextId] = useState(null);
     const [tags, setTags] = useState([]);
@@ -87,23 +90,33 @@ export const EditPage = () => {
     const [savedTags, setSavedTags] = useState([]);
     const [initLoading, setInitLoading] = useState(true);
     const [reload, setReload] = useState(false);
+    const [doSave, setDoSave] = useState(false);
     const [outdated, setOutdated] = useState(false);
     const [openSpeedDial, setOpenSpeedDial] = useState(false);
     const [firstSave, setFirstSave] = useState(true);
-    const blockSave = (text.trim() === '') ||
-        (text === savedText && _.isEqual(tags, savedTags));
+    const isSaved = text === savedText && _.isEqual(tags, savedTags);
+    const blockSave = isSaved || (text.trim() === '');
+
+    function changeEditor(event, editor) {
+        setText(editor.getData());
+    }
+
+    function clickGetLatest() {
+        if (loading) {
+            return;
+        }
+
+        setOpenSpeedDial(false);
+        setReload(true);
+    }
 
     useEffect(() => {
-        let active = true;
-
         if (!initLoading && !reload) {
             return;
         }
 
-        (async () => {
-            const {ok, data, error} = await request('/api/item/get', {itemId});
-
-            if (!active) {
+        request('/api/item/get', {itemId}).then(({ok, data, error}) => {
+            if (!mounted.current) {
                 return;
             }
 
@@ -124,53 +137,60 @@ export const EditPage = () => {
                 showError(error);
                 history.push('/items');
             }
-        })();
+        });
+    }, [initLoading, reload, itemId, history, request, showError, mounted]);
 
-        return () => {
-            active = false;
-        };
-    }, [initLoading, reload, itemId, history, request, showError]);
+    useHotkeys('ctrl+s', (event) => {
+        event.preventDefault();
 
-    function changeEditor(event, editor) {
-        setText(editor.getData());
+        if (blockSave || loading || outdated) {
+            return;
+        }
+        setDoSave(true);
+    }, {
+        filter: () => true,
+    }, [blockSave, loading, outdated]);
+
+    function clickSave() {
+        focusEditor();
+        setDoSave(true);
     }
 
-    async function clickSave() {
-        focusEditor();
+    useEffect(() => {
+        if (!doSave) {
+            return;
+        }
+        setDoSave(false);
 
         const api = firstSave ? '/api/item/resave' : '/api/item/update';
-        const {ok, data, error} = await request(api, {
+        request(api, {
             text,
             tags,
             itemId,
             textId,
+        }).then(({ok, data, error}) => {
+            if (!mounted.current) {
+                return;
+            }
+
+            if (ok) {
+                setSavedText(text);
+                setSavedTags(tags);
+
+                if (firstSave) {
+                    setTextId(data.textId);
+                    setFirstSave(false);
+                }
+
+                showSuccess(data.message);
+            } else {
+                if (data.outdated) {
+                    setOutdated(true);
+                }
+                showError(error);
+            }
         });
-        if (ok) {
-            setSavedText(text);
-            setSavedTags(tags);
-
-            if (firstSave) {
-                setTextId(data.textId);
-                setFirstSave(false);
-            }
-
-            showSuccess(data.message);
-        } else {
-            if (data.outdated) {
-                setOutdated(true);
-            }
-            showError(error);
-        }
-    }
-
-    function clickGetLatest() {
-        if (loading) {
-            return;
-        }
-
-        setOpenSpeedDial(false);
-        setReload(true);
-    }
+    }, [doSave, firstSave, itemId, textId, text, tags, request, showSuccess, showError, mounted]);
 
     async function clickDelete() {
         if (loading) {

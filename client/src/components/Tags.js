@@ -4,6 +4,7 @@ import {makeStyles} from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 import {useDebounce} from '../hooks/debounce.hook';
 import {useHttp} from "../hooks/http.hook";
+import {useMounted} from '../hooks/mounted.hook';
 import {useSnackbarEx} from "../hooks/snackbarEx.hook";
 
 const useStyles = makeStyles({
@@ -20,6 +21,7 @@ export function Tags(props) {
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 200);
     const {loading, request} = useHttp();
+    const mounted = useMounted();
 
     function onOpen() {
         setOpen(true);
@@ -55,27 +57,21 @@ export function Tags(props) {
             return;
         }
 
-        let active = true;
-
-        (async () => {
-            const {ok, data, error} = await request('/api/tag/list', {
-                text: debouncedSearch,
-                tags: props.value,
-            });
-
-            if (active) {
-                if (ok) {
-                    setOptions(data.list);
-                } else {
-                    showError(error);
-                }
+        request('/api/tag/list', {
+            text: debouncedSearch,
+            tags: props.value,
+        }).then(({ok, data, error}) => {
+            if (!mounted.current) {
+                return;
             }
-        })();
 
-        return () => {
-            active = false;
-        };
-    }, [open, debouncedSearch, request, showError, props.value]);
+            if (ok) {
+                setOptions(data.list);
+            } else {
+                showError(error);
+            }
+        });
+    }, [open, debouncedSearch, request, showError, props.value, mounted]);
 
     useEffect(() => {
         if (!open) {
