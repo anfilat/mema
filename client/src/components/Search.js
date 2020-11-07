@@ -48,6 +48,10 @@ export const Search = () => {
         };
     }, []);
 
+    function focusHandler(event) {
+        event.target.select();
+    }
+
     function changeHandler(event) {
         setValue(event.target.value);
     }
@@ -68,6 +72,7 @@ export const Search = () => {
         >
             <InputBase
                 value={value}
+                onFocus={focusHandler}
                 onChange={changeHandler}
                 placeholder="Search…"
                 classes={{
