@@ -84,6 +84,7 @@ export const Search = () => {
             />
             <IconButton
                 type="submit"
+                aria-label="search"
                 className={classes.searchIcon}
             >
                 <SearchIcon />
