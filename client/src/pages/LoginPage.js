@@ -53,6 +53,7 @@ export const LoginPage = () => {
                 <form className={classes.form} noValidate onSubmit={loginHandler}>
                     <TextField
                         label="Email Address"
+                        type="email"
                         variant="outlined"
                         margin="normal"
                         autoComplete="email"

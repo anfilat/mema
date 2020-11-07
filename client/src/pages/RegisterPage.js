@@ -56,6 +56,7 @@ export const RegisterPage = () => {
                 <form className={classes.form} noValidate onSubmit={registerHandler}>
                     <TextField
                         label="Email Address"
+                        type="email"
                         variant="outlined"
                         margin="normal"
                         autoComplete="email"
