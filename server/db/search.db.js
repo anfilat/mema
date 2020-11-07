@@ -10,25 +10,35 @@ async function listItems(userId, terms, limit, offset) {
         const termValues = [];
         let i = 4;
         terms.forEach(term => {
-            sumPoints.push(`10 * SUM(similarity(tag.tag, $${i})) + similarity(text.text, $${i})`);
+            sumPoints.push(`COALESCE(10 * SUM(similarity(tag.tag, $${i})), 0) + similarity(text.text, $${i})`);
             termConditions.push(`tag.tag ILIKE $${i} OR text.text ILIKE $${i}`);
             termValues.push(`%${term}%`);
             i++;
         });
 
         sql = `
+            WITH mem_with_tags AS (
+                SELECT mem_id,
+                       ARRAY_AGG(tag) AS tags
+                FROM mem
+                         LEFT JOIN mem_tag USING (mem_id)
+                         LEFT JOIN tag USING (tag_id)
+                WHERE mem.account_id = 1
+                GROUP BY mem_id
+            )
             SELECT mem.mem_id,
                    text.text,
                    mem.last_change_time,
-                   ARRAY_AGG(tag.tag)       AS tags,
+                   tags,
                    ${sumPoints.join(' + ')} AS sim
             FROM mem
-                     LEFT JOIN text on mem.text_id = text.text_id
-                     LEFT JOIN mem_tag ON mem.mem_id = mem_tag.mem_id
-                     LEFT JOIN tag on mem_tag.tag_id = tag.tag_id
+                     LEFT JOIN text USING(text_id)
+                     LEFT JOIN mem_tag USING(mem_id)
+                     LEFT JOIN tag USING(tag_id)
+                     JOIN mem_with_tags USING (mem_id)
             WHERE mem.account_id = $1
               AND (${termConditions.join(' OR ')})
-            GROUP BY mem.mem_id, text.text, mem.last_change_time
+            GROUP BY mem.mem_id, text.text, mem.last_change_time, tags
             ORDER BY sim DESC, mem.last_change_time desc
             LIMIT $2 OFFSET $3
         `;
@@ -40,9 +50,9 @@ async function listItems(userId, terms, limit, offset) {
                    mem.last_change_time,
                    ARRAY_AGG(tag.tag) AS tags
             FROM mem
-                     LEFT JOIN text on mem.text_id = text.text_id
-                     LEFT JOIN mem_tag ON mem.mem_id = mem_tag.mem_id
-                     LEFT JOIN tag on mem_tag.tag_id = tag.tag_id
+                     LEFT JOIN text USING(text_id)
+                     LEFT JOIN mem_tag USING(mem_id)
+                     LEFT JOIN tag USING(tag_id)
             WHERE mem.account_id = $1
             GROUP BY mem.mem_id, text.text, mem.last_change_time
             ORDER BY mem.last_change_time desc
@@ -50,7 +60,7 @@ async function listItems(userId, terms, limit, offset) {
         `;
         values = [userId, limit, offset];
     }
-    const res = await query(sql, values, );
+    const res = await query(sql, values);
     return res.rows.map(item => ({
         id: item.mem_id,
         text: item.text,
