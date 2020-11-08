@@ -64,7 +64,7 @@ export const ItemsPage = () => {
                 const newItems = data.list.map(({id, text, tags, time}) => ({
                     id,
                     html: mdToHtml(text),
-                    tags,
+                    tags: tags.sort(),
                     time,
                 }));
                 setItems(items => items.concat(newItems));
