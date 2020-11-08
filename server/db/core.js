@@ -15,6 +15,10 @@ function initDb() {
     return pool;
 }
 
+function closeDb(cb) {
+    pool.end(cb);
+}
+
 async function query(sql, values) {
     return pool.query(sql, values);
 }
@@ -89,6 +93,7 @@ async function clientGetValueArray(client, sql, values, name) {
 
 module.exports = {
     initDb,
+    closeDb,
     query,
     get,
     getValue,
