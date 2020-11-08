@@ -1,117 +1,157 @@
-import React, {useState, useEffect} from "react";
+import React from "react";
+import _ from "lodash";
 import {TextField, CircularProgress} from "@material-ui/core";
-import {makeStyles} from "@material-ui/core/styles";
+import {withStyles} from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
-import {useDebounce} from '../hooks/debounce.hook';
-import {useHttp} from "../hooks/http.hook";
-import {useMounted} from '../hooks/mounted.hook';
-import {useSnackbarEx} from "../hooks/snackbarEx.hook";
+import {withSnackbar} from 'notistack';
+import {AuthContext} from '../context/AuthContext';
+import {bindShowError, request} from "../utils";
 
-const useStyles = makeStyles({
+const styles = {
     root: {
         width: '100%',
     },
-});
+}
 
-export function Tags(props) {
-    const classes = useStyles();
-    const {showError} = useSnackbarEx();
-    const [open, setOpen] = useState(false);
-    const [options, setOptions] = useState([]);
-    const [search, setSearch] = useState('');
-    const debouncedSearch = useDebounce(search, 200);
-    const {loading, request} = useHttp();
-    const mounted = useMounted();
-
-    function onOpen() {
-        setOpen(true);
+class Tags extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            open: false,
+            search: '',
+            options: [],
+            loading: false,
+        };
+        this.showError = bindShowError(this);
+        this.debouncedGetOptions = _.debounce(this.getOptions, 200);
+        this.getOptionsCancel = null;
     }
 
-    function onClose() {
-        setOpen(false);
+    static contextType = AuthContext;
+
+    componentWillUnmount() {
+        this.stopGetOptions();
     }
 
-    function onInputChange(event, value) {
-        setSearch(value);
+    onOpen = () => {
+        this.setState({
+            open: true,
+        });
+        this.debouncedGetOptions('');
     }
 
-    function onChange(event, value) {
-        if (props.onChange) {
-            props.onChange(value);
+    onClose = () => {
+        this.setState({
+            open: false,
+            options: [],
+        });
+        this.stopGetOptions();
+    }
+
+    onInputChange = (event, value) => {
+        this.setState({search: value});
+        this.debouncedGetOptions(value);
+    }
+
+    onChange = (event, value) => {
+        if (this.props.onChange) {
+            this.props.onChange(value);
         }
     }
 
-    function filterOptions(options, params) {
+    getOptions = (search) => {
+        if (!this.state.open) {
+            return;
+        }
+
+        this.stopGetOptions();
+        this.setState({loading: true});
+        const {wait, cancel} = request('/api/tag/list', {
+            text: search,
+            tags: this.props.value,
+        },
+            true,
+            this.context.logout
+        );
+        wait.then(this.onGetOptionsResult);
+        this.getOptionsCancel = cancel;
+    }
+
+    onGetOptionsResult = ({ok, data, error, abort}) => {
+        if (abort) {
+            return;
+        }
+        this.setState({loading: false});
+        this.getOptionsCancel = null;
+
+        if (ok) {
+            if (this.state.open) {
+                this.setState({options: data.list});
+            }
+        } else {
+            this.showError(error);
+        }
+    }
+
+    stopGetOptions() {
+        if (this.getOptionsCancel) {
+            this.getOptionsCancel();
+            this.getOptionsCancel = null;
+            this.setState({loading: false});
+        }
+    }
+
+    filterOptions = (options, params) => {
         const filtered = [...options];
 
         const input = params.inputValue;
-        if (input !== '' && !options.includes(input) && !props.value.includes(input)) {
+        if (input !== '' && !options.includes(input) && !this.props.value.includes(input)) {
             filtered.push(params.inputValue);
         }
 
         return filtered;
     }
 
-    useEffect(() => {
-        if (!open) {
-            return;
-        }
+    render() {
+        const {open, search, options, loading} = this.state;
+        const {value, classes} = this.props;
 
-        request('/api/tag/list', {
-            text: debouncedSearch,
-            tags: props.value,
-        }).then(({ok, data, error}) => {
-            if (!mounted.current) {
-                return;
-            }
-
-            if (ok) {
-                setOptions(data.list);
-            } else {
-                showError(error);
-            }
-        });
-    }, [open, debouncedSearch, request, showError, props.value, mounted]);
-
-    useEffect(() => {
-        if (!open) {
-            setOptions([]);
-        }
-    }, [open]);
-
-    return (
-        <div className={classes.root}>
-            <Autocomplete
-                selectOnFocus
-                freeSolo
-                multiple
-                open={open}
-                onOpen={onOpen}
-                onClose={onClose}
-                inputValue={search}
-                onInputChange={onInputChange}
-                value={props.value}
-                onChange={onChange}
-                filterOptions={filterOptions}
-                options={options}
-                loading={loading}
-                renderInput={(params) =>
-                    <TextField
-                        {...params}
-                        label="Tags"
-                        variant="standard"
-                        InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                                <>
-                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                    {params.InputProps.endAdornment}
-                                </>
-                            ),
-                        }}
-                    />
-                }
-            />
-        </div>
-    );
+        return (
+            <div className={classes.root}>
+                <Autocomplete
+                    selectOnFocus
+                    freeSolo
+                    multiple
+                    open={open}
+                    onOpen={this.onOpen}
+                    onClose={this.onClose}
+                    inputValue={search}
+                    onInputChange={this.onInputChange}
+                    value={value}
+                    onChange={this.onChange}
+                    filterOptions={this.filterOptions}
+                    options={options}
+                    loading={loading}
+                    renderInput={(params) =>
+                        <TextField
+                            {...params}
+                            label="Tags"
+                            variant="standard"
+                            InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {loading ? <CircularProgress color="inherit" size={20}/> : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            }}
+                        />
+                    }
+                />
+            </div>
+        );
+    }
 }
+
+export default withStyles(styles)(withSnackbar(Tags));

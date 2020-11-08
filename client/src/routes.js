@@ -1,12 +1,12 @@
 import React from 'react';
 import {Switch, Route, Redirect} from 'react-router-dom';
-import {LoginPage} from './pages/LoginPage';
-import {RegisterPage} from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import {NewPage} from './pages/NewPage';
 import {ItemsPage} from './pages/ItemsPage';
 import {EditPage} from './pages/EditPage';
 
-export const useRoutes = isAuthenticated => {
+export function Routes(isAuthenticated) {
     if (isAuthenticated) {
         return (
             <Switch>
@@ -37,4 +37,4 @@ export const useRoutes = isAuthenticated => {
             <Redirect to="/"/>
         </Switch>
     );
-};
+}

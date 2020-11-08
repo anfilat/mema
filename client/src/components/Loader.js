@@ -1,22 +1,24 @@
 import React from 'react';
 import {CircularProgress} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import {withStyles} from '@material-ui/core/styles';
 
-const useStyles = makeStyles({
+const styles = {
     root: {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
     },
-});
+};
 
-export function Loader() {
-    const classes = useStyles();
+function Loader(props) {
+    const classes = props.classes;
 
     return (
         <div className={classes.root}>
-            <CircularProgress size={60} />
+            <CircularProgress size={60}/>
         </div>
     );
 }
+
+export default withStyles(styles)(Loader);

@@ -1,15 +1,14 @@
-import React, {useContext} from 'react';
-import {useHistory, Link as RouterLink} from 'react-router-dom'
+import React from 'react';
+import {Link as RouterLink, withRouter} from 'react-router-dom';
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
-import {makeStyles} from '@material-ui/core/styles';
-import {Copyright} from '../components/Copyright';
-import {Title} from '../components/Title';
-import {useHttp} from '../hooks/http.hook';
-import {useBind} from '../hooks/bind.hook';
+import {withStyles} from '@material-ui/core/styles';
+import {withSnackbar} from 'notistack';
+import Copyright from '../components/Copyright';
+import Title from '../components/Title';
 import {AuthContext} from '../context/AuthContext';
-import {useSnackbarEx} from '../hooks/snackbarEx.hook';
+import {bindField, bindShowSuccess, bindShowError, request} from '../utils';
 
-const useStyles = makeStyles(theme => ({
+const styles = theme => ({
     paper: {
         marginTop: theme.spacing(8),
         display: 'flex',
@@ -22,81 +21,116 @@ const useStyles = makeStyles(theme => ({
     submit: {
         margin: theme.spacing(3, 0, 2),
     },
-}));
+});
 
-export const RegisterPage = () => {
-    const classes = useStyles();
-    const auth = useContext(AuthContext);
-    const history = useHistory();
-    const {showSuccess, showError} = useSnackbarEx();
-    const {loading, request} = useHttp();
-    const [email, emailChangeHandler] = useBind('');
-    const [password, passwordChangeHandler] = useBind('');
+class RegisterPage extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            email: '',
+            password: '',
+            loading: false,
+        };
+        this.emailChangeHandler = bindField(this, 'email');
+        this.passwordChangeHandler = bindField(this, 'password');
+        this.showSuccess = bindShowSuccess(this);
+        this.showError = bindShowError(this);
+        this.registerCancel = null;
+    }
 
-    async function registerHandler(event) {
-        event.preventDefault();
+    static contextType = AuthContext;
 
-        const {ok, data, error} = await request('/api/auth/register', {email, password}, false);
-        if (ok) {
-            showSuccess(data.message);
-            auth.login(data.userId);
-            history.push('/');
-        } else {
-            showError(error);
+    componentWillUnmount() {
+        if (this.registerCancel) {
+            this.registerCancel();
+            this.registerCancel = null;
         }
     }
 
-    return (
-        <Container component="main" maxWidth="xs">
-            <Title title="Register"/>
-            <div className={classes.paper}>
-                <Typography component="h1" variant="h5">
-                    Register
-                </Typography>
-                <form className={classes.form} noValidate onSubmit={registerHandler}>
-                    <TextField
-                        label="Email Address"
-                        type="email"
-                        variant="outlined"
-                        margin="normal"
-                        autoComplete="email"
-                        value={email}
-                        onChange={emailChangeHandler}
-                        required
-                        fullWidth
-                        autoFocus
-                    />
-                    <TextField
-                        label="Password"
-                        type="password"
-                        variant="outlined"
-                        margin="normal"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={passwordChangeHandler}
-                        required
-                        fullWidth
-                    />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        className={classes.submit}
-                        disabled={loading}
-                    >
+    registerHandler = (event) => {
+        event.preventDefault();
+
+        this.setState({loading: true});
+        const {email, password} = this.state;
+        const {wait, cancel} = request('/api/auth/register', {email, password}, false);
+        wait.then(this.onRegisterResult);
+        this.registerCancel = cancel;
+    }
+
+    onRegisterResult = ({ok, data, error, abort}) => {
+        if (abort) {
+            return;
+        }
+        this.setState({loading: false});
+        this.registerCancel = null;
+
+        if (ok) {
+            this.showSuccess(data.message);
+            this.context.login(data.userId);
+            this.props.history.push('/');
+        } else {
+            this.showError(error);
+        }
+    }
+
+    render() {
+        const {email, password, loading} = this.state;
+        const classes = this.props.classes;
+
+        return (
+            <Container component="main" maxWidth="xs">
+                <Title title="Register"/>
+                <div className={classes.paper}>
+                    <Typography component="h1" variant="h5">
                         Register
-                    </Button>
-                    <Box display="flex" justifyContent="flex-end">
-                        <Link component={RouterLink} to="/" variant="body2">
-                            Already have an account? Login
-                        </Link>
-                    </Box>
-                </form>
-            </div>
-            <Box mt={8}>
-                <Copyright />
-            </Box>
-        </Container>
-    );
-};
+                    </Typography>
+                    <form className={classes.form} noValidate onSubmit={this.registerHandler}>
+                        <TextField
+                            label="Email Address"
+                            type="email"
+                            variant="outlined"
+                            margin="normal"
+                            autoComplete="email"
+                            value={email}
+                            onChange={this.emailChangeHandler}
+                            required
+                            fullWidth
+                            autoFocus
+                        />
+                        <TextField
+                            label="Password"
+                            type="password"
+                            variant="outlined"
+                            margin="normal"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={this.passwordChangeHandler}
+                            required
+                            fullWidth
+                        />
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            color="primary"
+                            className={classes.submit}
+                            disabled={loading}
+                        >
+                            Register
+                        </Button>
+                        <Box display="flex" justifyContent="flex-end">
+                            <Link component={RouterLink} to="/" variant="body2">
+                                Already have an account? Login
+                            </Link>
+                        </Box>
+                    </form>
+                </div>
+                <Box mt={8}>
+                    <Copyright/>
+                </Box>
+            </Container>
+        );
+    }
+}
+
+export default withStyles(styles)(withSnackbar(withRouter(RegisterPage)));

@@ -1,9 +1,9 @@
 import React from 'react';
 import {Link as RouterLink} from 'react-router-dom';
-import {makeStyles} from "@material-ui/core/styles";
+import {withStyles} from "@material-ui/core/styles";
 import {Chip, Card, CardContent, Box, Link} from '@material-ui/core';
 
-const useStyles = makeStyles(theme => ({
+const styles = theme => ({
     main: {
         marginBottom: `${theme.spacing(1)}px`,
     },
@@ -14,31 +14,31 @@ const useStyles = makeStyles(theme => ({
             margin: theme.spacing(0.5),
         },
     },
-}));
+});
 
-export const Item = (props) => {
-    const classes = useStyles();
-    const editLink = `/edit/${props.id}`;
+function Item(props) {
+    const {classes, id, time, html, tags} = props;
+    const editLink = `/edit/${id}`;
 
     return (
         <Card variant="outlined" className={classes.main}>
             <CardContent>
                 <Box display="flex" justifyContent="space-between">
-                    {renderTime(props.time)}
+                    {renderTime(time)}
                     <Link component={RouterLink} to={editLink} variant="body2">
                         Edit
                     </Link>
                 </Box>
                 <div
-                    dangerouslySetInnerHTML={{__html: props.html}}
+                    dangerouslySetInnerHTML={{__html: html}}
                 />
                 <div className={classes.tags}>
-                    {props.tags.map(tag => <Chip label={tag} key={tag}/>)}
+                    {tags.map(tag => <Chip label={tag} key={tag}/>)}
                 </div>
             </CardContent>
         </Card>
     );
-};
+}
 
 function renderTime(time) {
     const date = new Date(time);
@@ -50,3 +50,5 @@ function renderTime(time) {
 
     return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
+
+export default withStyles(styles)(Item);

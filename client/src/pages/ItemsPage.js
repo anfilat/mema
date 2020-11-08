@@ -6,8 +6,8 @@ import {Virtuoso} from 'react-virtuoso'
 import {useHttp} from '../hooks/http.hook';
 import {useMounted} from '../hooks/mounted.hook';
 import {getSearch, setSearch} from '../services/search';
-import {Title} from '../components/Title';
-import {Item} from '../components/Item';
+import Title from '../components/Title';
+import Item from '../components/Item';
 import {useSnackbarEx} from "../hooks/snackbarEx.hook";
 import {mdToHtml} from '../utils';
 
