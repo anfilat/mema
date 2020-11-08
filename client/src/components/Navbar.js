@@ -19,13 +19,10 @@ export const Navbar = () => {
     useHotkeys('alt+n,alt+i', (event, handler) => {
         event.preventDefault();
 
-        switch (handler.key) {
-            case 'alt+n':
-                handleNewPage();
-                break;
-            case 'alt+i':
-                handleItemsPage();
-                break;
+        if (handler.key === 'alt+n') {
+            handleNewPage();
+        } else if (handler.key === 'alt+i') {
+            handleItemsPage();
         }
     }, {
         filter: () => true,
