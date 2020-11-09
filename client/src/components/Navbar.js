@@ -1,10 +1,10 @@
 import React from 'react';
-import {useHistory} from 'react-router-dom';
-import {useHotkeys} from 'react-hotkeys-hook';
+import {withRouter} from 'react-router-dom';
+import Hotkeys from 'react-hot-keys';
 import {withStyles} from '@material-ui/core/styles';
 import {AppBar, Toolbar, Button} from '@material-ui/core';
-import {Search} from './Search';
-import {AppMenu} from './AppMenu';
+import Search from './Search';
+import AppMenu from './AppMenu';
 import {getSearch} from '../services/search';
 
 const NavButton = withStyles((theme) => ({
@@ -13,46 +13,52 @@ const NavButton = withStyles((theme) => ({
     },
 }))(Button);
 
-export const Navbar = () => {
-    const history = useHistory();
-
-    useHotkeys('alt+n,alt+i', (event, handler) => {
+class Navbar extends React.Component {
+    handleHotkey = (keyName, event) => {
         event.preventDefault();
 
-        if (handler.key === 'alt+n') {
-            handleNewPage();
-        } else if (handler.key === 'alt+i') {
-            handleItemsPage();
+        if (keyName === 'alt+n') {
+            this.handleNewPage();
+        } else if (keyName === 'alt+i') {
+            this.handleItemsPage();
         }
-    }, {
-        filter: () => true,
-    });
-
-    function handleNewPage() {
-        history.push('/new');
     }
 
-    function handleItemsPage() {
+    handleNewPage = () => {
+        this.props.history.push('/new');
+    }
+
+    handleItemsPage = () => {
         const search = getSearch();
         if (search) {
-            history.push(`/items?search=${search}`);
+            this.props.history.push(`/items?search=${search}`);
         } else {
-            history.push('/items');
+            this.props.history.push('/items');
         }
     }
 
-    return (
-        <AppBar position="sticky">
-            <Toolbar>
-                <AppMenu/>
-                <NavButton onClick={handleNewPage}>
-                    New
-                </NavButton>
-                <NavButton onClick={handleItemsPage}>
-                    Items
-                </NavButton>
-                <Search/>
-            </Toolbar>
-        </AppBar>
-    );
-};
+    render() {
+        return (
+            <Hotkeys
+                keyName="alt+n,alt+i"
+                filter={() => true}
+                onKeyDown={this.handleHotkey}
+            >
+                <AppBar position="sticky">
+                    <Toolbar>
+                        <AppMenu history={this.props.history}/>
+                        <NavButton onClick={this.handleNewPage}>
+                            New
+                        </NavButton>
+                        <NavButton onClick={this.handleItemsPage}>
+                            Items
+                        </NavButton>
+                        <Search history={this.props.history}/>
+                    </Toolbar>
+                </AppBar>
+            </Hotkeys>
+        );
+    }
+}
+
+export default withRouter(Navbar);

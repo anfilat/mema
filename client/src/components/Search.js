@@ -1,11 +1,11 @@
-import React, {useEffect, useState} from 'react';
-import {useHistory} from 'react-router-dom';
-import {makeStyles, fade} from '@material-ui/core/styles';
+import React from 'react';
+import {withStyles, fade} from '@material-ui/core/styles';
 import {InputBase, IconButton} from '@material-ui/core';
 import {Search as SearchIcon} from '@material-ui/icons';
 import {subscribe, getSearch} from '../services/search';
+import {bindField} from '../utils';
 
-const useStyles = makeStyles((theme) => ({
+const styles = (theme) => ({
     search: {
         display: 'flex',
         flexGrow: 1,
@@ -29,66 +29,71 @@ const useStyles = makeStyles((theme) => ({
     searchIcon: {
         padding: theme.spacing(0, 1),
     },
-}));
+});
 
-export const Search = () => {
-    const classes = useStyles();
-    const history = useHistory();
-    const [value, setValue] = useState('');
-
-    useEffect(() => {
-        const unsubscribe = subscribe((value) => {
-            setValue(value);
-        });
-
-        setValue(getSearch());
-
-        return () => {
-            unsubscribe();
+class Search extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            value: getSearch(),
         };
-    }, []);
+        this.changeHandler = bindField(this, 'value');
+        this.unsubscribe = subscribe(this.onSearchChange);
+    }
 
-    function focusHandler(event) {
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    onSearchChange = (value) => {
+        this.setState({value});
+    }
+
+    focusHandler = (event) => {
         event.target.select();
     }
 
-    function changeHandler(event) {
-        setValue(event.target.value);
-    }
-
-    function searchHandler(event) {
+    searchHandler = (event) => {
         event.preventDefault();
 
+        const value = this.state.value;
         if (value !== getSearch()) {
-            history.push(`/items?search=${value}`);
+            this.props.history.push(`/items?search=${value}`);
         }
     }
 
-    return (
-        <form
-            noValidate
-            className={classes.search}
-            onSubmit={searchHandler}
-        >
-            <InputBase
-                value={value}
-                onFocus={focusHandler}
-                onChange={changeHandler}
-                placeholder="Search…"
-                classes={{
-                    root: classes.inputRoot,
-                    input: classes.inputInput,
-                }}
-                fullWidth
-                inputProps={{ 'aria-label': 'search' }}
-            />
-            <IconButton
-                type="submit"
-                aria-label="search"
-                className={classes.searchIcon}
+    render() {
+        const {value} = this.state;
+        const {classes} = this.props;
+
+        return (
+            <form
+                noValidate
+                className={classes.search}
+                onSubmit={this.searchHandler}
             >
-                <SearchIcon />
-            </IconButton>
-        </form>
-    );
-};
+                <InputBase
+                    value={value}
+                    onFocus={this.focusHandler}
+                    onChange={this.changeHandler}
+                    placeholder="Search…"
+                    classes={{
+                        root: classes.inputRoot,
+                        input: classes.inputInput,
+                    }}
+                    fullWidth
+                    inputProps={{'aria-label': 'search'}}
+                />
+                <IconButton
+                    type="submit"
+                    aria-label="search"
+                    className={classes.searchIcon}
+                >
+                    <SearchIcon/>
+                </IconButton>
+            </form>
+        );
+    }
+}
+
+export default withStyles(styles)(Search);

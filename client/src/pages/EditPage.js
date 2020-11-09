@@ -1,307 +1,307 @@
-import React, {useEffect, useState} from 'react';
-import {useParams, useHistory} from 'react-router-dom';
+import React from 'react';
+import {withRouter} from 'react-router-dom';
 import _ from 'lodash';
-import {useHotkeys} from 'react-hotkeys-hook';
+import Hotkeys from 'react-hot-keys';
 import CKEditor from '@ckeditor/ckeditor5-react';
 import {Box, Button, Container, Grid, Backdrop} from "@material-ui/core";
 import {SpeedDial, SpeedDialIcon, SpeedDialAction} from "@material-ui/lab";
 import {Delete as DeleteIcon, Update as UpdateIcon} from '@material-ui/icons';
-import {makeStyles} from "@material-ui/core/styles";
+import {withStyles} from "@material-ui/core/styles";
+import {withSnackbar} from 'notistack';
+import {AuthContext} from '../context/AuthContext';
 import Loader from '../components/Loader';
 import Title from '../components/Title';
 import Tags from '../components/Tags';
-import {useEditor} from '../hooks/editor.hook';
-import {useHttp} from '../hooks/http.hook';
-import {useMounted} from '../hooks/mounted.hook';
-import {useSnackbarEx} from '../hooks/snackbarEx.hook';
+import {bindShowSuccess, bindShowError, editorHelper, editorConfig, editorStyles, request} from '../utils';
 import 'ckeditor5-custom-build/build/ckeditor';
 
-const useStyles = makeStyles(theme => ({
-    main: {
-        height: `calc(100vh - 64px - ${theme.spacing(2)}px)`,
-        display: 'flex',
-        'flex-direction': 'column',
-        position: 'relative',
-    },
-    editor: {
-        'flex-grow': 1,
-        '& .ck-editor': {
-            height: '100%',
-            display: 'flex',
-            'flex-direction': 'column',
-            '& .ck-editor__main': {
-                flexGrow: 1,
-                flexBasis: 0,
-                overflow: 'auto',
-                '& .ck-content': {
-                    height: '100%',
-                }
-            }
-        }
-    },
-    lastButtons: {
-        'flex-basis': 0,
-        'flex-grow': 1,
-    },
-    speedDial: {
-        position: 'absolute',
-        bottom: 0,
-        left: theme.spacing(2),
-    },
-    speedDialFab: {
-        width: '36px',
-        height: '36px',
-    },
-    speedDialActions: {
-        'padding-bottom': `${theme.spacing(5)}px !important`,
-    },
-    speedActionTooltip: {
-        'white-space': 'nowrap',
-    },
-    speedActionFab: {
-        width: '36px',
-        height: '36px',
-    },
-}));
-
-const config = {
-    toolbar: [
-        "heading", "|",
-        "bold", "italic", "strikethrough",  "|",
-        "link", "bulletedList", "numberedList", "|",
-        "alignment", "indent", "outdent", "|",
-        "code", "codeBlock", "insertTable", "|",
-        "undo", "redo"
-    ],
-};
-
-export const EditPage = () => {
-    const classes = useStyles();
-    const history = useHistory();
-    const {id: itemId} = useParams();
-    const {initEditor, focusEditor} = useEditor();
-    const {showSuccess, showError} = useSnackbarEx();
-    const {loading, request} = useHttp();
-    const mounted = useMounted();
-    const [text, setText] = useState('');
-    const [textId, setTextId] = useState(null);
-    const [tags, setTags] = useState([]);
-    const [savedText, setSavedText] = useState('');
-    const [savedTags, setSavedTags] = useState([]);
-    const [initLoading, setInitLoading] = useState(true);
-    const [reload, setReload] = useState(false);
-    const [doSave, setDoSave] = useState(false);
-    const [outdated, setOutdated] = useState(false);
-    const [openSpeedDial, setOpenSpeedDial] = useState(false);
-    const [firstSave, setFirstSave] = useState(true);
-    const isSaved = text === savedText && _.isEqual(tags, savedTags);
-    const blockSave = isSaved || (text.trim() === '');
-
-    function changeEditor(event, editor) {
-        setText(editor.getData());
+class EditPage extends React.Component {
+    constructor(props) {
+        super(props);
+        this.itemId = props.match.params.id;
+        this.state = {
+            initLoading: true,
+            textId: null,
+            text: '',
+            tags: [],
+            savedText: '',
+            savedTags: [],
+            firstSave: true,
+            loading: false,
+            outdated: false,
+            openSpeedDial: false,
+        };
+        const {initEditor, focusEditor} = editorHelper();
+        this.initEditor = initEditor;
+        this.focusEditor = focusEditor;
+        this.showSuccess = bindShowSuccess(this);
+        this.showError = bindShowError(this);
+        this.requestCancel = null;
+        setTimeout(() => this.getLatest(), 0);
     }
 
-    function clickGetLatest() {
-        if (loading) {
-            return;
-        }
+    static contextType = AuthContext;
 
-        setOpenSpeedDial(false);
-        setReload(true);
+    componentWillUnmount() {
+        this.stopRequest();
     }
 
-    useEffect(() => {
-        if (!initLoading && !reload) {
-            return;
-        }
+    blockSave() {
+        const {text, tags, savedText, savedTags} = this.state;
+        const isSaved = text === savedText && _.isEqual(tags, savedTags);
+        return isSaved || (text.trim() === '');
+    }
 
-        request('/api/item/get', {itemId}).then(({ok, data, error}) => {
-            if (!mounted.current) {
-                return;
-            }
+    changeEditor = (event, editor) => {
+        this.setState({text: editor.getData()});
+    }
 
-            if (ok) {
-                const {textId, text, tags} = data;
+    setTags = (tags) => {
+        this.setState({tags});
+    }
 
-                setTextId(textId);
-                setText(text);
-                setTags(tags);
+    handleOpenSpeedDial = () => {
+        this.setState({openSpeedDial: true});
+    }
 
-                setSavedText(text);
-                setSavedTags(tags);
+    handleCloseSpeedDial = () => {
+        this.setState({openSpeedDial: false});
+    }
 
-                setOutdated(false);
-                setInitLoading(false);
-                setReload(false);
-            } else {
-                showError(error);
-                history.push('/items');
-            }
-        });
-    }, [initLoading, reload, itemId, history, request, showError, mounted]);
-
-    useHotkeys('ctrl+s', (event) => {
+    handleHotkey = (keyName, event) => {
         event.preventDefault();
 
-        if (blockSave || loading || outdated) {
+        const {loading, outdated} = this.state;
+        if (this.blockSave() || loading || outdated) {
             return;
         }
-        setDoSave(true);
-    }, {
-        filter: () => true,
-    }, [blockSave, loading, outdated]);
-
-    function clickSave() {
-        focusEditor();
-        setDoSave(true);
+        this.saveIt();
     }
 
-    useEffect(() => {
-        if (!doSave) {
+    clickGetLatest = () => {
+        if (this.state.loading) {
             return;
         }
-        setDoSave(false);
 
+        this.setState({openSpeedDial: false});
+        this.getLatest();
+    }
+
+    clickDelete = () => {
+        if (this.state.loading) {
+            return;
+        }
+
+        this.setState({openSpeedDial: false});
+        this.deleteIt();
+    }
+
+    clickSave = () => {
+        this.focusEditor();
+        this.saveIt();
+    }
+
+    getLatest() {
+        request(this, '/api/item/get', {
+                itemId: this.itemId,
+            },
+            true,
+            this.context.logout
+        ).then(this.onGetLatestResult);
+    }
+
+    onGetLatestResult = ({ok, data, error, abort}) => {
+        if (abort) {
+            return;
+        }
+
+        if (ok) {
+            const {textId, text, tags} = data;
+
+            this.setState({
+                textId,
+                text,
+                tags,
+                savedText: text,
+                savedTags: tags,
+                outdated: false,
+                initLoading: false,
+            });
+        } else {
+            this.showError(error);
+            this.props.history.push('/items');
+        }
+    }
+
+    deleteIt() {
+        request(this, '/api/item/del', {
+                itemId: this.itemId,
+            },
+            true,
+            this.context.logout
+        ).then(this.onDeleteItResult);
+    }
+
+    onDeleteItResult = ({ok, data, error, abort}) => {
+        if (abort) {
+            return;
+        }
+
+        if (ok) {
+            this.showSuccess(data.message);
+            this.props.history.push('/items');
+        } else {
+            this.showError(error);
+        }
+    }
+
+    saveIt() {
+        const {text, tags, textId, firstSave} = this.state;
         const api = firstSave ? '/api/item/resave' : '/api/item/update';
-        request(api, {
-            text,
-            tags,
-            itemId,
-            textId,
-        }).then(({ok, data, error}) => {
-            if (!mounted.current) {
+        request(this, api, {
+                text,
+                tags,
+                itemId: this.itemId,
+                textId,
+            },
+            true,
+            this.context.logout
+        ).then(({ok, data, error, abort}) => {
+            if (abort) {
                 return;
             }
 
             if (ok) {
-                setSavedText(text);
-                setSavedTags(tags);
+                this.setState({
+                    savedText: text,
+                    savedTags: tags,
+                });
 
                 if (firstSave) {
-                    setTextId(data.textId);
-                    setFirstSave(false);
+                    this.setState({
+                        textId: data.textId,
+                        firstSave: false,
+                    });
                 }
 
-                showSuccess(data.message);
+                this.showSuccess(data.message);
             } else {
                 if (data.outdated) {
-                    setOutdated(true);
+                    this.setState({
+                        outdated: true,
+                    });
                 }
-                showError(error);
+                this.showError(error);
             }
         });
-    }, [doSave, firstSave, itemId, textId, text, tags, request, showSuccess, showError, mounted]);
+    }
 
-    async function clickDelete() {
-        if (loading) {
-            return;
-        }
-
-        setOpenSpeedDial(false);
-        const {ok, data, error} = await request('/api/item/del', {itemId});
-        if (ok) {
-            showSuccess(data.message);
-            history.push('/items');
-        } else {
-            showError(error);
+    stopRequest() {
+        if (this.requestCancel) {
+            this.requestCancel();
+            this.requestCancel = null;
+            this.setState({loading: false});
         }
     }
 
-    function handleOpenSpeedDial() {
-        setOpenSpeedDial(true);
-    }
+    render() {
+        const {initLoading, text, tags, firstSave, loading, outdated, openSpeedDial} = this.state;
+        const classes = this.props.classes;
 
-    function handleCloseSpeedDial() {
-        setOpenSpeedDial(false);
-    }
+        if (initLoading) {
+            return <Loader/>;
+        }
 
-    if (initLoading) {
-        return <Loader/>;
-    }
-
-    return (
-        <>
-            <Title title="Edit"/>
-            <Container component="main" maxWidth="md" className={classes.main}>
-                <Backdrop open={openSpeedDial} />
-                <Box mt={2} mb={2} className={classes.editor}>
-                    <CKEditor
-                        editor={ window.Editor || window.ClassicEditor }
-                        config={config}
-                        data={text}
-                        onInit={initEditor}
-                        onChange={changeEditor}
-                        disabled={outdated}
-                    />
-                </Box>
-                <Box mb={2}>
-                    <Tags
-                        value={tags}
-                        onChange={setTags}
-                    />
-                </Box>
-                <Grid
-                    container
-                    justify="space-between"
-                    spacing={2}
-                >
-                    <SpeedDial
-                        ariaLabel="Actions"
-                        classes={{
-                            root: classes.speedDial,
-                            fab: classes.speedDialFab,
-                            actions: classes.speedDialActions,
-                        }}
-                        icon={<SpeedDialIcon />}
-                        onClose={handleCloseSpeedDial}
-                        onOpen={handleOpenSpeedDial}
-                        open={openSpeedDial}
-                    >
-                        {outdated && <SpeedDialAction
-                            key="GetLatest"
-                            icon={<UpdateIcon/>}
-                            tooltipTitle="Get latest"
-                            tooltipPlacement="right"
-                            tooltipOpen
-                            classes={{
-                                fab: classes.speedActionFab,
-                                tooltipPlacementRight: classes.speedActionTooltip,
-                            }}
-                            onClick={clickGetLatest}
-                        />}
-                        <SpeedDialAction
-                            key="Delete"
-                            icon={<DeleteIcon/>}
-                            tooltipTitle="Delete"
-                            tooltipPlacement="right"
-                            tooltipOpen
-                            classes={{
-                                fab: classes.speedActionFab,
-                                tooltipPlacementRight: classes.speedActionTooltip,
-                            }}
-                            onClick={clickDelete}
+        return (
+            <Hotkeys
+                keyName="ctrl+s"
+                filter={() => true}
+                onKeyDown={this.handleHotkey}
+            >
+                <Title title="Edit"/>
+                <Container component="main" maxWidth="md" className={classes.main}>
+                    <Backdrop open={openSpeedDial}/>
+                    <Box mt={2} mb={2} className={classes.editor}>
+                        <CKEditor
+                            editor={window.Editor || window.ClassicEditor}
+                            config={editorConfig}
+                            data={text}
+                            onInit={this.initEditor}
+                            onChange={this.changeEditor}
+                            disabled={outdated}
                         />
-                    </SpeedDial>
+                    </Box>
+                    <Box mb={2}>
+                        <Tags
+                            value={tags}
+                            onChange={this.setTags}
+                        />
+                    </Box>
                     <Grid
-                        item
                         container
-                        justify="flex-end"
+                        justify="space-between"
                         spacing={2}
-                        className={classes.lastButtons}
                     >
-                        <Grid item>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={clickSave}
-                                disabled={blockSave || loading || outdated}
-                            >
-                                {firstSave ? 'Save' : 'Update'}
-                            </Button>
+                        <SpeedDial
+                            ariaLabel="Actions"
+                            classes={{
+                                root: classes.speedDial,
+                                fab: classes.speedDialFab,
+                                actions: classes.speedDialActions,
+                            }}
+                            icon={<SpeedDialIcon/>}
+                            onClose={this.handleCloseSpeedDial}
+                            onOpen={this.handleOpenSpeedDial}
+                            open={openSpeedDial}
+                        >
+                            {outdated && <SpeedDialAction
+                                key="GetLatest"
+                                icon={<UpdateIcon/>}
+                                tooltipTitle="Get latest"
+                                tooltipPlacement="right"
+                                tooltipOpen
+                                classes={{
+                                    fab: classes.speedActionFab,
+                                    tooltipPlacementRight: classes.speedActionTooltip,
+                                }}
+                                onClick={this.clickGetLatest}
+                            />}
+                            <SpeedDialAction
+                                key="Delete"
+                                icon={<DeleteIcon/>}
+                                tooltipTitle="Delete"
+                                tooltipPlacement="right"
+                                tooltipOpen
+                                classes={{
+                                    fab: classes.speedActionFab,
+                                    tooltipPlacementRight: classes.speedActionTooltip,
+                                }}
+                                onClick={this.clickDelete}
+                            />
+                        </SpeedDial>
+                        <Grid
+                            item
+                            container
+                            justify="flex-end"
+                            spacing={2}
+                            className={classes.lastButtons}
+                        >
+                            <Grid item>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={this.clickSave}
+                                    disabled={this.blockSave() || loading || outdated}
+                                >
+                                    {firstSave ? 'Save' : 'Update'}
+                                </Button>
+                            </Grid>
                         </Grid>
                     </Grid>
-                </Grid>
-            </Container>
-        </>
-    )
+                </Container>
+            </Hotkeys>
+        )
+    }
 }
+
+export default withStyles(editorStyles)(withSnackbar(withRouter(EditPage)));

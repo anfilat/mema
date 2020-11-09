@@ -34,39 +34,44 @@ class LoginPage extends React.Component {
         this.emailChangeHandler = bindField(this, 'email');
         this.passwordChangeHandler = bindField(this, 'password');
         this.showError = bindShowError(this);
-        this.loginCancel = null;
+        this.requestCancel = null;
     }
 
     static contextType = AuthContext;
 
     componentWillUnmount() {
-        if (this.loginCancel) {
-            this.loginCancel();
-            this.loginCancel = null;
-        }
+        this.stopRequest();
     }
 
     loginHandler = (event) => {
         event.preventDefault();
 
-        this.setState({loading: true});
         const {email, password} = this.state;
-        const {wait, cancel} = request('/api/auth/login', {email, password}, false);
-        wait.then(this.onLoginResult);
-        this.loginCancel = cancel;
+        request(this, '/api/auth/login', {
+                email,
+                password,
+            },
+            false
+        ).then(this.onLoginResult);
     }
 
     onLoginResult = ({ok, data, error, abort}) => {
         if (abort) {
             return;
         }
-        this.setState({loading: false});
-        this.loginCancel = null;
 
         if (ok) {
             this.context.login(data.userId);
         } else {
             this.showError(error);
+        }
+    }
+
+    stopRequest() {
+        if (this.requestCancel) {
+            this.requestCancel();
+            this.requestCancel = null;
+            this.setState({loading: false});
         }
     }
 

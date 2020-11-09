@@ -35,34 +35,31 @@ class RegisterPage extends React.Component {
         this.passwordChangeHandler = bindField(this, 'password');
         this.showSuccess = bindShowSuccess(this);
         this.showError = bindShowError(this);
-        this.registerCancel = null;
+        this.requestCancel = null;
     }
 
     static contextType = AuthContext;
 
     componentWillUnmount() {
-        if (this.registerCancel) {
-            this.registerCancel();
-            this.registerCancel = null;
-        }
+        this.stopRequest();
     }
 
     registerHandler = (event) => {
         event.preventDefault();
 
-        this.setState({loading: true});
         const {email, password} = this.state;
-        const {wait, cancel} = request('/api/auth/register', {email, password}, false);
-        wait.then(this.onRegisterResult);
-        this.registerCancel = cancel;
+        request(this, '/api/auth/register', {
+                email,
+                password,
+            },
+            false
+        ).then(this.onRegisterResult);
     }
 
     onRegisterResult = ({ok, data, error, abort}) => {
         if (abort) {
             return;
         }
-        this.setState({loading: false});
-        this.registerCancel = null;
 
         if (ok) {
             this.showSuccess(data.message);
@@ -70,6 +67,14 @@ class RegisterPage extends React.Component {
             this.props.history.push('/');
         } else {
             this.showError(error);
+        }
+    }
+
+    stopRequest() {
+        if (this.requestCancel) {
+            this.requestCancel();
+            this.requestCancel = null;
+            this.setState({loading: false});
         }
     }
 

@@ -5,7 +5,7 @@ import {SnackbarProvider} from 'notistack';
 import {Routes} from './routes';
 import {AuthContext} from './context/AuthContext';
 import * as search from './services/search';
-import {Navbar} from './components/Navbar';
+import Navbar from './components/Navbar';
 
 const storageName = 'userData';
 

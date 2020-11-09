@@ -1,5 +1,13 @@
-export function request(url, body = null, autoLogout = true, logout) {
+export function request(component, url, body = null, autoLogout = true, logout) {
     const controller = new AbortController();
+
+    function cancel() {
+        controller.abort();
+    }
+
+    component.stopRequest();
+    component.requestCancel = cancel;
+    component.setState({loading: true});
 
     const headers = {};
     if (body) {
@@ -7,7 +15,7 @@ export function request(url, body = null, autoLogout = true, logout) {
         headers['Content-Type'] = 'application/json';
     }
 
-    const wait = fetch(url, {
+    return fetch(url, {
         method: 'POST',
         body,
         headers,
@@ -40,14 +48,13 @@ export function request(url, body = null, autoLogout = true, logout) {
                 error: err.message ?? 'Something went wrong',
                 abort,
             };
+        })
+        .then(result => {
+            if (!result.abort) {
+                component.requestCancel = null;
+                component.setState({loading: false});
+            }
+
+            return result;
         });
-
-    function cancel() {
-        controller.abort();
-    }
-
-    return {
-        wait,
-        cancel,
-    };
 }

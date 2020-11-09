@@ -24,13 +24,13 @@ class Tags extends React.Component {
         };
         this.showError = bindShowError(this);
         this.debouncedGetOptions = _.debounce(this.getOptions, 200);
-        this.getOptionsCancel = null;
+        this.requestCancel = null;
     }
 
     static contextType = AuthContext;
 
     componentWillUnmount() {
-        this.stopGetOptions();
+        this.stopRequest();
     }
 
     onOpen = () => {
@@ -45,7 +45,7 @@ class Tags extends React.Component {
             open: false,
             options: [],
         });
-        this.stopGetOptions();
+        this.stopRequest();
     }
 
     onInputChange = (event, value) => {
@@ -64,25 +64,19 @@ class Tags extends React.Component {
             return;
         }
 
-        this.stopGetOptions();
-        this.setState({loading: true});
-        const {wait, cancel} = request('/api/tag/list', {
-            text: search,
-            tags: this.props.value,
-        },
+        request(this, '/api/tag/list', {
+                text: search,
+                tags: this.props.value,
+            },
             true,
             this.context.logout
-        );
-        wait.then(this.onGetOptionsResult);
-        this.getOptionsCancel = cancel;
+        ).then(this.onGetOptionsResult);
     }
 
     onGetOptionsResult = ({ok, data, error, abort}) => {
         if (abort) {
             return;
         }
-        this.setState({loading: false});
-        this.getOptionsCancel = null;
 
         if (ok) {
             if (this.state.open) {
@@ -90,14 +84,6 @@ class Tags extends React.Component {
             }
         } else {
             this.showError(error);
-        }
-    }
-
-    stopGetOptions() {
-        if (this.getOptionsCancel) {
-            this.getOptionsCancel();
-            this.getOptionsCancel = null;
-            this.setState({loading: false});
         }
     }
 
@@ -110,6 +96,14 @@ class Tags extends React.Component {
         }
 
         return filtered;
+    }
+
+    stopRequest() {
+        if (this.requestCancel) {
+            this.requestCancel();
+            this.requestCancel = null;
+            this.setState({loading: false});
+        }
     }
 
     render() {
