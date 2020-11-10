@@ -46,7 +46,7 @@ class NewPage extends React.Component {
         this.focusEditor = focusEditor;
         this.showSuccess = bindShowSuccess(this);
         this.showError = bindShowError(this);
-        this.request = new Request(this);
+        this.request = new Request(this, {abortOnStop: false});
     }
 
     componentWillUnmount() {

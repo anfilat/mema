@@ -5,14 +5,23 @@ export class Request {
     #autoLogout;
     #loadingName;
     #cancelPrev;
+    #abortOnStop;
     #abortController;
+    #unmounted;
 
-    constructor(component, {autoLogout = true, loadingName = 'loading', cancelPrev = false} = {}) {
+    constructor(component, {
+        autoLogout = true,
+        loadingName = 'loading',
+        cancelPrev = false,
+        abortOnStop = true,
+    } = {}) {
         this.#component = component;
         this.#autoLogout = autoLogout;
         this.#loadingName = loadingName;
         this.#cancelPrev = cancelPrev;
+        this.#abortOnStop = abortOnStop;
         this.#abortController = null;
+        this.#unmounted = false;
     }
 
     fetch(url, body = null) {
@@ -65,7 +74,7 @@ export class Request {
                 };
             })
             .then(result => {
-                const aborted = abortController.signal.aborted;
+                const aborted = abortController.signal.aborted || this.#unmounted;
                 if (!aborted) {
                     this.#abortController = null;
                     this.#component.setState({[this.#loadingName]: false});
@@ -79,10 +88,14 @@ export class Request {
     }
 
     stop() {
-        if (this.#abortController) {
-            this.#abortController.abort();
-            this.#abortController = null;
-            this.#component.setState({[this.#loadingName]: false});
+        if (this.#abortOnStop) {
+            if (this.#abortController) {
+                this.#abortController.abort();
+                this.#abortController = null;
+                this.#component.setState({[this.#loadingName]: false});
+            }
+        } else {
+            this.#unmounted = true;
         }
     }
 }

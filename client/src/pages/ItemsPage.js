@@ -26,16 +26,17 @@ class ItemsPage extends React.Component {
         this.state = {
             items: [],
             allDataHere: false,
+            loading: false,
         };
-        this.unsubscribe = searchService.subscribe(this.onSearchChange);
+        this.searchServiceUnsubscribe = searchService.subscribe(this.onSearchChange);
         this.showError = bindShowError(this);
-        this.request = new Request(this);
+        this.request = new Request(this, {cancelPrev: true});
         setTimeout(() => this.loadMore(), 0);
     }
 
     componentWillUnmount() {
         this.request.stop();
-        this.unsubscribe();
+        this.searchServiceUnsubscribe();
     }
 
     onSearchChange = () => {
@@ -46,7 +47,7 @@ class ItemsPage extends React.Component {
     }
 
     loadNext = () => {
-        if (this.state.allDataHere) {
+        if (this.state.loading || this.state.allDataHere) {
             return;
         }
 

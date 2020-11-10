@@ -36,18 +36,26 @@ class EditPage extends React.Component {
         this.focusEditor = focusEditor;
         this.showSuccess = bindShowSuccess(this);
         this.showError = bindShowError(this);
-        this.request = new Request(this);
+        this.request = new Request(this, {abortOnStop: false});
         setTimeout(() => this.getLatest(), 0);
     }
 
     componentWillUnmount() {
         this.request.stop();
+
+        if (!this.isSaved() && !this.state.outdated) {
+            this.saveOnUnmount();
+        }
+    }
+
+    isSaved() {
+        const {text, tags, savedText, savedTags} = this.state;
+        return text === savedText && _.isEqual(tags, savedTags);
     }
 
     blockSave() {
-        const {text, tags, savedText, savedTags} = this.state;
-        const isSaved = text === savedText && _.isEqual(tags, savedTags);
-        return isSaved || (text.trim() === '');
+        const {text} = this.state;
+        return this.isSaved() || (text.trim() === '');
     }
 
     changeEditor = (event, editor) => {
@@ -180,6 +188,24 @@ class EditPage extends React.Component {
                         outdated: true,
                     });
                 }
+                this.showError(error);
+            }
+        });
+    }
+
+    saveOnUnmount() {
+        const {text, tags, textId, firstSave} = this.state;
+        const api = firstSave ? '/api/item/resave' : '/api/item/update';
+        const request = new Request(this);
+        request.fetch(api, {
+            text,
+            tags,
+            itemId: this.itemId,
+            textId,
+        }).then(({ok, data, error}) => {
+            if (ok) {
+                this.showSuccess(data.message);
+            } else {
                 this.showError(error);
             }
         });
