@@ -2,8 +2,9 @@ import React from 'react';
 import {IconButton, Menu, MenuItem} from '@material-ui/core';
 import {Menu as MenuIcon} from '@material-ui/icons';
 import {AuthContext} from '../context/AuthContext';
-import projectInfo from "../../package.json";
+import history from "../services/history";
 import {request} from "../utils";
+import projectInfo from "../../package.json";
 
 class AppMenu extends React.Component {
     constructor(props) {
@@ -31,7 +32,7 @@ class AppMenu extends React.Component {
         request(this, '/api/auth/logout', null, false)
             .then(() => {
                 this.context.logout();
-                this.props.history.push('/');
+                history.push('/');
             });
     }
 

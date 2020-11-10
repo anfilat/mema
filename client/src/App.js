@@ -1,9 +1,10 @@
 import React from 'react';
-import {BrowserRouter as Router} from 'react-router-dom';
+import {Router} from 'react-router-dom';
 import {CssBaseline} from '@material-ui/core';
 import {SnackbarProvider} from 'notistack';
 import {Routes} from './routes';
 import {AuthContext} from './context/AuthContext';
+import history from "./services/history";
 import * as search from './services/search';
 import Navbar from './components/Navbar';
 
@@ -56,7 +57,7 @@ export default class App extends React.Component {
                     vertical: 'top',
                     horizontal: 'right',
                 }}>
-                    <Router>
+                    <Router history={history}>
                         {isAuthenticated && <Navbar/>}
                         <div className="container">
                             {Routes(isAuthenticated)}

@@ -2,6 +2,7 @@ import React from 'react';
 import {withStyles, fade} from '@material-ui/core/styles';
 import {InputBase, IconButton} from '@material-ui/core';
 import {Search as SearchIcon} from '@material-ui/icons';
+import history from "../services/history";
 import {subscribe, getSearch} from '../services/search';
 import {bindField} from '../utils';
 
@@ -58,7 +59,7 @@ class Search extends React.Component {
 
         const value = this.state.value;
         if (value !== getSearch()) {
-            this.props.history.push(`/items?search=${value}`);
+            history.push(`/items?search=${value}`);
         }
     }
 

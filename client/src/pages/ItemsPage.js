@@ -1,10 +1,10 @@
 import React from 'react';
-import {withRouter} from "react-router-dom";
 import {Container, CircularProgress} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import {Virtuoso} from 'react-virtuoso'
 import {withSnackbar} from 'notistack';
 import {AuthContext} from '../context/AuthContext';
+import history from "../services/history";
 import {getSearch, setSearch} from '../services/search';
 import Title from '../components/Title';
 import Item from '../components/Item';
@@ -30,8 +30,8 @@ class ItemsPage extends React.Component {
             allDataHere: false,
         };
 
-        setSearch(getSearchFromLocation(this.props.location.search));
-        this.unsubscribeHistory = this.props.history.listen(this.onHistoryChange);
+        setSearch(getSearchFromLocation(history.location.search));
+        this.unsubscribeHistory = history.listen(this.onHistoryChange);
 
         this.showError = bindShowError(this);
         this.requestCancel = null;
@@ -170,4 +170,4 @@ function getSearchFromLocation(value) {
     return new URLSearchParams(value).get('search') ?? '';
 }
 
-export default withStyles(styles)(withSnackbar(withRouter(ItemsPage)));
+export default withStyles(styles)(withSnackbar(ItemsPage));

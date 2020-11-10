@@ -9,6 +9,7 @@ import {Delete as DeleteIcon, Update as UpdateIcon} from '@material-ui/icons';
 import {withStyles} from "@material-ui/core/styles";
 import {withSnackbar} from 'notistack';
 import {AuthContext} from '../context/AuthContext';
+import history from "../services/history";
 import Loader from '../components/Loader';
 import Title from '../components/Title';
 import Tags from '../components/Tags';
@@ -129,7 +130,7 @@ class EditPage extends React.Component {
             });
         } else {
             this.showError(error);
-            this.props.history.push('/items');
+            history.push('/items');
         }
     }
 
@@ -149,7 +150,7 @@ class EditPage extends React.Component {
 
         if (ok) {
             this.showSuccess(data.message);
-            this.props.history.push('/items');
+            history.push('/items');
         } else {
             this.showError(error);
         }

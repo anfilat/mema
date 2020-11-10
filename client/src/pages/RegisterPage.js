@@ -1,8 +1,9 @@
 import React from 'react';
-import {Link as RouterLink, withRouter} from 'react-router-dom';
+import {Link as RouterLink} from 'react-router-dom';
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {withStyles} from '@material-ui/core/styles';
 import {withSnackbar} from 'notistack';
+import history from "../services/history";
 import Copyright from '../components/Copyright';
 import Title from '../components/Title';
 import {AuthContext} from '../context/AuthContext';
@@ -64,7 +65,7 @@ class RegisterPage extends React.Component {
         if (ok) {
             this.showSuccess(data.message);
             this.context.login(data.userId);
-            this.props.history.push('/');
+            history.push('/');
         } else {
             this.showError(error);
         }
@@ -138,4 +139,4 @@ class RegisterPage extends React.Component {
     }
 }
 
-export default withStyles(styles)(withSnackbar(withRouter(RegisterPage)));
+export default withStyles(styles)(withSnackbar(RegisterPage));
