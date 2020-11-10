@@ -5,7 +5,7 @@ import {SnackbarProvider} from 'notistack';
 import {Routes} from './routes';
 import {AuthContext} from './context/AuthContext';
 import history from "./services/history";
-import * as search from './services/search';
+import searchService from './services/search';
 import Navbar from './components/Navbar';
 
 const storageName = 'userData';
@@ -38,7 +38,7 @@ export default class App extends React.Component {
     logout = () => {
         this.setState({userId: null});
         localStorage.clear();
-        search.clean();
+        searchService.clear();
     }
 
     render() {

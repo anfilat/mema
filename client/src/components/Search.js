@@ -2,8 +2,7 @@ import React from 'react';
 import {withStyles, fade} from '@material-ui/core/styles';
 import {InputBase, IconButton} from '@material-ui/core';
 import {Search as SearchIcon} from '@material-ui/icons';
-import history from "../services/history";
-import {subscribe, getSearch} from '../services/search';
+import searchService from '../services/search';
 import {bindField} from '../utils';
 
 const styles = (theme) => ({
@@ -36,10 +35,10 @@ class Search extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            value: getSearch(),
+            value: searchService.search,
         };
         this.changeHandler = bindField(this, 'value');
-        this.unsubscribe = subscribe(this.onSearchChange);
+        this.unsubscribe = searchService.subscribe(this.onSearchChange);
     }
 
     componentWillUnmount() {
@@ -57,10 +56,7 @@ class Search extends React.Component {
     searchHandler = (event) => {
         event.preventDefault();
 
-        const value = this.state.value;
-        if (value !== getSearch()) {
-            history.push(`/items?search=${value}`);
-        }
+        searchService.showItems(this.state.value);
     }
 
     render() {

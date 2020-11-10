@@ -4,8 +4,7 @@ import {withStyles} from "@material-ui/core/styles";
 import {Virtuoso} from 'react-virtuoso'
 import {withSnackbar} from 'notistack';
 import {AuthContext} from '../context/AuthContext';
-import history from "../services/history";
-import {getSearch, setSearch} from '../services/search';
+import searchService from '../services/search';
 import Title from '../components/Title';
 import Item from '../components/Item';
 import {bindShowError, mdToHtml, request} from '../utils';
@@ -29,10 +28,7 @@ class ItemsPage extends React.Component {
             items: [],
             allDataHere: false,
         };
-
-        setSearch(getSearchFromLocation(history.location.search));
-        this.unsubscribeHistory = history.listen(this.onHistoryChange);
-
+        this.unsubscribe = searchService.subscribe(this.onSearchChange);
         this.showError = bindShowError(this);
         this.requestCancel = null;
         setTimeout(() => this.loadMore(), 0);
@@ -42,25 +38,14 @@ class ItemsPage extends React.Component {
 
     componentWillUnmount() {
         this.stopRequest();
-        this.unsubscribeHistory();
+        this.unsubscribe();
     }
 
-    onHistoryChange = (location) => {
-        if (location.pathname !== '/items') {
-            return;
-        }
-
-        const search = getSearch();
-        const urlSearch = getSearchFromLocation(location.search);
-
-        if (search !== urlSearch) {
-            setSearch(urlSearch);
-
-            this.setState({
-                items: [],
-                allDataHere: false,
-            }, this.loadMore);
-        }
+    onSearchChange = () => {
+        this.setState({
+            items: [],
+            allDataHere: false,
+        }, this.loadMore);
     }
 
     loadNext = () => {
@@ -72,7 +57,7 @@ class ItemsPage extends React.Component {
     }
 
     loadMore() {
-        const search = getSearch();
+        const search = searchService.search;
         const total = this.state.items.length;
 
         request(this, '/api/search/list', {
@@ -122,7 +107,7 @@ class ItemsPage extends React.Component {
     render() {
         const {items, allDataHere} = this.state;
         const total = items.length;
-        const search = getSearch();
+        const search = searchService.search;
         const title = search ? `Items: ${search}` : 'Items';
         const {classes} = this.props;
 
@@ -164,10 +149,6 @@ class ItemsPage extends React.Component {
             </>
         );
     }
-}
-
-function getSearchFromLocation(value) {
-    return new URLSearchParams(value).get('search') ?? '';
 }
 
 export default withStyles(styles)(withSnackbar(ItemsPage));

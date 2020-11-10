@@ -5,7 +5,7 @@ import {AppBar, Toolbar, Button} from '@material-ui/core';
 import Search from './Search';
 import AppMenu from './AppMenu';
 import history from "../services/history";
-import {getSearch} from '../services/search';
+import searchService from '../services/search';
 
 const NavButton = withStyles((theme) => ({
     root: {
@@ -29,7 +29,7 @@ export default class Navbar extends React.Component {
     }
 
     handleItemsPage = () => {
-        const search = getSearch();
+        const search = searchService.search;
         if (search) {
             history.push(`/items?search=${search}`);
         } else {
