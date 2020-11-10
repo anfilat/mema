@@ -15,7 +15,7 @@ import {
     editorHelper,
     editorConfig,
     editorStyles,
-    request,
+    Request,
     localStorageVars,
 } from '../utils';
 import 'ckeditor5-custom-build/build/ckeditor';
@@ -46,11 +46,11 @@ class NewPage extends React.Component {
         this.focusEditor = focusEditor;
         this.showSuccess = bindShowSuccess(this);
         this.showError = bindShowError(this);
-        this.requestCancel = null;
+        this.request = new Request(this);
     }
 
     componentWillUnmount() {
-        this.stopRequest();
+        this.request.stop();
 
         if (this.isSaved()) {
             this.delVars();
@@ -133,15 +133,13 @@ class NewPage extends React.Component {
     }
 
     getLatest() {
-        request(this,
-            '/api/item/get', {
-                itemId: this.state.itemId,
-            }
-        ).then(this.onGetLatestResult);
+        this.request.fetch('/api/item/get', {
+            itemId: this.state.itemId,
+        }).then(this.onGetLatestResult);
     }
 
-    onGetLatestResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onGetLatestResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -162,15 +160,13 @@ class NewPage extends React.Component {
     }
 
     deleteIt() {
-        request(this,
-            '/api/item/del', {
-                itemId: this.state.itemId,
-            }
-        ).then(this.onDeleteItResult);
+        this.request.fetch('/api/item/del', {
+            itemId: this.state.itemId,
+        }).then(this.onDeleteItResult);
     }
 
-    onDeleteItResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onDeleteItResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -185,15 +181,13 @@ class NewPage extends React.Component {
     saveIt() {
         const {text, tags, textId} = this.state;
         if (this.inEditing()) {
-            request(this,
-                '/api/item/update', {
-                    text,
-                    tags,
-                    itemId: this.state.itemId,
-                    textId,
-                }
-            ).then(({ok, data, error, abort}) => {
-                if (abort) {
+            this.request.fetch('/api/item/update', {
+                text,
+                tags,
+                itemId: this.state.itemId,
+                textId,
+            }).then(({ok, data, error, aborted}) => {
+                if (aborted) {
                     return;
                 }
 
@@ -214,13 +208,11 @@ class NewPage extends React.Component {
                 }
             });
         } else {
-            request(this,
-                '/api/item/add', {
-                    text,
-                    tags,
-                }
-            ).then(({ok, data, error, abort}) => {
-                if (abort) {
+            this.request.fetch('/api/item/add', {
+                text,
+                tags,
+            }).then(({ok, data, error, aborted}) => {
+                if (aborted) {
                     return;
                 }
 
@@ -237,14 +229,6 @@ class NewPage extends React.Component {
                     this.showError(error);
                 }
             });
-        }
-    }
-
-    stopRequest() {
-        if (this.requestCancel) {
-            this.requestCancel();
-            this.requestCancel = null;
-            this.setState({loading: false});
         }
     }
 

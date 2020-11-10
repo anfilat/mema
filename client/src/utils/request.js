@@ -1,62 +1,88 @@
 import authService from "../services/auth";
 
-export function request(component, url, body = null, autoLogout = true) {
-    const controller = new AbortController();
+export class Request {
+    #component;
+    #autoLogout;
+    #loadingName;
+    #cancelPrev;
+    #abortController;
 
-    function cancel() {
-        controller.abort();
+    constructor(component, {autoLogout = true, loadingName = 'loading', cancelPrev = false} = {}) {
+        this.#component = component;
+        this.#autoLogout = autoLogout;
+        this.#loadingName = loadingName;
+        this.#cancelPrev = cancelPrev;
+        this.#abortController = null;
     }
 
-    component.stopRequest();
-    component.requestCancel = cancel;
-    component.setState({loading: true});
+    fetch(url, body = null) {
+        if (this.#cancelPrev) {
+            this.stop();
+        } else if (this.#abortController) {
+            return;
+        }
 
-    const headers = {};
-    if (body) {
-        body = JSON.stringify(body);
-        headers['Content-Type'] = 'application/json';
+        const abortController = new AbortController();
+        this.#abortController = abortController;
+        this.#component.setState({[this.#loadingName]: true});
+
+        const headers = {};
+        if (body) {
+            body = JSON.stringify(body);
+            headers['Content-Type'] = 'application/json';
+        }
+
+        return fetch(url, {
+            method: 'POST',
+            body,
+            headers,
+            signal: abortController.signal,
+        })
+            .then(async (response) => {
+                const ok = response.ok;
+                const status = response.status;
+                const data = await response.json();
+                const error = ok ? null : data.message ?? 'Something went wrong';
+
+                if (this.#autoLogout && status === 401) {
+                    abortController.abort();
+                    authService.logout();
+                }
+
+                return {
+                    ok,
+                    status,
+                    data,
+                    error,
+                };
+            })
+            .catch(err => {
+                return {
+                    ok: false,
+                    status: null,
+                    data: null,
+                    error: err.message ?? 'Something went wrong',
+                };
+            })
+            .then(result => {
+                const aborted = abortController.signal.aborted;
+                if (!aborted) {
+                    this.#abortController = null;
+                    this.#component.setState({[this.#loadingName]: false});
+                }
+
+                return {
+                    ...result,
+                    aborted,
+                };
+            });
     }
 
-    return fetch(url, {
-        method: 'POST',
-        body,
-        headers,
-        signal: controller.signal,
-    })
-        .then(async (response) => {
-            const ok = response.ok;
-            const status = response.status;
-            const data = await response.json();
-            const error = ok ? null : data.message ?? 'Something went wrong';
-
-            if (status === 401 && autoLogout) {
-                authService.logout();
-            }
-
-            return {
-                ok,
-                status,
-                data,
-                error,
-                abort: false,
-            };
-        })
-        .catch(err => {
-            const abort = err.name === 'AbortError';
-            return {
-                ok: false,
-                status: null,
-                data: null,
-                error: err.message ?? 'Something went wrong',
-                abort,
-            };
-        })
-        .then(result => {
-            if (!result.abort) {
-                component.requestCancel = null;
-                component.setState({loading: false});
-            }
-
-            return result;
-        });
+    stop() {
+        if (this.#abortController) {
+            this.#abortController.abort();
+            this.#abortController = null;
+            this.#component.setState({[this.#loadingName]: false});
+        }
+    }
 }

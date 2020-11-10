@@ -2,7 +2,7 @@ import React from 'react';
 import {IconButton, Menu, MenuItem} from '@material-ui/core';
 import {Menu as MenuIcon} from '@material-ui/icons';
 import authService from '../services/auth';
-import {request} from "../utils";
+import {Request} from "../utils";
 import projectInfo from "../../package.json";
 
 class AppMenu extends React.Component {
@@ -12,7 +12,7 @@ class AppMenu extends React.Component {
             anchorEl: null,
             loading: false,
         };
-        this.requestCancel = null;
+        this.request = new Request(this, {autoLogout: false});
     }
 
     handleMenu = (event) => {
@@ -26,18 +26,10 @@ class AppMenu extends React.Component {
     handleLogout = (event) => {
         event.preventDefault();
 
-        request(this, '/api/auth/logout', null, false)
+        this.request.fetch('/api/auth/logout')
             .then(() => {
                 authService.logout();
             });
-    }
-
-    stopRequest() {
-        if (this.requestCancel) {
-            this.requestCancel();
-            this.requestCancel = null;
-            this.setState({loading: false});
-        }
     }
 
     render() {

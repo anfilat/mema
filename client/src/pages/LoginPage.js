@@ -6,7 +6,7 @@ import {withSnackbar} from 'notistack';
 import authService from '../services/auth';
 import Copyright from '../components/Copyright';
 import Title from '../components/Title';
-import {bindField, bindShowError, request} from '../utils';
+import {bindField, bindShowError, Request} from '../utils';
 
 const styles = theme => ({
     paper: {
@@ -34,28 +34,25 @@ class LoginPage extends React.Component {
         this.emailChangeHandler = bindField(this, 'email');
         this.passwordChangeHandler = bindField(this, 'password');
         this.showError = bindShowError(this);
-        this.requestCancel = null;
+        this.request = new Request(this, {autoLogout: false});
     }
 
     componentWillUnmount() {
-        this.stopRequest();
+        this.request.stop();
     }
 
     loginHandler = (event) => {
         event.preventDefault();
 
         const {email, password} = this.state;
-        request(this,
-            '/api/auth/login', {
-                email,
-                password,
-            },
-            false
-        ).then(this.onLoginResult);
+        this.request.fetch('/api/auth/login', {
+            email,
+            password,
+        }).then(this.onLoginResult);
     }
 
-    onLoginResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onLoginResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -63,14 +60,6 @@ class LoginPage extends React.Component {
             authService.login(data.userId);
         } else {
             this.showError(error);
-        }
-    }
-
-    stopRequest() {
-        if (this.requestCancel) {
-            this.requestCancel();
-            this.requestCancel = null;
-            this.setState({loading: false});
         }
     }
 

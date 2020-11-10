@@ -6,7 +6,7 @@ import {withSnackbar} from 'notistack';
 import authService from '../services/auth';
 import Copyright from '../components/Copyright';
 import Title from '../components/Title';
-import {bindField, bindShowSuccess, bindShowError, request} from '../utils';
+import {bindField, bindShowSuccess, bindShowError, Request} from '../utils';
 
 const styles = theme => ({
     paper: {
@@ -35,28 +35,25 @@ class RegisterPage extends React.Component {
         this.passwordChangeHandler = bindField(this, 'password');
         this.showSuccess = bindShowSuccess(this);
         this.showError = bindShowError(this);
-        this.requestCancel = null;
+        this.request = new Request(this, {autoLogout: false});
     }
 
     componentWillUnmount() {
-        this.stopRequest();
+        this.request.stop();
     }
 
     registerHandler = (event) => {
         event.preventDefault();
 
         const {email, password} = this.state;
-        request(this,
-            '/api/auth/register', {
-                email,
-                password,
-            },
-            false
-        ).then(this.onRegisterResult);
+        this.request.fetch('/api/auth/register', {
+            email,
+            password,
+        }).then(this.onRegisterResult);
     }
 
-    onRegisterResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onRegisterResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -65,14 +62,6 @@ class RegisterPage extends React.Component {
             authService.login(data.userId);
         } else {
             this.showError(error);
-        }
-    }
-
-    stopRequest() {
-        if (this.requestCancel) {
-            this.requestCancel();
-            this.requestCancel = null;
-            this.setState({loading: false});
         }
     }
 

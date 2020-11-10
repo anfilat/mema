@@ -12,7 +12,7 @@ import history from "../services/history";
 import Loader from '../components/Loader';
 import Title from '../components/Title';
 import Tags from '../components/Tags';
-import {bindShowSuccess, bindShowError, editorHelper, editorConfig, editorStyles, request} from '../utils';
+import {bindShowSuccess, bindShowError, editorHelper, editorConfig, editorStyles, Request} from '../utils';
 import 'ckeditor5-custom-build/build/ckeditor';
 
 class EditPage extends React.Component {
@@ -36,12 +36,12 @@ class EditPage extends React.Component {
         this.focusEditor = focusEditor;
         this.showSuccess = bindShowSuccess(this);
         this.showError = bindShowError(this);
-        this.requestCancel = null;
+        this.request = new Request(this);
         setTimeout(() => this.getLatest(), 0);
     }
 
     componentWillUnmount() {
-        this.stopRequest();
+        this.request.stop();
     }
 
     blockSave() {
@@ -100,15 +100,13 @@ class EditPage extends React.Component {
     }
 
     getLatest() {
-        request(this,
-            '/api/item/get', {
-                itemId: this.itemId,
-            }
-        ).then(this.onGetLatestResult);
+        this.request.fetch('/api/item/get', {
+            itemId: this.itemId,
+        }).then(this.onGetLatestResult);
     }
 
-    onGetLatestResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onGetLatestResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -131,15 +129,13 @@ class EditPage extends React.Component {
     }
 
     deleteIt() {
-        request(this,
-            '/api/item/del', {
-                itemId: this.itemId,
-            }
-        ).then(this.onDeleteItResult);
+        this.request.fetch('/api/item/del', {
+            itemId: this.itemId,
+        }).then(this.onDeleteItResult);
     }
 
-    onDeleteItResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onDeleteItResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -154,15 +150,13 @@ class EditPage extends React.Component {
     saveIt() {
         const {text, tags, textId, firstSave} = this.state;
         const api = firstSave ? '/api/item/resave' : '/api/item/update';
-        request(this,
-            api, {
-                text,
-                tags,
-                itemId: this.itemId,
-                textId,
-            }
-        ).then(({ok, data, error, abort}) => {
-            if (abort) {
+        this.request.fetch(api, {
+            text,
+            tags,
+            itemId: this.itemId,
+            textId,
+        }).then(({ok, data, error, aborted}) => {
+            if (aborted) {
                 return;
             }
 
@@ -189,14 +183,6 @@ class EditPage extends React.Component {
                 this.showError(error);
             }
         });
-    }
-
-    stopRequest() {
-        if (this.requestCancel) {
-            this.requestCancel();
-            this.requestCancel = null;
-            this.setState({loading: false});
-        }
     }
 
     render() {

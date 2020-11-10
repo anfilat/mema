@@ -4,7 +4,7 @@ import {TextField, CircularProgress} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 import {withSnackbar} from 'notistack';
-import {bindShowError, request} from "../utils";
+import {bindShowError, Request} from "../utils";
 
 const styles = {
     root: {
@@ -23,11 +23,11 @@ class Tags extends React.Component {
         };
         this.showError = bindShowError(this);
         this.debouncedGetOptions = _.debounce(this.getOptions, 200);
-        this.requestCancel = null;
+        this.request = new Request(this, {cancelPrev: true});
     }
 
     componentWillUnmount() {
-        this.stopRequest();
+        this.request.stop();
     }
 
     onOpen = () => {
@@ -42,7 +42,7 @@ class Tags extends React.Component {
             open: false,
             options: [],
         });
-        this.stopRequest();
+        this.request.stop();
     }
 
     onInputChange = (event, value) => {
@@ -61,16 +61,14 @@ class Tags extends React.Component {
             return;
         }
 
-        request(this,
-            '/api/tag/list', {
-                text: search,
-                tags: this.props.value,
-            }
-        ).then(this.onGetOptionsResult);
+        this.request.fetch('/api/tag/list', {
+            text: search,
+            tags: this.props.value,
+        }).then(this.onGetOptionsResult);
     }
 
-    onGetOptionsResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onGetOptionsResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -92,14 +90,6 @@ class Tags extends React.Component {
         }
 
         return filtered;
-    }
-
-    stopRequest() {
-        if (this.requestCancel) {
-            this.requestCancel();
-            this.requestCancel = null;
-            this.setState({loading: false});
-        }
     }
 
     render() {

@@ -6,7 +6,7 @@ import {withSnackbar} from 'notistack';
 import searchService from '../services/search';
 import Title from '../components/Title';
 import Item from '../components/Item';
-import {bindShowError, mdToHtml, request} from '../utils';
+import {bindShowError, mdToHtml, Request} from '../utils';
 
 const styles = theme => ({
     main: {
@@ -29,12 +29,12 @@ class ItemsPage extends React.Component {
         };
         this.unsubscribe = searchService.subscribe(this.onSearchChange);
         this.showError = bindShowError(this);
-        this.requestCancel = null;
+        this.request = new Request(this);
         setTimeout(() => this.loadMore(), 0);
     }
 
     componentWillUnmount() {
-        this.stopRequest();
+        this.request.stop();
         this.unsubscribe();
     }
 
@@ -57,17 +57,15 @@ class ItemsPage extends React.Component {
         const search = searchService.search;
         const total = this.state.items.length;
 
-        request(this,
-            '/api/search/list', {
-                text: search,
-                offset: total,
-                limit: itemsLimit,
-            }
-        ).then(this.onLoadMoreResult);
+        this.request.fetch('/api/search/list', {
+            text: search,
+            offset: total,
+            limit: itemsLimit,
+        }).then(this.onLoadMoreResult);
     }
 
-    onLoadMoreResult = ({ok, data, error, abort}) => {
-        if (abort) {
+    onLoadMoreResult = ({ok, data, error, aborted}) => {
+        if (aborted) {
             return;
         }
 
@@ -89,14 +87,6 @@ class ItemsPage extends React.Component {
             }
         } else {
             this.showError(error);
-        }
-    }
-
-    stopRequest() {
-        if (this.requestCancel) {
-            this.requestCancel();
-            this.requestCancel = null;
-            this.setState({loading: false});
         }
     }
 
