@@ -4,7 +4,6 @@ import {TextField, CircularProgress} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import {Autocomplete} from "@material-ui/lab";
 import {withSnackbar} from 'notistack';
-import {AuthContext} from '../context/AuthContext';
 import {bindShowError, request} from "../utils";
 
 const styles = {
@@ -26,8 +25,6 @@ class Tags extends React.Component {
         this.debouncedGetOptions = _.debounce(this.getOptions, 200);
         this.requestCancel = null;
     }
-
-    static contextType = AuthContext;
 
     componentWillUnmount() {
         this.stopRequest();
@@ -64,12 +61,11 @@ class Tags extends React.Component {
             return;
         }
 
-        request(this, '/api/tag/list', {
+        request(this,
+            '/api/tag/list', {
                 text: search,
                 tags: this.props.value,
-            },
-            true,
-            this.context.logout
+            }
         ).then(this.onGetOptionsResult);
     }
 

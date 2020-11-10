@@ -3,9 +3,9 @@ import {Link as RouterLink} from 'react-router-dom';
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {withStyles} from '@material-ui/core/styles';
 import {withSnackbar} from 'notistack';
+import authService from '../services/auth';
 import Copyright from '../components/Copyright';
 import Title from '../components/Title';
-import {AuthContext} from '../context/AuthContext';
 import {bindField, bindShowError, request} from '../utils';
 
 const styles = theme => ({
@@ -37,8 +37,6 @@ class LoginPage extends React.Component {
         this.requestCancel = null;
     }
 
-    static contextType = AuthContext;
-
     componentWillUnmount() {
         this.stopRequest();
     }
@@ -47,7 +45,8 @@ class LoginPage extends React.Component {
         event.preventDefault();
 
         const {email, password} = this.state;
-        request(this, '/api/auth/login', {
+        request(this,
+            '/api/auth/login', {
                 email,
                 password,
             },
@@ -61,7 +60,7 @@ class LoginPage extends React.Component {
         }
 
         if (ok) {
-            this.context.login(data.userId);
+            authService.login(data.userId);
         } else {
             this.showError(error);
         }

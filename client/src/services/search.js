@@ -1,4 +1,5 @@
 import history from "./history";
+import authService from "./auth";
 
 class SearchService {
     #searchStr;
@@ -7,15 +8,14 @@ class SearchService {
     constructor() {
         this.#searchStr = getSearchFromLocation(history.location.search);
         this.#subscribers = [];
-        this._subscribeHistory();
+        if (authService.isAuthenticated) {
+            this._subscribeHistory();
+        }
+        authService.subscribe(this._onAuthChange);
     }
 
     get search() {
         return this.#searchStr;
-    }
-
-    clear() {
-        this.#searchStr = '';
     }
 
     subscribe(callback) {
@@ -44,6 +44,15 @@ class SearchService {
         const urlSearch = getSearchFromLocation(location.search);
         if (this.#searchStr !== urlSearch) {
             this._setSearch(urlSearch);
+        }
+    }
+
+    _onAuthChange = (isAuthenticated) => {
+        if (isAuthenticated) {
+            this._subscribeHistory();
+        } else {
+            this.#searchStr = '';
+            this._unsubscribeHistory();
         }
     }
 

@@ -8,7 +8,6 @@ import {SpeedDial, SpeedDialIcon, SpeedDialAction} from "@material-ui/lab";
 import {Delete as DeleteIcon, Update as UpdateIcon} from '@material-ui/icons';
 import {withStyles} from "@material-ui/core/styles";
 import {withSnackbar} from 'notistack';
-import {AuthContext} from '../context/AuthContext';
 import history from "../services/history";
 import Loader from '../components/Loader';
 import Title from '../components/Title';
@@ -40,8 +39,6 @@ class EditPage extends React.Component {
         this.requestCancel = null;
         setTimeout(() => this.getLatest(), 0);
     }
-
-    static contextType = AuthContext;
 
     componentWillUnmount() {
         this.stopRequest();
@@ -103,11 +100,10 @@ class EditPage extends React.Component {
     }
 
     getLatest() {
-        request(this, '/api/item/get', {
+        request(this,
+            '/api/item/get', {
                 itemId: this.itemId,
-            },
-            true,
-            this.context.logout
+            }
         ).then(this.onGetLatestResult);
     }
 
@@ -135,11 +131,10 @@ class EditPage extends React.Component {
     }
 
     deleteIt() {
-        request(this, '/api/item/del', {
+        request(this,
+            '/api/item/del', {
                 itemId: this.itemId,
-            },
-            true,
-            this.context.logout
+            }
         ).then(this.onDeleteItResult);
     }
 
@@ -159,14 +154,13 @@ class EditPage extends React.Component {
     saveIt() {
         const {text, tags, textId, firstSave} = this.state;
         const api = firstSave ? '/api/item/resave' : '/api/item/update';
-        request(this, api, {
+        request(this,
+            api, {
                 text,
                 tags,
                 itemId: this.itemId,
                 textId,
-            },
-            true,
-            this.context.logout
+            }
         ).then(({ok, data, error, abort}) => {
             if (abort) {
                 return;

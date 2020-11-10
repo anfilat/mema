@@ -6,7 +6,7 @@ import NewPage from './pages/NewPage';
 import ItemsPage from './pages/ItemsPage';
 import EditPage from './pages/EditPage';
 
-export function Routes(isAuthenticated) {
+export default function Routes(isAuthenticated) {
     if (isAuthenticated) {
         return (
             <Switch>

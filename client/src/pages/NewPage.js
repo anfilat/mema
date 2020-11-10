@@ -7,7 +7,6 @@ import {SpeedDial, SpeedDialIcon, SpeedDialAction} from "@material-ui/lab";
 import {Delete as DeleteIcon, Update as UpdateIcon} from '@material-ui/icons';
 import {withStyles} from "@material-ui/core/styles";
 import {withSnackbar} from 'notistack';
-import {AuthContext} from '../context/AuthContext';
 import Title from '../components/Title';
 import Tags from '../components/Tags';
 import {
@@ -49,8 +48,6 @@ class NewPage extends React.Component {
         this.showError = bindShowError(this);
         this.requestCancel = null;
     }
-
-    static contextType = AuthContext;
 
     componentWillUnmount() {
         this.stopRequest();
@@ -136,11 +133,10 @@ class NewPage extends React.Component {
     }
 
     getLatest() {
-        request(this, '/api/item/get', {
+        request(this,
+            '/api/item/get', {
                 itemId: this.state.itemId,
-            },
-            true,
-            this.context.logout
+            }
         ).then(this.onGetLatestResult);
     }
 
@@ -166,11 +162,10 @@ class NewPage extends React.Component {
     }
 
     deleteIt() {
-        request(this, '/api/item/del', {
+        request(this,
+            '/api/item/del', {
                 itemId: this.state.itemId,
-            },
-            true,
-            this.context.logout
+            }
         ).then(this.onDeleteItResult);
     }
 
@@ -190,14 +185,13 @@ class NewPage extends React.Component {
     saveIt() {
         const {text, tags, textId} = this.state;
         if (this.inEditing()) {
-            request(this, '/api/item/update', {
-                text,
-                tags,
-                itemId: this.state.itemId,
-                textId,
-            },
-                true,
-                this.context.logout
+            request(this,
+                '/api/item/update', {
+                    text,
+                    tags,
+                    itemId: this.state.itemId,
+                    textId,
+                }
             ).then(({ok, data, error, abort}) => {
                 if (abort) {
                     return;
@@ -220,12 +214,11 @@ class NewPage extends React.Component {
                 }
             });
         } else {
-            request(this, '/api/item/add', {
-                text,
-                tags,
-            },
-                true,
-                this.context.logout
+            request(this,
+                '/api/item/add', {
+                    text,
+                    tags,
+                }
             ).then(({ok, data, error, abort}) => {
                 if (abort) {
                     return;
@@ -313,7 +306,7 @@ class NewPage extends React.Component {
                                 }}
                                 onClick={this.clickGetLatest}
                             />}
-                            (this.inEditing() && <SpeedDialAction
+                            {this.inEditing() && <SpeedDialAction
                                 key="Delete"
                                 icon={<DeleteIcon/>}
                                 tooltipTitle="Delete"

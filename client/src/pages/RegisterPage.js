@@ -3,10 +3,9 @@ import {Link as RouterLink} from 'react-router-dom';
 import {Container, Box, Button, TextField, Link, Typography} from '@material-ui/core';
 import {withStyles} from '@material-ui/core/styles';
 import {withSnackbar} from 'notistack';
-import history from "../services/history";
+import authService from '../services/auth';
 import Copyright from '../components/Copyright';
 import Title from '../components/Title';
-import {AuthContext} from '../context/AuthContext';
 import {bindField, bindShowSuccess, bindShowError, request} from '../utils';
 
 const styles = theme => ({
@@ -39,8 +38,6 @@ class RegisterPage extends React.Component {
         this.requestCancel = null;
     }
 
-    static contextType = AuthContext;
-
     componentWillUnmount() {
         this.stopRequest();
     }
@@ -49,7 +46,8 @@ class RegisterPage extends React.Component {
         event.preventDefault();
 
         const {email, password} = this.state;
-        request(this, '/api/auth/register', {
+        request(this,
+            '/api/auth/register', {
                 email,
                 password,
             },
@@ -64,8 +62,7 @@ class RegisterPage extends React.Component {
 
         if (ok) {
             this.showSuccess(data.message);
-            this.context.login(data.userId);
-            history.push('/');
+            authService.login(data.userId);
         } else {
             this.showError(error);
         }

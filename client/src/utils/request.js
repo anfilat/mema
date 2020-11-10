@@ -1,4 +1,6 @@
-export function request(component, url, body = null, autoLogout = true, logout) {
+import authService from "../services/auth";
+
+export function request(component, url, body = null, autoLogout = true) {
     const controller = new AbortController();
 
     function cancel() {
@@ -28,7 +30,7 @@ export function request(component, url, body = null, autoLogout = true, logout) 
             const error = ok ? null : data.message ?? 'Something went wrong';
 
             if (status === 401 && autoLogout) {
-                logout();
+                authService.logout();
             }
 
             return {

@@ -1,8 +1,7 @@
 import React from 'react';
 import {IconButton, Menu, MenuItem} from '@material-ui/core';
 import {Menu as MenuIcon} from '@material-ui/icons';
-import {AuthContext} from '../context/AuthContext';
-import history from "../services/history";
+import authService from '../services/auth';
 import {request} from "../utils";
 import projectInfo from "../../package.json";
 
@@ -15,8 +14,6 @@ class AppMenu extends React.Component {
         };
         this.requestCancel = null;
     }
-
-    static contextType = AuthContext;
 
     handleMenu = (event) => {
         this.setState({anchorEl: event.currentTarget});
@@ -31,8 +28,7 @@ class AppMenu extends React.Component {
 
         request(this, '/api/auth/logout', null, false)
             .then(() => {
-                this.context.logout();
-                history.push('/');
+                authService.logout();
             });
     }
 

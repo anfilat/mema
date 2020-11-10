@@ -2,56 +2,29 @@ import React from 'react';
 import {Router} from 'react-router-dom';
 import {CssBaseline} from '@material-ui/core';
 import {SnackbarProvider} from 'notistack';
-import {Routes} from './routes';
-import {AuthContext} from './context/AuthContext';
+import Routes from './routes';
 import history from "./services/history";
-import searchService from './services/search';
+import authService from './services/auth';
 import Navbar from './components/Navbar';
-
-const storageName = 'userData';
 
 export default class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            userId: this.readLocalStorageUserId(),
+            isAuthenticated: authService.isAuthenticated,
         };
+        authService.subscribe(this.onAuthChange);
     }
 
-    readLocalStorageUserId() {
-        try {
-            const data = JSON.parse(localStorage.getItem(storageName));
-            return data?.userId ?? null;
-        } catch {
-        }
-        return null;
-    }
-
-    login = (userId) => {
-        this.setState({userId});
-
-        localStorage.setItem(storageName, JSON.stringify({
-            userId,
-        }));
-    }
-
-    logout = () => {
-        this.setState({userId: null});
-        localStorage.clear();
-        searchService.clear();
+    onAuthChange = (isAuthenticated) => {
+        this.setState({isAuthenticated});
     }
 
     render() {
-        const userId = this.state.userId;
-        const isAuthenticated = !!userId;
+        const {isAuthenticated} = this.state;
 
         return (
-            <AuthContext.Provider value={{
-                login: this.login,
-                logout: this.logout,
-                userId,
-                isAuthenticated,
-            }}>
+            <>
                 <CssBaseline/>
                 <SnackbarProvider hideIconVariant maxSnack={3} autoHideDuration={1000} anchorOrigin={{
                     vertical: 'top',
@@ -64,7 +37,7 @@ export default class App extends React.Component {
                         </div>
                     </Router>
                 </SnackbarProvider>
-            </AuthContext.Provider>
+            </>
         );
     }
 }

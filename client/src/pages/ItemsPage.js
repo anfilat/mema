@@ -3,7 +3,6 @@ import {Container, CircularProgress} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import {Virtuoso} from 'react-virtuoso'
 import {withSnackbar} from 'notistack';
-import {AuthContext} from '../context/AuthContext';
 import searchService from '../services/search';
 import Title from '../components/Title';
 import Item from '../components/Item';
@@ -34,8 +33,6 @@ class ItemsPage extends React.Component {
         setTimeout(() => this.loadMore(), 0);
     }
 
-    static contextType = AuthContext;
-
     componentWillUnmount() {
         this.stopRequest();
         this.unsubscribe();
@@ -60,13 +57,12 @@ class ItemsPage extends React.Component {
         const search = searchService.search;
         const total = this.state.items.length;
 
-        request(this, '/api/search/list', {
+        request(this,
+            '/api/search/list', {
                 text: search,
                 offset: total,
                 limit: itemsLimit,
-            },
-            true,
-            this.context.logout
+            }
         ).then(this.onLoadMoreResult);
     }
 
