@@ -20,4 +20,7 @@ pool.query(sql, (err) => {
         process.exit(1);
     }
     console.log('Database is ok');
+    pool.end(() => {
+        process.exit(0);
+    });
 });
