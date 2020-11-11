@@ -23,6 +23,7 @@ class Tags extends React.Component {
         };
         this.showError = bindShowError(this);
         this.debouncedGetOptions = _.debounce(this.getOptions, 200);
+        this.lastSearch = null;
         this.request = new Request(this, {cancelPrev: true});
     }
 
@@ -34,7 +35,8 @@ class Tags extends React.Component {
         this.setState({
             open: true,
         });
-        this.debouncedGetOptions('');
+        this.lastSearch = null;
+        this.changeSearch(this.state.search);
     }
 
     onClose = () => {
@@ -47,13 +49,24 @@ class Tags extends React.Component {
 
     onInputChange = (event, value) => {
         this.setState({search: value});
-        this.debouncedGetOptions(value);
+        this.changeSearch(value);
     }
 
     onChange = (event, value) => {
         if (this.props.onChange) {
+            value = _.uniq(value.map(item => item.trim()));
             this.props.onChange(value);
         }
+    }
+
+    changeSearch(value) {
+        value = value.trim();
+        if (value === this.lastSearch) {
+            return;
+        }
+
+        this.lastSearch = value;
+        this.debouncedGetOptions(value);
     }
 
     getOptions = (search) => {
@@ -84,9 +97,9 @@ class Tags extends React.Component {
     filterOptions = (options, params) => {
         const filtered = [...options];
 
-        const input = params.inputValue;
+        const input = params.inputValue.trim();
         if (input !== '' && !options.includes(input) && !this.props.value.includes(input)) {
-            filtered.push(params.inputValue);
+            filtered.push(input);
         }
 
         return filtered;
