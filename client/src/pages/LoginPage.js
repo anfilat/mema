@@ -38,7 +38,7 @@ class LoginPage extends React.Component {
     }
 
     componentWillUnmount() {
-        this.request.stop();
+        this.request.willUnmount();
     }
 
     loginHandler = (event) => {

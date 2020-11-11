@@ -5,7 +5,8 @@ export class Request {
     #autoLogout;
     #loadingName;
     #cancelPrev;
-    #abortOnStop;
+    #silent;
+    #abortOnUnmount;
     #abortController;
     #unmounted;
 
@@ -13,13 +14,15 @@ export class Request {
         autoLogout = true,
         loadingName = 'loading',
         cancelPrev = false,
-        abortOnStop = true,
+        silent = false,
+        abortOnUnmount = true,
     } = {}) {
         this.#component = component;
         this.#autoLogout = autoLogout;
         this.#loadingName = loadingName;
         this.#cancelPrev = cancelPrev;
-        this.#abortOnStop = abortOnStop;
+        this.#silent = silent;
+        this.#abortOnUnmount = abortOnUnmount;
         this.#abortController = null;
         this.#unmounted = false;
     }
@@ -33,7 +36,7 @@ export class Request {
 
         const abortController = new AbortController();
         this.#abortController = abortController;
-        this.#component.setState({[this.#loadingName]: true});
+        this._changeLoadingState(true);
 
         const headers = {};
         if (body) {
@@ -74,28 +77,40 @@ export class Request {
                 };
             })
             .then(result => {
-                const aborted = abortController.signal.aborted || this.#unmounted;
+                const unmounted = this.#unmounted;
+                const aborted = abortController.signal.aborted || unmounted;
                 if (!aborted) {
                     this.#abortController = null;
-                    this.#component.setState({[this.#loadingName]: false});
+                    this._changeLoadingState(false);
                 }
 
                 return {
                     ...result,
                     aborted,
+                    unmounted,
                 };
             });
     }
 
+    willUnmount() {
+        this.#unmounted = true;
+        if (this.#abortOnUnmount && this.#abortController) {
+            this.#abortController.abort();
+            this.#abortController = null;
+        }
+    }
+
     stop() {
-        if (this.#abortOnStop) {
-            if (this.#abortController) {
-                this.#abortController.abort();
-                this.#abortController = null;
-                this.#component.setState({[this.#loadingName]: false});
-            }
-        } else {
-            this.#unmounted = true;
+        if (this.#abortController) {
+            this.#abortController.abort();
+            this.#abortController = null;
+            this._changeLoadingState(false);
+        }
+    }
+
+    _changeLoadingState(value) {
+        if (!this.#silent && !this.#unmounted) {
+            this.#component.setState({[this.#loadingName]: value});
         }
     }
 }

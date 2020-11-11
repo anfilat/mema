@@ -35,7 +35,7 @@ class ItemsPage extends React.Component {
     }
 
     componentWillUnmount() {
-        this.request.stop();
+        this.request.willUnmount();
         this.searchServiceUnsubscribe();
     }
 

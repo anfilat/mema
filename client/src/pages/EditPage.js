@@ -36,16 +36,14 @@ class EditPage extends React.Component {
         this.focusEditor = focusEditor;
         this.showSuccess = bindShowSuccess(this);
         this.showError = bindShowError(this);
-        this.request = new Request(this, {abortOnStop: false});
+        this.request = new Request(this, {abortOnUnmount: false});
+        this.saveInProgress = false;
         setTimeout(() => this.getLatest(), 0);
     }
 
     componentWillUnmount() {
-        this.request.stop();
-
-        if (!this.isSaved() && !this.state.outdated) {
-            this.saveOnUnmount();
-        }
+        this.request.willUnmount();
+        this.saveOnUnmount();
     }
 
     isSaved() {
@@ -158,12 +156,19 @@ class EditPage extends React.Component {
     saveIt() {
         const {text, tags, textId, firstSave} = this.state;
         const api = firstSave ? '/api/item/resave' : '/api/item/update';
+        this.saveInProgress = true;
         this.request.fetch(api, {
             text,
             tags,
             itemId: this.itemId,
             textId,
-        }).then(({ok, data, error, aborted}) => {
+        }).then(({ok, data, error, aborted, unmounted}) => {
+            this.saveInProgress = false;
+
+            if (unmounted || !aborted) {
+                this.showSaveResult(ok, data, error);
+            }
+
             if (aborted) {
                 return;
             }
@@ -180,35 +185,40 @@ class EditPage extends React.Component {
                         firstSave: false,
                     });
                 }
-
-                this.showSuccess(data.message);
             } else {
                 if (data.outdated) {
                     this.setState({
                         outdated: true,
                     });
                 }
-                this.showError(error);
             }
         });
     }
 
     saveOnUnmount() {
+        if (this.isSaved() || this.saveInProgress || this.state.outdated) {
+            return;
+        }
+
         const {text, tags, textId, firstSave} = this.state;
         const api = firstSave ? '/api/item/resave' : '/api/item/update';
-        const request = new Request(this);
+        const request = new Request(this, {silent: true});
         request.fetch(api, {
             text,
             tags,
             itemId: this.itemId,
             textId,
         }).then(({ok, data, error}) => {
-            if (ok) {
-                this.showSuccess(data.message);
-            } else {
-                this.showError(error);
-            }
+            this.showSaveResult(ok, data, error);
         });
+    }
+
+    showSaveResult(ok, data, error) {
+        if (ok) {
+            this.showSuccess(data.message);
+        } else {
+            this.showError(error);
+        }
     }
 
     render() {

@@ -28,7 +28,7 @@ class Tags extends React.Component {
     }
 
     componentWillUnmount() {
-        this.request.stop();
+        this.request.willUnmount();
     }
 
     onOpen = () => {
