@@ -51,14 +51,14 @@ class AppMenu extends React.Component {
                 <Menu
                     id="menu-appbar"
                     anchorEl={anchorEl}
+                    getContentAnchorEl={null}
                     anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
+                        vertical: 'bottom',
+                        horizontal: 'left',
                     }}
-                    keepMounted
                     transformOrigin={{
                         vertical: 'top',
-                        horizontal: 'right',
+                        horizontal: 'left',
                     }}
                     open={isOpen}
                     onClose={this.handleMenuClose}

@@ -2,9 +2,8 @@ import React from 'react';
 import _ from 'lodash';
 import Hotkeys from 'react-hot-keys';
 import CKEditor from '@ckeditor/ckeditor5-react';
-import {Box, Button, Container, Grid, Backdrop} from "@material-ui/core";
-import {SpeedDial, SpeedDialIcon, SpeedDialAction} from "@material-ui/lab";
-import {Delete as DeleteIcon, Update as UpdateIcon} from '@material-ui/icons';
+import {Box, Button, Container, Grid, Fab, Menu, MenuItem} from "@material-ui/core";
+import {Add as AddIcon} from '@material-ui/icons';
 import {withStyles} from "@material-ui/core/styles";
 import {withSnackbar} from 'notistack';
 import Title from '../components/Title';
@@ -37,7 +36,7 @@ class NewPage extends React.Component {
             ...vars,
             loading: false,
             outdated: false,
-            openSpeedDial: false,
+            anchorEl: null,
         };
         this.changeVars = changeVars;
         this.delVars = delVars;
@@ -83,12 +82,12 @@ class NewPage extends React.Component {
         });
     }
 
-    handleOpenSpeedDial = () => {
-        this.setState({openSpeedDial: true});
+    handleOpenMenu = (event) => {
+        this.setState({anchorEl: event.currentTarget.parentElement});
     }
 
-    handleCloseSpeedDial = () => {
-        this.setState({openSpeedDial: false});
+    handleCloseMenu = () => {
+        this.setState({anchorEl: null});
     }
 
     handleHotkey = (keyName, event) => {
@@ -114,7 +113,7 @@ class NewPage extends React.Component {
             return;
         }
 
-        this.setState({openSpeedDial: false});
+        this.handleCloseMenu();
         this.getLatest();
     }
 
@@ -123,7 +122,7 @@ class NewPage extends React.Component {
             return;
         }
 
-        this.setState({openSpeedDial: false});
+        this.handleCloseMenu();
         this.deleteIt();
     }
 
@@ -233,8 +232,9 @@ class NewPage extends React.Component {
     }
 
     render() {
-        const {text, tags, loading, outdated, openSpeedDial} = this.state;
+        const {text, tags, loading, outdated, anchorEl} = this.state;
         const classes = this.props.classes;
+        const isOpenMenu = Boolean(anchorEl);
 
         return (
             <Hotkeys
@@ -244,7 +244,6 @@ class NewPage extends React.Component {
             >
                 <Title title="New"/>
                 <Container component="main" maxWidth="md" className={classes.main}>
-                    <Backdrop open={openSpeedDial}/>
                     <Box mt={2} mb={2} className={classes.editor}>
                         <CKEditor
                             editor={window.Editor || window.ClassicEditor}
@@ -266,43 +265,47 @@ class NewPage extends React.Component {
                         justify="space-between"
                         spacing={2}
                     >
-                        {(outdated || this.inEditing()) && <SpeedDial
-                            ariaLabel="Actions"
-                            classes={{
-                                root: classes.speedDial,
-                                fab: classes.speedDialFab,
-                                actions: classes.speedDialActions,
+                        {(outdated || this.inEditing()) && <Grid item>
+                            <div className={classes.menuParent}>
+                                <Fab
+                                    color="primary"
+                                    aria-label="Actions"
+                                    size="small"
+                                    className={classes.menuFab}
+                                    onClick={this.handleOpenMenu}
+                                >
+                                    <AddIcon/>
+                                </Fab>
+                            </div>
+                        </Grid>}
+                        <Menu
+                            anchorEl={anchorEl}
+                            getContentAnchorEl={null}
+                            anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'left',
                             }}
-                            icon={<SpeedDialIcon/>}
-                            onClose={this.handleCloseSpeedDial}
-                            onOpen={this.handleOpenSpeedDial}
-                            open={openSpeedDial}
+                            transformOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'left',
+                            }}
+                            open={isOpenMenu}
+                            onClose={this.handleCloseMenu}
+                            classes={{
+                                paper: classes.paper,
+                            }}
                         >
-                            {outdated && <SpeedDialAction
-                                key="GetLatest"
-                                icon={<UpdateIcon/>}
-                                tooltipTitle="Get latest"
-                                tooltipPlacement="right"
-                                tooltipOpen
-                                classes={{
-                                    fab: classes.speedActionFab,
-                                    tooltipPlacementRight: classes.speedActionTooltip,
-                                }}
+                            {outdated && <MenuItem
                                 onClick={this.clickGetLatest}
-                            />}
-                            {this.inEditing() && <SpeedDialAction
-                                key="Delete"
-                                icon={<DeleteIcon/>}
-                                tooltipTitle="Delete"
-                                tooltipPlacement="right"
-                                tooltipOpen
-                                classes={{
-                                    fab: classes.speedActionFab,
-                                    tooltipPlacementRight: classes.speedActionTooltip,
-                                }}
+                            >
+                                Get latest
+                            </MenuItem>}
+                            {this.inEditing() && <MenuItem
                                 onClick={this.clickDelete}
-                            />}
-                        </SpeedDial>}
+                            >
+                                Delete
+                            </MenuItem>}
+                        </Menu>
                         <Grid
                             item
                             container

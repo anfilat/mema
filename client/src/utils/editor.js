@@ -61,18 +61,12 @@ export const editorStyles = theme => ({
         bottom: 0,
         left: theme.spacing(2),
     },
-    speedDialFab: {
+    menuFab: {
         width: '36px',
         height: '36px',
     },
-    speedDialActions: {
-        'padding-bottom': `${theme.spacing(5)}px !important`,
-    },
-    speedActionTooltip: {
-        'white-space': 'nowrap',
-    },
-    speedActionFab: {
-        width: '36px',
-        height: '36px',
+    menuParent: {
+        paddingTop: `${theme.spacing(1)}px`,
+        marginTop: `-${theme.spacing(1)}px`,
     },
 });
