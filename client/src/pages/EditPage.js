@@ -12,6 +12,7 @@ import history from "../services/history";
 import Loader from '../components/Loader';
 import Title from '../components/Title';
 import Tags from '../components/Tags';
+import DeleteDialog from "../components/DeleteDialog";
 import {bindShowSuccess, bindShowError, editorHelper, editorConfig, editorStyles, Request} from '../utils';
 import 'ckeditor5-custom-build/build/ckeditor';
 
@@ -30,6 +31,7 @@ class EditPage extends React.Component {
             loading: false,
             outdated: false,
             anchorEl: null,
+            openDeleteDialog: false,
         };
         const {initEditor, focusEditor} = editorHelper();
         this.initEditor = initEditor;
@@ -100,7 +102,16 @@ class EditPage extends React.Component {
         }
 
         this.handleCloseMenu();
+        this.setState({openDeleteDialog: true});
+    }
+
+    reallyDelete = () => {
+        this.handleCloseDeleteDialog();
         this.deleteIt();
+    }
+
+    handleCloseDeleteDialog = () => {
+        this.setState({openDeleteDialog: false});
     }
 
     clickSave = () => {
@@ -224,7 +235,7 @@ class EditPage extends React.Component {
     }
 
     render() {
-        const {initLoading, text, tags, firstSave, loading, outdated, anchorEl} = this.state;
+        const {initLoading, text, tags, firstSave, loading, outdated, anchorEl, openDeleteDialog} = this.state;
         const classes = this.props.classes;
         const isOpenMenu = Boolean(anchorEl);
 
@@ -321,6 +332,11 @@ class EditPage extends React.Component {
                         </Grid>
                     </Grid>
                 </Container>
+                <DeleteDialog
+                    open={openDeleteDialog}
+                    onClose={this.handleCloseDeleteDialog}
+                    onOk={this.reallyDelete}
+                />
             </Hotkeys>
         )
     }

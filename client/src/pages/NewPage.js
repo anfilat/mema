@@ -8,6 +8,7 @@ import {withStyles} from "@material-ui/core/styles";
 import {withSnackbar} from 'notistack';
 import Title from '../components/Title';
 import Tags from '../components/Tags';
+import DeleteDialog from "../components/DeleteDialog";
 import {
     bindShowSuccess,
     bindShowError,
@@ -37,6 +38,7 @@ class NewPage extends React.Component {
             loading: false,
             outdated: false,
             anchorEl: null,
+            openDeleteDialog: false,
         };
         this.changeVars = changeVars;
         this.delVars = delVars;
@@ -123,7 +125,16 @@ class NewPage extends React.Component {
         }
 
         this.handleCloseMenu();
+        this.setState({openDeleteDialog: true});
+    }
+
+    reallyDelete = () => {
+        this.handleCloseDeleteDialog();
         this.deleteIt();
+    }
+
+    handleCloseDeleteDialog = () => {
+        this.setState({openDeleteDialog: false});
     }
 
     clickSave = () => {
@@ -238,7 +249,7 @@ class NewPage extends React.Component {
     }
 
     render() {
-        const {text, tags, loading, outdated, anchorEl} = this.state;
+        const {text, tags, loading, outdated, anchorEl, openDeleteDialog} = this.state;
         const classes = this.props.classes;
         const isOpenMenu = Boolean(anchorEl);
 
@@ -342,6 +353,11 @@ class NewPage extends React.Component {
                         </Grid>
                     </Grid>
                 </Container>
+                <DeleteDialog
+                    open={openDeleteDialog}
+                    onClose={this.handleCloseDeleteDialog}
+                    onOk={this.reallyDelete}
+                />
             </Hotkeys>
         );
     }
