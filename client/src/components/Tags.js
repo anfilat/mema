@@ -80,8 +80,12 @@ class Tags extends React.Component {
         }).then(this.onGetOptionsResult);
     }
 
-    onGetOptionsResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onGetOptionsResult = ({ok, data, error, aborted, exit}) => {
+        if (!ok) {
+            this.showError(error);
+        }
+
+        if (aborted || exit) {
             return;
         }
 
@@ -89,8 +93,6 @@ class Tags extends React.Component {
             if (this.state.open) {
                 this.setState({options: data.list});
             }
-        } else {
-            this.showError(error);
         }
     }
 

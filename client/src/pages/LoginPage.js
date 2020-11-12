@@ -51,8 +51,8 @@ class LoginPage extends React.Component {
         }).then(this.onLoginResult);
     }
 
-    onLoginResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onLoginResult = ({ok, data, error, exit}) => {
+        if (exit) {
             return;
         }
 

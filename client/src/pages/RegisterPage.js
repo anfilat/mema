@@ -52,8 +52,8 @@ class RegisterPage extends React.Component {
         }).then(this.onRegisterResult);
     }
 
-    onRegisterResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onRegisterResult = ({ok, data, error, exit}) => {
+        if (exit) {
             return;
         }
 

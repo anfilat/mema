@@ -56,11 +56,6 @@ export class Request {
                 const data = await response.json();
                 const error = ok ? null : data.message ?? 'Something went wrong';
 
-                if (this.#autoLogout && status === 401) {
-                    abortController.abort();
-                    authService.logout();
-                }
-
                 return {
                     ok,
                     status,
@@ -69,16 +64,24 @@ export class Request {
                 };
             })
             .catch(err => {
+                const abort = err.name === 'AbortError';
+
                 return {
                     ok: false,
                     status: null,
                     data: null,
-                    error: err.message ?? 'Something went wrong',
+                    error: abort ? null : err.message ?? 'Something went wrong',
                 };
             })
             .then(result => {
+                const aborted = abortController.signal.aborted;
                 const unmounted = this.#unmounted;
-                const aborted = abortController.signal.aborted || unmounted;
+                const logout = this.#autoLogout && result.status === 401;
+
+                if (logout) {
+                    authService.logout();
+                }
+
                 if (!aborted) {
                     this.#abortController = null;
                     this._changeLoadingState(false);
@@ -87,7 +90,7 @@ export class Request {
                 return {
                     ...result,
                     aborted,
-                    unmounted,
+                    exit: unmounted || logout,
                 };
             });
     }

@@ -7,6 +7,7 @@ import {Box, Button, Container, Grid, Fab, Menu, MenuItem} from "@material-ui/co
 import {Add as AddIcon} from '@material-ui/icons';
 import {withStyles} from "@material-ui/core/styles";
 import {withSnackbar} from 'notistack';
+import authService from "../services/auth";
 import history from "../services/history";
 import Loader from '../components/Loader';
 import Title from '../components/Title';
@@ -37,7 +38,10 @@ class EditPage extends React.Component {
         this.showError = bindShowError(this);
         this.request = new Request(this, {abortOnUnmount: false});
         this.saveInProgress = false;
-        setTimeout(() => this.getLatest(), 0);
+    }
+
+    componentDidMount() {
+        this.getLatest()
     }
 
     componentWillUnmount() {
@@ -110,8 +114,12 @@ class EditPage extends React.Component {
         }).then(this.onGetLatestResult);
     }
 
-    onGetLatestResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onGetLatestResult = ({ok, data, error, exit}) => {
+        if (!ok) {
+            this.showError(error);
+        }
+
+        if (exit) {
             return;
         }
 
@@ -128,7 +136,6 @@ class EditPage extends React.Component {
                 initLoading: false,
             });
         } else {
-            this.showError(error);
             history.push('/items');
         }
     }
@@ -139,16 +146,15 @@ class EditPage extends React.Component {
         }).then(this.onDeleteItResult);
     }
 
-    onDeleteItResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onDeleteItResult = ({ok, data, error, exit}) => {
+        this.showRequestResult(ok, data, error);
+
+        if (exit) {
             return;
         }
 
         if (ok) {
-            this.showSuccess(data.message);
             history.push('/items');
-        } else {
-            this.showError(error);
         }
     }
 
@@ -161,14 +167,11 @@ class EditPage extends React.Component {
             tags,
             itemId: this.itemId,
             textId,
-        }).then(({ok, data, error, aborted, unmounted}) => {
+        }).then(({ok, data, error, exit}) => {
             this.saveInProgress = false;
+            this.showRequestResult(ok, data, error);
 
-            if (unmounted || !aborted) {
-                this.showSaveResult(ok, data, error);
-            }
-
-            if (aborted) {
+            if (exit) {
                 return;
             }
 
@@ -195,7 +198,7 @@ class EditPage extends React.Component {
     }
 
     saveOnUnmount() {
-        if (this.isSaved() || this.saveInProgress || this.state.outdated) {
+        if (this.isSaved() || this.saveInProgress || this.state.outdated || !authService.isAuthenticated) {
             return;
         }
 
@@ -208,11 +211,11 @@ class EditPage extends React.Component {
             itemId: this.itemId,
             textId,
         }).then(({ok, data, error}) => {
-            this.showSaveResult(ok, data, error);
+            this.showRequestResult(ok, data, error);
         });
     }
 
-    showSaveResult(ok, data, error) {
+    showRequestResult(ok, data, error) {
         if (ok) {
             this.showSuccess(data.message);
         } else {

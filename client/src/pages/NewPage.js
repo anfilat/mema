@@ -137,8 +137,12 @@ class NewPage extends React.Component {
         }).then(this.onGetLatestResult);
     }
 
-    onGetLatestResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onGetLatestResult = ({ok, data, error, exit}) => {
+        if (!ok) {
+            this.showError(error);
+        }
+
+        if (exit) {
             return;
         }
 
@@ -153,8 +157,6 @@ class NewPage extends React.Component {
                 savedTags: tags,
                 outdated: false,
             });
-        } else {
-            this.showError(error);
         }
     }
 
@@ -164,16 +166,15 @@ class NewPage extends React.Component {
         }).then(this.onDeleteItResult);
     }
 
-    onDeleteItResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onDeleteItResult = ({ok, data, error, exit}) => {
+        this.showRequestResult(ok, data, error);
+
+        if (exit) {
             return;
         }
 
         if (ok) {
             this.clickReset();
-            this.showSuccess(data.message);
-        } else {
-            this.showError(error);
         }
     }
 
@@ -185,8 +186,10 @@ class NewPage extends React.Component {
                 tags,
                 itemId: this.state.itemId,
                 textId,
-            }).then(({ok, data, error, aborted}) => {
-                if (aborted) {
+            }).then(({ok, data, error, exit}) => {
+                this.showRequestResult(ok, data, error);
+
+                if (exit) {
                     return;
                 }
 
@@ -195,23 +198,22 @@ class NewPage extends React.Component {
                         savedText: text,
                         savedTags: tags,
                     });
-
-                    this.showSuccess(data.message);
                 } else {
                     if (data.outdated) {
                         this.setState({
                             outdated: true,
                         });
                     }
-                    this.showError(error);
                 }
             });
         } else {
             this.request.fetch('/api/item/add', {
                 text,
                 tags,
-            }).then(({ok, data, error, aborted}) => {
-                if (aborted) {
+            }).then(({ok, data, error, exit}) => {
+                this.showRequestResult(ok, data, error);
+
+                if (exit) {
                     return;
                 }
 
@@ -222,12 +224,16 @@ class NewPage extends React.Component {
                         savedText: text,
                         savedTags: tags,
                     });
-
-                    this.showSuccess(data.message);
-                } else {
-                    this.showError(error);
                 }
             });
+        }
+    }
+
+    showRequestResult(ok, data, error) {
+        if (ok) {
+            this.showSuccess(data.message);
+        } else {
+            this.showError(error);
         }
     }
 

@@ -31,7 +31,10 @@ class ItemsPage extends React.Component {
         this.searchServiceUnsubscribe = searchService.subscribe(this.onSearchChange);
         this.showError = bindShowError(this);
         this.request = new Request(this, {cancelPrev: true});
-        setTimeout(() => this.loadMore(), 0);
+    }
+
+    componentDidMount() {
+        this.loadMore()
     }
 
     componentWillUnmount() {
@@ -65,8 +68,12 @@ class ItemsPage extends React.Component {
         }).then(this.onLoadMoreResult);
     }
 
-    onLoadMoreResult = ({ok, data, error, aborted}) => {
-        if (aborted) {
+    onLoadMoreResult = ({ok, data, error, aborted, exit}) => {
+        if (!ok) {
+            this.showError(error);
+        }
+
+        if (aborted || exit) {
             return;
         }
 
@@ -86,8 +93,6 @@ class ItemsPage extends React.Component {
             if (newItems.length < itemsLimit) {
                 this.setState({allDataHere: true});
             }
-        } else {
-            this.showError(error);
         }
     }
 
