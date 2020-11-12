@@ -1,6 +1,6 @@
 const md = require('markdown-it')();
 
-export function mdToHtml(text) {
+function mdToHtml(text) {
     const env = {};
     const tokens = shortText(md.parse(text, env), 250);
     return md.renderer.render(tokens, md.options, env);
@@ -84,4 +84,8 @@ md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
     }
 
     return defaultRender(tokens, idx, options, env, self);
+};
+
+module.exports = {
+    mdToHtml,
 };

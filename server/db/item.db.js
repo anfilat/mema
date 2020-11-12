@@ -1,6 +1,6 @@
 const {query, getValue, transaction, getClient, clientGetValue, clientQuery} = require('./core');
 const {getTagsForMem, addTagsToMem, changeTagsForMem} = require('./tag.db');
-const {mdToPlain} = require('../helpers/md');
+const {mdToPlain} = require('mdutils');
 
 async function addItem(userId, text, tags) {
     return transaction(async function (client) {

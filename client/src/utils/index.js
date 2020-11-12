@@ -1,4 +1,3 @@
-export {mdToHtml} from './md';
 export {bindField} from './bindField';
 export {bindShowSuccess, bindShowError} from './snackbar';
 export {Request} from './request';

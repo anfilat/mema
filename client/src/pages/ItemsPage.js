@@ -3,10 +3,11 @@ import {Container, CircularProgress} from "@material-ui/core";
 import {withStyles} from "@material-ui/core/styles";
 import {Virtuoso} from 'react-virtuoso'
 import {withSnackbar} from 'notistack';
+import {mdToHtml} from 'mdutils';
 import searchService from '../services/search';
 import Title from '../components/Title';
 import Item from '../components/Item';
-import {bindShowError, mdToHtml, Request} from '../utils';
+import {bindShowError, Request} from '../utils';
 
 const styles = theme => ({
     main: {
