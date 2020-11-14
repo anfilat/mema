@@ -35,6 +35,7 @@ class ItemsPage extends React.Component {
     }
 
     componentDidMount() {
+        this.currentSearch = searchService.search;
         this.loadMore()
     }
 
@@ -43,7 +44,12 @@ class ItemsPage extends React.Component {
         this.searchServiceUnsubscribe();
     }
 
-    onSearchChange = () => {
+    onSearchChange = (value) => {
+        if (value === this.currentSearch) {
+            return;
+        }
+
+        this.currentSearch = value;
         this.setState({
             items: [],
             allDataHere: false,
@@ -59,11 +65,10 @@ class ItemsPage extends React.Component {
     }
 
     loadMore() {
-        const search = searchService.search;
         const total = this.state.items.length;
 
         this.request.fetch('/api/search/list', {
-            text: search,
+            text: this.currentSearch,
             offset: total,
             limit: itemsLimit,
         }).then(this.onLoadMoreResult);
