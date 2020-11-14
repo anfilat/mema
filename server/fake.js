@@ -91,4 +91,6 @@ function randomInt(upTo) {
     db.initDb();
     const tags = await addTags();
     await addMems(tags);
+    pool.end();
+    db.closeDb();
 })();
