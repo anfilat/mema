@@ -28,7 +28,7 @@ class SearchService {
 
     showItems(value) {
         if (value !== this.#searchStr) {
-            history.push(`/items?search=${value}`);
+            history.push(`/items?search=${encodeURIComponent(value)}`);
         }
     }
 
