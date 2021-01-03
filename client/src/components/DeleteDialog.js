@@ -1,11 +1,13 @@
-import React from "react";
-import {Button, Dialog, DialogActions, DialogTitle} from "@material-ui/core";
+import React from 'react';
+import {Button, Dialog, DialogActions, DialogTitle} from '@material-ui/core';
 
 export default function DeleteDialog(props) {
+    const {open, onClose, onOk} = props;
+
     return (
         <Dialog
-            open={props.open}
-            onClose={props.onClose}
+            open={open}
+            onClose={onClose}
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
         >
@@ -14,7 +16,7 @@ export default function DeleteDialog(props) {
             </DialogTitle>
             <DialogActions>
                 <Button
-                    onClick={props.onOk}
+                    onClick={onOk}
                     variant="contained"
                     color="primary"
                     autoFocus
@@ -22,7 +24,7 @@ export default function DeleteDialog(props) {
                     Delete
                 </Button>
                 <Button
-                    onClick={props.onClose}
+                    onClick={onClose}
                     color="secondary"
                 >
                     Cancel

@@ -1,152 +1,136 @@
-import React from "react";
-import _ from "lodash";
-import {TextField, CircularProgress} from "@material-ui/core";
-import {withStyles} from "@material-ui/core/styles";
-import {Autocomplete} from "@material-ui/lab";
-import {withSnackbar} from 'notistack';
-import {bindShowError, Request} from "../utils";
+import React, {useState} from 'react';
+import _ from 'lodash';
+import {TextField, CircularProgress} from '@material-ui/core';
+import {makeStyles} from '@material-ui/core/styles';
+import {Autocomplete} from '@material-ui/lab';
+import useFullEffect from 'fulleffect-hook';
+import {Request} from '../utils';
+import useDebounce from '../hooks/debounce.hook';
+import useSnackbarEx from '../hooks/snackbarEx.hook';
 
-const styles = {
+const useStyles = makeStyles({
     root: {
         width: '100%',
     },
-}
+});
 
-class Tags extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            open: false,
-            search: '',
-            options: [],
-            loading: false,
-        };
-        this.showError = bindShowError(this);
-        this.debouncedGetOptions = _.debounce(this.getOptions, 200);
-        this.lastSearch = null;
-        this.request = new Request(this, {cancelPrev: true});
+export default function Tags(props) {
+    const classes = useStyles();
+    const {showError} = useSnackbarEx();
+    const [open, setOpen] = useState(false);
+    const [tags, setTags] = useState([]);
+    const [search, setSearch] = useState('');
+    const [loading, setLoading] = useState(0);
+    const isLoading = loading > 0;
+    const debouncedSearch = useDebounce(search, 200);
+
+    function onOpen() {
+        setOpen(true);
     }
 
-    componentWillUnmount() {
-        this.request.willUnmount();
+    function onClose() {
+        setOpen(false);
     }
 
-    onOpen = () => {
-        this.setState({
-            open: true,
-        });
-        this.lastSearch = null;
-        this.changeSearch(this.state.search);
+    function onInputChange(event, value) {
+        setSearch(value.trim());
     }
 
-    onClose = () => {
-        this.setState({
-            open: false,
-            options: [],
-        });
-        this.request.stop();
-    }
-
-    onInputChange = (event, value) => {
-        this.setState({search: value});
-        this.changeSearch(value);
-    }
-
-    onChange = (event, value) => {
-        if (this.props.onChange) {
+    function onChange(event, value) {
+        if (props.onChange) {
             value = _.uniq(value.map(item => item.trim()));
-            this.props.onChange(value);
+            props.onChange(value);
         }
     }
 
-    changeSearch(value) {
-        value = value.trim();
-        if (value === this.lastSearch) {
-            return;
-        }
-
-        this.lastSearch = value;
-        this.debouncedGetOptions(value);
-    }
-
-    getOptions = (search) => {
-        if (!this.state.open) {
-            return;
-        }
-
-        this.request.fetch('/api/tag/list', {
-            text: search,
-            tags: this.props.value,
-        }).then(this.onGetOptionsResult);
-    }
-
-    onGetOptionsResult = ({ok, data, error, aborted, exit}) => {
-        if (!ok) {
-            this.showError(error);
-        }
-
-        if (aborted || exit) {
-            return;
-        }
-
-        if (ok) {
-            if (this.state.open) {
-                this.setState({options: data.list});
-            }
-        }
-    }
-
-    filterOptions = (options, params) => {
-        const filtered = [...options];
+    function filterTags(tags, params) {
+        const filtered = [...tags];
 
         const input = params.inputValue.trim();
-        if (input !== '' && !options.includes(input) && !this.props.value.includes(input)) {
+        if (input !== '' && !tags.includes(input) && !props.value.includes(input)) {
             filtered.push(input);
         }
 
         return filtered;
     }
 
-    render() {
-        const {open, search, options, loading} = this.state;
-        const {value, classes} = this.props;
+    useFullEffect(() => {
+        if (!open) {
+            return;
+        }
 
-        return (
-            <div className={classes.root}>
-                <Autocomplete
-                    selectOnFocus
-                    freeSolo
-                    multiple
-                    open={open}
-                    onOpen={this.onOpen}
-                    onClose={this.onClose}
-                    inputValue={search}
-                    onInputChange={this.onInputChange}
-                    value={value}
-                    onChange={this.onChange}
-                    filterOptions={this.filterOptions}
-                    options={options}
-                    loading={loading}
-                    renderInput={(params) =>
-                        <TextField
-                            {...params}
-                            label="Tags"
-                            variant="standard"
-                            InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {loading ? <CircularProgress color="inherit" size={20}/> : null}
-                                        {params.InputProps.endAdornment}
-                                    </>
-                                ),
-                            }}
-                        />
-                    }
-                />
-            </div>
-        );
-    }
+        let canceled = false;
+
+        setLoading(val => val + 1);
+        const request = new Request();
+        request.fetch('/api/tag/list', {
+            text: debouncedSearch,
+            tags: props.value,
+        }).then(({ok, data, error, exit}) => {
+            if (error) {
+                showError(error);
+            }
+
+            if (exit) {
+                return;
+            }
+
+            setLoading(val => val - 1);
+
+            if (ok && !canceled) {
+                setTags(data.list);
+            }
+        });
+
+        return (mounted) => {
+            canceled = true;
+            if (mounted) {
+                request.stop();
+            } else {
+                request.willUnmount();
+            }
+        }
+    }, [open, debouncedSearch]);
+
+    useFullEffect(() => {
+        if (!open) {
+            setTags([]);
+        }
+    }, [open]);
+
+    return (
+        <div className={classes.root}>
+            <Autocomplete
+                selectOnFocus
+                freeSolo
+                multiple
+                open={open}
+                onOpen={onOpen}
+                onClose={onClose}
+                inputValue={search}
+                onInputChange={onInputChange}
+                value={props.value}
+                onChange={onChange}
+                filterOptions={filterTags}
+                options={tags}
+                loading={isLoading}
+                renderInput={(params) =>
+                    <TextField
+                        {...params}
+                        label="Tags"
+                        variant="standard"
+                        InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                                <>
+                                    {isLoading ? <CircularProgress color="inherit" size={20}/> : null}
+                                    {params.InputProps.endAdornment}
+                                </>
+                            ),
+                        }}
+                    />
+                }
+            />
+        </div>
+    );
 }
-
-export default withStyles(styles)(withSnackbar(Tags));

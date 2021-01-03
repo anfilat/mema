@@ -1,18 +1,18 @@
 import React from 'react';
 import {CircularProgress} from '@material-ui/core';
-import {withStyles} from '@material-ui/core/styles';
+import {makeStyles} from '@material-ui/core/styles';
 
-const styles = {
+const useStyles = makeStyles({
     root: {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
     },
-};
+});
 
-function Loader(props) {
-    const classes = props.classes;
+export default function Loader() {
+    const classes = useStyles();
 
     return (
         <div className={classes.root}>
@@ -20,5 +20,3 @@ function Loader(props) {
         </div>
     );
 }
-
-export default withStyles(styles)(Loader);

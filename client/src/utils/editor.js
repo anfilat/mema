@@ -1,23 +1,3 @@
-export function editorHelper() {
-    let editor = null;
-
-    function initEditor(value) {
-        editor = value;
-        focusEditor({toEnd: true});
-    }
-
-    function focusEditor({toEnd} = {toEnd: false}) {
-        editor.editing.view.focus();
-        if (toEnd) {
-            editor.model.change(writer => {
-                writer.setSelection(writer.createPositionAt(editor.model.document.getRoot(), 'end'));
-            });
-        }
-    }
-
-    return {initEditor, focusEditor};
-}
-
 export const editorConfig = {
     toolbar: [
         "heading", "|",

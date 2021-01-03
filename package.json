@@ -3,7 +3,9 @@
   "version": "0.1.1",
   "description": "MemA app",
   "workspaces": [
-    "mdutils"
+    "fulleffect-hook",
+    "mdutils",
+    "oncalleffect-hook"
   ],
   "scripts": {
     "start": "cd server && cross-env NODE_ENV=production node index.js",

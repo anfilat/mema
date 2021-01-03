@@ -3,7 +3,7 @@ import {Router} from 'react-router-dom';
 import {CssBaseline} from '@material-ui/core';
 import {SnackbarProvider} from 'notistack';
 import Routes from './routes';
-import history from "./services/history";
+import history from './services/history';
 import authService from './services/auth';
 import Navbar from './components/Navbar';
 

@@ -1,5 +1,5 @@
-import history from "./history";
-import authService from "./auth";
+import history from './history';
+import authService from './auth';
 
 class SearchService {
     #searchStr;

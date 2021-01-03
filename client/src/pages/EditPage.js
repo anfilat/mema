@@ -1,345 +1,346 @@
-import React from 'react';
-import {withRouter} from 'react-router-dom';
+import React, {useState} from 'react';
+import {useParams} from 'react-router-dom';
 import _ from 'lodash';
-import Hotkeys from 'react-hot-keys';
+import {useHotkeys} from 'react-hotkeys-hook';
 import CKEditor from '@ckeditor/ckeditor5-react';
-import {Box, Button, Container, Grid, Fab, Menu, MenuItem} from "@material-ui/core";
+import {Box, Button, Container, Grid, Fab, Menu, MenuItem} from '@material-ui/core';
 import {Add as AddIcon} from '@material-ui/icons';
-import {withStyles} from "@material-ui/core/styles";
-import {withSnackbar} from 'notistack';
-import authService from "../services/auth";
-import history from "../services/history";
+import {makeStyles} from '@material-ui/core/styles';
+import useFullEffect from "fulleffect-hook";
+import useOnCallEffect from "oncalleffect-hook";
+import authService from '../services/auth';
+import history from '../services/history';
 import Loader from '../components/Loader';
 import Title from '../components/Title';
 import Tags from '../components/Tags';
-import DeleteDialog from "../components/DeleteDialog";
-import {bindShowSuccess, bindShowError, editorHelper, editorConfig, editorStyles, Request} from '../utils';
+import DeleteDialog from '../components/DeleteDialog';
+import {editorConfig, editorStyles, Request} from '../utils';
+import useEditor from '../hooks/editor.hook';
+import useSnackbarEx from '../hooks/snackbarEx.hook';
 import 'ckeditor5-custom-build/build/ckeditor';
 
-class EditPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.itemId = props.match.params.id;
-        this.state = {
-            initLoading: true,
-            textId: null,
-            text: '',
-            tags: [],
-            savedText: '',
-            savedTags: [],
-            firstSave: true,
-            loading: false,
-            outdated: false,
-            anchorEl: null,
-            openDeleteDialog: false,
-        };
-        const {initEditor, focusEditor} = editorHelper();
-        this.initEditor = initEditor;
-        this.focusEditor = focusEditor;
-        this.showSuccess = bindShowSuccess(this);
-        this.showError = bindShowError(this);
-        this.request = new Request(this, {abortOnUnmount: false});
-        this.saveInProgress = false;
-    }
+const useStyles = makeStyles(editorStyles);
 
-    componentDidMount() {
-        this.getLatest()
-    }
+export default function EditPage() {
+    const classes = useStyles();
+    const {id: itemId} = useParams();
+    const {initEditor, focusEditor} = useEditor();
+    const {showSuccess, showError} = useSnackbarEx();
+    const [initLoading, setInitLoading] = useState(true);
+    const [textId, setTextId] = useState(null);
+    const [text, setText] = useState('');
+    const [tags, setTags] = useState([]);
+    const [savedText, setSavedText] = useState('');
+    const [savedTags, setSavedTags] = useState([]);
+    const [firstSave, setFirstSave] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [outdated, setOutdated] = useState(false);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const isOpenMenu = Boolean(anchorEl);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [saveInProgress, setSaveInProgress] = useState(false);
+    const isSaved = text === savedText && _.isEqual(tags, savedTags);
+    const blockSave = isSaved || (text.trim() === '');
 
-    componentWillUnmount() {
-        this.request.willUnmount();
-        this.saveOnUnmount();
-    }
+    const getLatest = useOnCallEffect(() => {
+        setLoading(true);
 
-    isSaved() {
-        const {text, tags, savedText, savedTags} = this.state;
-        return text === savedText && _.isEqual(tags, savedTags);
-    }
+        const request = new Request();
+        request.fetch('/api/item/get', {
+            itemId,
+        }).then(onGetLatestResult);
 
-    blockSave() {
-        const {text} = this.state;
-        return this.isSaved() || (text.trim() === '');
-    }
-
-    changeEditor = (event, editor) => {
-        this.setState({text: editor.getData()});
-    }
-
-    setTags = (tags) => {
-        this.setState({tags});
-    }
-
-    handleOpenMenu = (event) => {
-        this.setState({anchorEl: event.currentTarget.parentElement});
-    }
-
-    handleCloseMenu = () => {
-        this.setState({anchorEl: null});
-    }
-
-    handleHotkey = (keyName, event) => {
-        event.preventDefault();
-
-        const {loading, outdated} = this.state;
-        if (this.blockSave() || loading || outdated) {
-            return;
+        return (mounted) => {
+            if (!mounted) {
+                request.willUnmount();
+            }
         }
-        this.saveIt();
-    }
+    });
 
-    clickGetLatest = () => {
-        if (this.state.loading) {
-            return;
-        }
-
-        this.handleCloseMenu();
-        this.getLatest();
-    }
-
-    clickDelete = () => {
-        if (this.state.loading) {
-            return;
-        }
-
-        this.handleCloseMenu();
-        this.setState({openDeleteDialog: true});
-    }
-
-    reallyDelete = () => {
-        this.handleCloseDeleteDialog();
-        this.deleteIt();
-    }
-
-    handleCloseDeleteDialog = () => {
-        this.setState({openDeleteDialog: false});
-    }
-
-    clickSave = () => {
-        this.focusEditor();
-        this.saveIt();
-    }
-
-    getLatest() {
-        this.request.fetch('/api/item/get', {
-            itemId: this.itemId,
-        }).then(this.onGetLatestResult);
-    }
-
-    onGetLatestResult = ({ok, data, error, exit}) => {
-        if (!ok) {
-            this.showError(error);
+    function onGetLatestResult({ok, data, error, exit}) {
+        if (error) {
+            showError(error);
         }
 
         if (exit) {
             return;
         }
 
+        setLoading(false);
+
         if (ok) {
             const {textId, text, tags} = data;
 
-            this.setState({
-                textId,
-                text,
-                tags,
-                savedText: text,
-                savedTags: tags,
-                outdated: false,
-                initLoading: false,
-            });
+            setTextId(textId);
+            setText(text);
+            setTags(tags);
+            setSavedText(text);
+            setSavedTags(tags);
+            setOutdated(false);
+            setInitLoading(false);
         } else {
             history.push('/items');
         }
     }
 
-    deleteIt() {
-        this.request.fetch('/api/item/del', {
-            itemId: this.itemId,
-        }).then(this.onDeleteItResult);
-    }
+    const deleteIt = useOnCallEffect(() => {
+        setLoading(true);
 
-    onDeleteItResult = ({ok, data, error, exit}) => {
-        this.showRequestResult(ok, data, error);
-
-        if (exit) {
-            return;
-        }
-
-        if (ok) {
-            history.push('/items');
-        }
-    }
-
-    saveIt() {
-        const {text, tags, textId, firstSave} = this.state;
-        const api = firstSave ? '/api/item/resave' : '/api/item/update';
-        this.saveInProgress = true;
-        this.request.fetch(api, {
-            text,
-            tags,
-            itemId: this.itemId,
-            textId,
+        const request = new Request({abortOnUnmount: false});
+        request.fetch('/api/item/del', {
+            itemId,
         }).then(({ok, data, error, exit}) => {
-            this.saveInProgress = false;
-            this.showRequestResult(ok, data, error);
+            showRequestResult(ok, data, error);
 
             if (exit) {
                 return;
             }
 
-            if (ok) {
-                this.setState({
-                    savedText: text,
-                    savedTags: tags,
-                });
+            setLoading(false);
 
-                if (firstSave) {
-                    this.setState({
-                        textId: data.textId,
-                        firstSave: false,
-                    });
-                }
-            } else {
-                if (data.outdated) {
-                    this.setState({
-                        outdated: true,
-                    });
-                }
+            if (ok) {
+                history.push('/items');
             }
         });
-    }
 
-    saveOnUnmount() {
-        if (this.isSaved() || this.saveInProgress || this.state.outdated || !authService.isAuthenticated) {
-            return;
+        return (mounted) => {
+            if (!mounted) {
+                request.willUnmount();
+            }
         }
+    });
 
-        const {text, tags, textId, firstSave} = this.state;
+    const saveIt = useOnCallEffect(() => {
         const api = firstSave ? '/api/item/resave' : '/api/item/update';
-        const request = new Request(this, {silent: true});
+        setLoading(true);
+        setSaveInProgress(true);
+
+        const request = new Request({abortOnUnmount: false});
         request.fetch(api, {
             text,
             tags,
-            itemId: this.itemId,
+            itemId,
+            textId,
+        }).then(({ok, data, error, exit}) => {
+            showRequestResult(ok, data, error);
+
+            if (exit) {
+                return;
+            }
+
+            setLoading(false);
+            setSaveInProgress(false);
+
+            if (ok) {
+                setSavedText(text);
+                setSavedTags(tags);
+
+                if (firstSave) {
+                    setTextId(data.textId);
+                    setFirstSave(false);
+                }
+            } else {
+                if (data.outdated) {
+                    setOutdated(true);
+                }
+            }
+        });
+
+        return (mounted) => {
+            if (!mounted) {
+                request.willUnmount();
+            }
+        }
+    });
+
+    const saveOnUnmount = useOnCallEffect(() => {
+        if (isSaved || saveInProgress || outdated || !authService.isAuthenticated) {
+            return;
+        }
+
+        const api = firstSave ? '/api/item/resave' : '/api/item/update';
+        const request = new Request();
+        request.fetch(api, {
+            text,
+            tags,
+            itemId,
             textId,
         }).then(({ok, data, error}) => {
-            this.showRequestResult(ok, data, error);
+            showRequestResult(ok, data, error);
         });
+    });
+
+    useHotkeys('ctrl+s', (event) => {
+        event.preventDefault();
+
+        if (blockSave || loading || outdated) {
+            return;
+        }
+        saveIt();
+    }, {
+        enableOnTags: ["INPUT"],
+    }, [blockSave, loading, outdated, saveIt]);
+
+    useFullEffect(getLatest, []);
+
+    useFullEffect(() => {
+        return (mounted) => {
+            if (!mounted) {
+                saveOnUnmount();
+            }
+        }
+    }, [saveOnUnmount]);
+
+    function changeEditor(event, editor) {
+        setText(editor.getData());
     }
 
-    showRequestResult(ok, data, error) {
+    function changeTags(tags) {
+        setTags(tags);
+    }
+
+    function handleOpenMenu(event) {
+        setAnchorEl(event.currentTarget.parentElement);
+    }
+
+    function handleCloseMenu() {
+        setAnchorEl(null);
+    }
+
+    function clickGetLatest() {
+        if (loading) {
+            return;
+        }
+
+        handleCloseMenu();
+        getLatest();
+    }
+
+    function clickDelete() {
+        if (loading) {
+            return;
+        }
+
+        handleCloseMenu();
+        setOpenDeleteDialog(true);
+    }
+
+    function reallyDelete() {
+        handleCloseDeleteDialog();
+        deleteIt();
+    }
+
+    function handleCloseDeleteDialog() {
+        setOpenDeleteDialog(false);
+    }
+
+    function clickSave() {
+        focusEditor();
+        saveIt();
+    }
+
+    function showRequestResult(ok, data, error) {
         if (ok) {
-            this.showSuccess(data.message);
+            showSuccess(data.message);
         } else {
-            this.showError(error);
+            showError(error);
         }
     }
 
-    render() {
-        const {initLoading, text, tags, firstSave, loading, outdated, anchorEl, openDeleteDialog} = this.state;
-        const classes = this.props.classes;
-        const isOpenMenu = Boolean(anchorEl);
+    if (initLoading) {
+        return <Loader/>;
+    }
 
-        if (initLoading) {
-            return <Loader/>;
-        }
-
-        return (
-            <Hotkeys
-                keyName="ctrl+s"
-                filter={() => true}
-                onKeyDown={this.handleHotkey}
-            >
-                <Title title="Edit"/>
-                <Container component="main" maxWidth="md" className={classes.main}>
-                    <Box mt={2} mb={2} className={classes.editor}>
-                        <CKEditor
-                            editor={window.Editor || window.ClassicEditor}
-                            config={editorConfig}
-                            data={text}
-                            onInit={this.initEditor}
-                            onChange={this.changeEditor}
-                            disabled={outdated}
-                        />
-                    </Box>
-                    <Box mb={2}>
-                        <Tags
-                            value={tags}
-                            onChange={this.setTags}
-                        />
-                    </Box>
+    return (
+        <>
+            <Title title="Edit"/>
+            <Container component="main" maxWidth="md" className={classes.main}>
+                <Box mt={2} mb={2} className={classes.editor}>
+                    <CKEditor
+                        editor={window.Editor || window.ClassicEditor}
+                        config={editorConfig}
+                        data={text}
+                        onInit={initEditor}
+                        onChange={changeEditor}
+                        disabled={outdated}
+                    />
+                </Box>
+                <Box mb={2}>
+                    <Tags
+                        value={tags}
+                        onChange={changeTags}
+                    />
+                </Box>
+                <Grid
+                    container
+                    justify="space-between"
+                    spacing={2}
+                >
+                    <Grid item>
+                        <div className={classes.menuParent}>
+                            <Fab
+                                color="primary"
+                                aria-label="Actions"
+                                size="small"
+                                className={classes.menuFab}
+                                onClick={handleOpenMenu}
+                            >
+                                <AddIcon />
+                            </Fab>
+                        </div>
+                    </Grid>
+                    <Menu
+                        anchorEl={anchorEl}
+                        getContentAnchorEl={null}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                        }}
+                        transformOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                        open={isOpenMenu}
+                        onClose={handleCloseMenu}
+                        classes={{
+                            paper: classes.paper,
+                        }}
+                    >
+                        {outdated && <MenuItem
+                            onClick={clickGetLatest}
+                        >
+                            Get latest
+                        </MenuItem>}
+                        <MenuItem
+                            onClick={clickDelete}
+                        >
+                            Delete
+                        </MenuItem>
+                    </Menu>
                     <Grid
+                        item
                         container
-                        justify="space-between"
-                        spacing={2}
+                        justify="flex-end"
+                        className={classes.lastButtons}
                     >
                         <Grid item>
-                            <div className={classes.menuParent}>
-                                <Fab
-                                    color="primary"
-                                    aria-label="Actions"
-                                    size="small"
-                                    className={classes.menuFab}
-                                    onClick={this.handleOpenMenu}
-                                >
-                                    <AddIcon />
-                                </Fab>
-                            </div>
-                        </Grid>
-                        <Menu
-                            anchorEl={anchorEl}
-                            getContentAnchorEl={null}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'left',
-                            }}
-                            transformOrigin={{
-                                vertical: 'bottom',
-                                horizontal: 'left',
-                            }}
-                            open={isOpenMenu}
-                            onClose={this.handleCloseMenu}
-                            classes={{
-                                paper: classes.paper,
-                            }}
-                        >
-                            {outdated && <MenuItem
-                                onClick={this.clickGetLatest}
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={clickSave}
+                                disabled={blockSave || loading || outdated}
                             >
-                                Get latest
-                            </MenuItem>}
-                            <MenuItem
-                                onClick={this.clickDelete}
-                            >
-                                Delete
-                            </MenuItem>
-                        </Menu>
-                        <Grid
-                            item
-                            container
-                            justify="flex-end"
-                            className={classes.lastButtons}
-                        >
-                            <Grid item>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={this.clickSave}
-                                    disabled={this.blockSave() || loading || outdated}
-                                >
-                                    {firstSave ? 'Save' : 'Update'}
-                                </Button>
-                            </Grid>
+                                {firstSave ? 'Save' : 'Update'}
+                            </Button>
                         </Grid>
                     </Grid>
-                </Container>
-                <DeleteDialog
-                    open={openDeleteDialog}
-                    onClose={this.handleCloseDeleteDialog}
-                    onOk={this.reallyDelete}
-                />
-            </Hotkeys>
-        )
-    }
+                </Grid>
+            </Container>
+            <DeleteDialog
+                open={openDeleteDialog}
+                onClose={handleCloseDeleteDialog}
+                onOk={reallyDelete}
+            />
+        </>
+    );
 }
-
-export default withStyles(editorStyles)(withSnackbar(withRouter(EditPage)));

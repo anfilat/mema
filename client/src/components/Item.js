@@ -1,9 +1,9 @@
 import React from 'react';
 import {Link as RouterLink} from 'react-router-dom';
-import {withStyles} from "@material-ui/core/styles";
+import {makeStyles} from '@material-ui/core/styles';
 import {Chip, Card, CardContent, Box, Link} from '@material-ui/core';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
     main: {
         marginBottom: `${theme.spacing(1)}px`,
     },
@@ -14,10 +14,11 @@ const styles = theme => ({
             margin: theme.spacing(0.5),
         },
     },
-});
+}));
 
-function Item(props) {
-    const {classes, id, time, html, tags} = props;
+export default function Item(props) {
+    const classes = useStyles();
+    const {id, time, html, tags} = props;
     const editLink = `/edit/${id}`;
 
     return (
@@ -50,5 +51,3 @@ function renderTime(time) {
 
     return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
-
-export default withStyles(styles)(Item);
