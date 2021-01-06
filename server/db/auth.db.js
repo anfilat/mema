@@ -5,7 +5,7 @@ async function addAccount(email, password) {
     email = email.toLowerCase();
 
     const checkAccountSQL = `
-        SELECT Count(*) AS count
+        SELECT count(*) AS count
         FROM account
         WHERE email = $1
     `;

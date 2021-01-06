@@ -3,14 +3,16 @@ const app = require('../../app');
 const {dataConst} = require('../../testHelpers');
 
 describe('item add', () => {
+    const query = app._db.query;
+
     beforeEach(() => {
         return app._db.refreshDb();
     });
 
     test('success', async () => {
-        const query = app._db.query.bind(app._db);
-        const sqlNewTag = `SELECT tag_id FROM tag WHERE account_id = 1 AND tag = 'new tag'`;
-        expect((await query(sqlNewTag)).rowCount).toBe(0);
+        const sqlNewTag = `SELECT count(tag_id) AS count FROM tag WHERE account_id = $1 AND tag = $2`;
+        const sqlNewTagValues = [1, 'new tag'];
+        expect((await query(sqlNewTag, sqlNewTagValues)).rows[0].count).toBe(0);
 
         await request(app)
             .post('/api/item/add')
@@ -26,9 +28,10 @@ describe('item add', () => {
                 expect(body).toHaveProperty('textId', dataConst.lastTextId + 1);
             });
 
-        expect((await query(sqlNewTag)).rowCount).toBe(1);
-        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = ${dataConst.lastMemId + 1}`;
-        expect((await query(sqlMemTags)).rows[0].count).toBe(2);
+        expect((await query(sqlNewTag, sqlNewTagValues)).rows[0].count).toBe(1);
+        const sqlMemTags = `SELECT count(tag_id) AS count FROM mem_tag WHERE mem_id = $1`;
+        const sqlMemTagsValues = [dataConst.lastMemId + 1];
+        expect((await query(sqlMemTags, sqlMemTagsValues)).rows[0].count).toBe(2);
     });
 
     test('success without tags', async () => {
@@ -47,8 +50,6 @@ describe('item add', () => {
     });
 
     test('success with duplicate tags', async () => {
-        const query = app._db.query.bind(app._db);
-
         await request(app)
             .post('/api/item/add')
             .set('Cookie', 'token=someToken')
@@ -63,8 +64,9 @@ describe('item add', () => {
                 expect(body).toHaveProperty('textId', dataConst.lastTextId + 1);
             });
 
-        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = ${dataConst.lastMemId + 1}`;
-        expect((await query(sqlMemTags)).rows[0].count).toBe(1);
+        const sql = `SELECT count(tag_id) AS count FROM mem_tag WHERE mem_id = $1`;
+        const values = [dataConst.lastMemId + 1];
+        expect((await query(sql, values)).rows[0].count).toBe(1);
     });
 
     test('fail without text', () => {

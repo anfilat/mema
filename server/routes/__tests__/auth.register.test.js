@@ -3,12 +3,13 @@ const Cookies = require('expect-cookies');
 const app = require('../../app');
 
 describe('register', () => {
+    const query = app._db.query;
+
     beforeEach(() => {
         return app._db.refreshDb();
     });
 
     test('success', async () => {
-        const query = app._db.query.bind(app._db);
         const sql = 'SELECT count(*) AS count FROM account';
         const accountsBefore = (await query(sql)).rows[0].count;
         await request(app)

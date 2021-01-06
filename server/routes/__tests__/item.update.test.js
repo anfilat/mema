@@ -2,14 +2,16 @@ const request = require('supertest');
 const app = require('../../app');
 
 describe('item update', () => {
+    const query = app._db.query;
+
     beforeEach(() => {
         return app._db.refreshDb();
     });
 
     test('success', async () => {
-        const query = app._db.query.bind(app._db);
-        const sqlNewTag = `SELECT tag_id FROM tag WHERE account_id = 1 AND tag = 'new tag'`;
-        expect((await query(sqlNewTag)).rowCount).toBe(0);
+        const sqlNewTag = `SELECT count(tag_id) AS count FROM tag WHERE account_id = $1 AND tag = $2`;
+        const sqlNewTagValues = [1, 'new tag'];
+        expect((await query(sqlNewTag, sqlNewTagValues)).rows[0].count).toBe(0);
 
         await request(app)
             .post('/api/item/update')
@@ -25,14 +27,13 @@ describe('item update', () => {
                 expect(body).toHaveProperty('message', 'Text saved');
             });
 
-        expect((await query(sqlNewTag)).rowCount).toBe(1);
-        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = 1`;
-        expect((await query(sqlMemTags)).rows[0].count).toBe(2);
+        expect((await query(sqlNewTag, sqlNewTagValues)).rows[0].count).toBe(1);
+        const sqlMemTags = `SELECT count(tag_id) AS count FROM mem_tag WHERE mem_id = $1`;
+        const sqlMemTagsValues = [1];
+        expect((await query(sqlMemTags, sqlMemTagsValues)).rows[0].count).toBe(2);
     });
 
     test('success with same tags', async () => {
-        const query = app._db.query.bind(app._db);
-
         await request(app)
             .post('/api/item/update')
             .set('Cookie', 'token=someToken')
@@ -47,13 +48,12 @@ describe('item update', () => {
                 expect(body).toHaveProperty('message', 'Text saved');
             });
 
-        const sqlMemTags = `SELECT Count(tag_id) AS count FROM mem_tag WHERE mem_id = 1`;
-        expect((await query(sqlMemTags)).rows[0].count).toBe(2);
+        const sql = `SELECT count(tag_id) AS count FROM mem_tag WHERE mem_id = $1`;
+        const values = [1];
+        expect((await query(sql, values)).rows[0].count).toBe(2);
     });
 
     test('success without tags', async () => {
-        const query = app._db.query.bind(app._db);
-
         await request(app)
             .post('/api/item/update')
             .set('Cookie', 'token=someToken')
@@ -67,8 +67,9 @@ describe('item update', () => {
                 expect(body).toHaveProperty('message', 'Text saved');
             });
 
-        const sqlMemTags = `SELECT tag_id FROM mem_tag WHERE mem_id = 1`;
-        expect((await query(sqlMemTags)).rowCount).toBe(0);
+        const sql = `SELECT count(tag_id) AS count FROM mem_tag WHERE mem_id = $1`;
+        const values = [1];
+        expect((await query(sql, values)).rows[0].count).toBe(0);
     });
 
     test('fail on outdated textId', async () => {

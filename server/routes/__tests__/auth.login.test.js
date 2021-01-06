@@ -3,14 +3,16 @@ const Cookies = require('expect-cookies');
 const app = require('../../app');
 
 describe('login', () => {
+    const query = app._db.query;
+
     beforeEach(() => {
         return app._db.refreshDb();
     });
 
     test('success', async () => {
-        const query = app._db.query.bind(app._db);
-        const sql = 'SELECT count(*) AS count FROM token WHERE account_id = 1';
-        const tokensBefore = (await query(sql)).rows[0].count;
+        const sql = 'SELECT count(*) AS count FROM token WHERE account_id = $1';
+        const values = [1];
+        const tokensBefore = (await query(sql, values)).rows[0].count;
         await request(app)
             .post('/api/auth/login')
             .send({
@@ -22,7 +24,7 @@ describe('login', () => {
             .expect(({body}) => {
                 expect(body).toHaveProperty('userId', 1);
             });
-        const tokensAfter = (await query(sql)).rows[0].count;
+        const tokensAfter = (await query(sql, values)).rows[0].count;
         expect(tokensAfter - tokensBefore).toBe(1);
     });
 

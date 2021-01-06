@@ -1,4 +1,4 @@
-const { newDb } = require('pg-mem');
+const { newDb, DataType } = require('pg-mem');
 
 let pgMem;
 let pgMemPool;
@@ -12,8 +12,6 @@ async function pgMemQuery(query, values) {
     if (query.startsWith('SAVEPOINT')) {
         return Promise.resolve();
     }
-
-    query = query.replace(/similarity\(.*\).*,/, '');
 
     const matchANY = query.match(/ANY\s*\((.*)\)/);
     if (matchANY) {
@@ -31,14 +29,7 @@ async function pgMemQuery(query, values) {
         query = query.replace(/!= ALL\s*\((.*)\)/, `NOT IN(${value})`)
     }
 
-    return new Promise((resolve, reject) => {
-        pgMemPool.query(query, values, (err, result) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(result);
-        });
-    });
+    return pgMemPool.query(query, values);
 }
 
 function pgMemConnect() {
@@ -50,6 +41,13 @@ function pgMemConnect() {
 
 function createPgMem() {
     pgMem = newDb();
+
+    pgMem.public.registerFunction({
+        name: 'similarity',
+        args: [DataType.text, DataType.text],
+        returns: DataType.float,
+        implementation: () => 0.5,
+    })
 
     const adapter = pgMem.adapters.createPg();
     pgMemPool = new adapter.Pool({
