@@ -1,0 +1,6 @@
+.dockerignore
+.idea
+**/.env
+**/node_modules
+
+client/build
