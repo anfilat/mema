@@ -27,7 +27,7 @@ const initialVars = {
     savedTags: [],
 };
 
-export default function() {
+export default function NewPage() {
     const classes = useStyles();
     const {initEditor, focusEditor} = useEditor();
     const {showSuccess, showError} = useSnackbarEx();

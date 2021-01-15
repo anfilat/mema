@@ -1,10 +1,10 @@
 {
   "name": "client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^2.1.0",
-    "@fontsource/roboto": "^4.0.1",
+    "@fontsource/roboto": "^4.1.0",
     "@material-ui/core": "^4.11.2",
     "@material-ui/icons": "^4.11.2",
     "@material-ui/lab": "^4.0.0-alpha.57",
@@ -15,10 +15,22 @@
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-helmet": "^6.1.0",
-    "react-hotkeys-hook": "^3.0.1",
+    "react-hotkeys-hook": "^3.0.3",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^3.4.3",
-    "react-virtuoso": "^0.20.1"
+    "react-scripts": "^4.0.1",
+    "react-virtuoso": "^0.20.1",
+    "workbox-background-sync": "^5.1.3",
+    "workbox-broadcast-update": "^5.1.3",
+    "workbox-cacheable-response": "^5.1.3",
+    "workbox-core": "^5.1.3",
+    "workbox-expiration": "^5.1.3",
+    "workbox-google-analytics": "^5.1.3",
+    "workbox-navigation-preload": "^5.1.3",
+    "workbox-precaching": "^5.1.3",
+    "workbox-range-requests": "^5.1.3",
+    "workbox-routing": "^5.1.3",
+    "workbox-strategies": "^5.1.3",
+    "workbox-streams": "^5.1.3"
   },
   "scripts": {
     "start": "react-scripts start",
