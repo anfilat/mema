@@ -2,10 +2,28 @@ import React, {useState} from 'react';
 import {Link as RouterLink} from 'react-router-dom';
 import {makeStyles} from '@material-ui/core/styles';
 import {Chip, Card, CardContent, Box, Link} from '@material-ui/core';
+import DeleteDialog from './DeleteDialog';
+import useDeleteItem from "../hooks/deleteItem.hool";
 
 const useStyles = makeStyles(theme => ({
     main: {
-        marginBottom: `${theme.spacing(1)}px`,
+        marginBottom: theme.spacing(1),
+        position: 'relative',
+    },
+    wait: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        bottom: 0,
+        right: 0,
+        opacity: 0.1,
+        backgroundColor: '#000',
+    },
+    buttons: {
+        display: 'flex',
+        '& > * + *': {
+            marginLeft: theme.spacing(1),
+        },
     },
     bottom: {
         justifyContent: 'space-between',
@@ -18,7 +36,7 @@ const useStyles = makeStyles(theme => ({
             margin: theme.spacing(0.5),
         },
     },
-    showAll: {
+    button: {
         color: theme.palette.primary.main,
         '&:hover': {
             cursor: 'pointer',
@@ -29,40 +47,54 @@ const useStyles = makeStyles(theme => ({
 
 export default function Item(props) {
     const classes = useStyles();
-    const {id, time, html, tags} = props;
+    const {id, time, html, tags, remove} = props;
     const [showAll, setShowAll] = useState(false);
     const editLink = `/edit/${id}`;
     const isFullHtml = html[1] !== '';
     const content = showAll ? html[1] : html[0];
+    const {clickDelete, reallyDelete, handleCloseDeleteDialog, openDeleteDialog, loading} = useDeleteItem(id, remove);
 
     function handlesShowAll() {
         setShowAll(!showAll);
     }
 
     return (
-        <Card variant="outlined" className={classes.main}>
-            <CardContent>
-                <Box display="flex" justifyContent="space-between">
-                    {renderTime(time)}
-                    <Link component={RouterLink} to={editLink} variant="body2">
-                        Edit
-                    </Link>
-                </Box>
-                <div
-                    dangerouslySetInnerHTML={{__html: content}}
-                />
-                <Box display="flex" className={classes.bottom}>
-                    <div className={classes.tags}>
-                        {tags.map(tag => <Chip label={tag} key={tag}/>)}
-                    </div>
-                    {isFullHtml &&
-                        <div className={classes.showAll} onClick={handlesShowAll}>
-                            {showAll ? 'Short' : 'Full'}
+        <>
+            <Card variant="outlined" className={classes.main}>
+                <CardContent>
+                    <Box display="flex" justifyContent="space-between">
+                        {renderTime(time)}
+                        <div className={classes.buttons}>
+                            <div className={classes.button} onClick={clickDelete}>
+                                Delete
+                            </div>
+                            <Link component={RouterLink} to={editLink} variant="body2">
+                                Edit
+                            </Link>
                         </div>
-                    }
-                </Box>
-            </CardContent>
-        </Card>
+                    </Box>
+                    <div
+                        dangerouslySetInnerHTML={{__html: content}}
+                    />
+                    <Box display="flex" className={classes.bottom}>
+                        <div className={classes.tags}>
+                            {tags.map(tag => <Chip label={tag} key={tag}/>)}
+                        </div>
+                        {isFullHtml &&
+                            <div className={classes.button} onClick={handlesShowAll}>
+                                {showAll ? 'Short' : 'Full'}
+                            </div>
+                        }
+                    </Box>
+                </CardContent>
+                {loading && <div className={classes.wait}/>}
+            </Card>
+            <DeleteDialog
+                open={openDeleteDialog}
+                onClose={handleCloseDeleteDialog}
+                onOk={reallyDelete}
+            />
+        </>
     );
 }
 

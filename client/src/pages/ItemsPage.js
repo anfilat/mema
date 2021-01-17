@@ -108,6 +108,10 @@ export default function ItemsPage() {
         loadMore();
     }
 
+    function removeItem(id) {
+        setItems(items => items.filter(value => value.id !== id));
+    }
+
     function renderItem(index) {
         const {id, html, tags, time} = items[index];
 
@@ -117,6 +121,7 @@ export default function ItemsPage() {
             tags={tags}
             time={time}
             key={id}
+            remove={removeItem}
         />;
     }
 
