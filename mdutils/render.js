@@ -2,13 +2,13 @@ const md = require('markdown-it')();
 
 function mdToHtml(text) {
     const env = {};
-    const tokens = shortText(md.parse(text, env), 250);
-    return md.renderer.render(tokens, md.options, env);
-}
-
-function shortText(tokens, limit) {
-    const res = short(tokens, limit);
-    return res.tokens;
+    const tokens = md.parse(text, env);
+    const fullText = md.renderer.render(tokens, md.options, env);
+    const shorted = short(tokens, 250);
+    return [
+        shorted.limit > 0 ? fullText : md.renderer.render(shorted.tokens, md.options, env),
+        shorted.limit > 0 ? '' : fullText,
+    ];
 }
 
 function short(tokens, limit) {

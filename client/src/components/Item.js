@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Link as RouterLink} from 'react-router-dom';
 import {makeStyles} from '@material-ui/core/styles';
 import {Chip, Card, CardContent, Box, Link} from '@material-ui/core';
@@ -7,6 +7,10 @@ const useStyles = makeStyles(theme => ({
     main: {
         marginBottom: `${theme.spacing(1)}px`,
     },
+    bottom: {
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+    },
     tags: {
         display: 'flex',
         flexWrap: 'wrap',
@@ -14,12 +18,26 @@ const useStyles = makeStyles(theme => ({
             margin: theme.spacing(0.5),
         },
     },
+    showAll: {
+        color: theme.palette.primary.main,
+        '&:hover': {
+            cursor: 'pointer',
+            textDecoration: 'underline',
+        },
+    }
 }));
 
 export default function Item(props) {
     const classes = useStyles();
     const {id, time, html, tags} = props;
+    const [showAll, setShowAll] = useState(false);
     const editLink = `/edit/${id}`;
+    const isFullHtml = html[1] !== '';
+    const content = showAll ? html[1] : html[0];
+
+    function handlesShowAll() {
+        setShowAll(!showAll);
+    }
 
     return (
         <Card variant="outlined" className={classes.main}>
@@ -31,11 +49,18 @@ export default function Item(props) {
                     </Link>
                 </Box>
                 <div
-                    dangerouslySetInnerHTML={{__html: html}}
+                    dangerouslySetInnerHTML={{__html: content}}
                 />
-                <div className={classes.tags}>
-                    {tags.map(tag => <Chip label={tag} key={tag}/>)}
-                </div>
+                <Box display="flex" className={classes.bottom}>
+                    <div className={classes.tags}>
+                        {tags.map(tag => <Chip label={tag} key={tag}/>)}
+                    </div>
+                    {isFullHtml &&
+                        <div className={classes.showAll} onClick={handlesShowAll}>
+                            {showAll ? 'Short' : 'Full'}
+                        </div>
+                    }
+                </Box>
             </CardContent>
         </Card>
     );
