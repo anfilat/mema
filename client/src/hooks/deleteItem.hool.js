@@ -12,16 +12,12 @@ export default function useDeleteItem(id, remove) {
         setOpenDeleteDialog(true);
     }, []);
 
-    const reallyDelete = useCallback(() => {
-        handleCloseDeleteDialog();
-        deleteIt();
-    }, []);
-
     const handleCloseDeleteDialog = useCallback(() => {
         setOpenDeleteDialog(false);
     }, []);
 
-    const deleteIt = useOnCallEffect(() => {
+    const reallyDelete = useOnCallEffect(() => {
+        setOpenDeleteDialog(false);
         setLoading(true);
 
         const request = new Request({abortOnUnmount: false});
