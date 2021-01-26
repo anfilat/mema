@@ -5,6 +5,7 @@ require('dotenv').config();
 const setupAPI = require('./app.api');
 const setupStatic = require('./app.static');
 const db = require('./db');
+require('./schedule');
 
 const app = express();
 

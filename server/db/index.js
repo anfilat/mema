@@ -3,7 +3,7 @@ const {addAccount, getAccount} = require('./auth.db');
 const {addItem, getItem, reSaveItem, updateItem, delItem} = require('./item.db');
 const {listItems} = require('./search.db');
 const {listTags} = require('./tag.db');
-const {addToken, getToken, delToken} = require('./token.db');
+const {addToken, getToken, delToken, deleteOldTokens} = require('./token.db');
 
 module.exports = {
     initDb,
@@ -25,4 +25,5 @@ module.exports = {
     addToken,
     getToken,
     delToken,
+    deleteOldTokens,
 };

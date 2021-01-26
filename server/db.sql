@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS account (
 CREATE TABLE IF NOT EXISTS token (
     token CHAR(36) PRIMARY KEY,
     account_id int NOT NULL,
+    expires timestamptz NOT NULL,
 
     CONSTRAINT token_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE
 );

@@ -22,8 +22,8 @@ exports.register = async (req, res) => {
     }
 
     const userId = account.account_id;
-    const token = await newToken(userId);
-    setCookie(res, token);
+    const token = await newToken();
+    setCookie(res, userId, token);
     res
         .status(201)
         .json({
@@ -59,8 +59,8 @@ exports.login = async (req, res) => {
     }
 
     const userId = account.account_id;
-    const token = await newToken(userId);
-    setCookie(res, token);
+    const token = await newToken();
+    setCookie(res, userId, token);
     res
         .json({
             userId,

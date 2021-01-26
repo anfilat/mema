@@ -2,11 +2,8 @@ const uuid = require('uuid');
 const onHeaders = require('on-headers');
 const db = require('../db');
 
-async function newToken(userId) {
-    const token = uuid.v4();
-    await db.addToken(userId, token);
-
-    return token;
+async function newToken() {
+    return uuid.v4();
 }
 
 async function checkAuth(req, res, next) {
@@ -29,19 +26,23 @@ function refreshCookie(req, res, next) {
         if (res.statusCode !== 200) {
             return;
         }
-        setCookie(res, req.userData.token);
+        setCookie(res, req.userData.userId, req.userData.token);
     });
 
     next();
 }
 
-function setCookie(res, token) {
+const msPerDay = 24 * 60 * 60 * 1000;
+
+function setCookie(res, userId, token) {
+    const expires = new Date(Date.now() + process.env.APP_COOKIE_EXPIRES * msPerDay);
     res
         .cookie('token', token, {
             httpOnly: true,
             sameSite: 'strict',
-            maxAge: process.env.APP_COOKIE_EXPIRES * 24 * 60 * 60 * 1000,
+            expires,
         });
+    db.addToken(userId, token, expires);
 }
 
 function delCookie(res) {
