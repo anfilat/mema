@@ -15,7 +15,7 @@ exports.parseTerms = function parseTerms(text) {
         .map(term => {
             term = term.trim();
             if (term[0] === '"') {
-                return term.substring(1, term.length - 1);
+                return term.substring(1, term.length - 1).trim();
             }
             return term;
         })

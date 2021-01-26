@@ -28,6 +28,7 @@ export default function ItemsPage() {
     const {showError} = useSnackbarEx();
     const [currentSearch, setCurrentSearch] = useState(searchService.search);
     const [items, setItems] = useState([]);
+    const [offset, setOffset] = useState(0);
     const [allDataHere, setAllDataHere] = useState(false);
     const [loading, setLoading] = useState(0);
     const isLoading = loading > 0;
@@ -41,7 +42,7 @@ export default function ItemsPage() {
         const request = new Request();
         request.fetch('/api/search/list', {
             text: currentSearch,
-            offset: total,
+            offset,
             limit: itemsLimit,
         }).then(({ok, data, error, exit}) => {
             if (error) {
@@ -62,8 +63,9 @@ export default function ItemsPage() {
                     time,
                 }));
                 setItems(items => items.concat(newItems));
+                setOffset(data.offset);
 
-                if (newItems.length < itemsLimit) {
+                if (data.all) {
                     setAllDataHere(true);
                 }
             }
@@ -91,6 +93,7 @@ export default function ItemsPage() {
 
             setCurrentSearch(value);
             setItems([]);
+            setOffset(0);
             setAllDataHere(false);
             loadMore();
         });

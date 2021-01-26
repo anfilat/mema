@@ -15,11 +15,37 @@ exports.checkList = [
 ];
 
 exports.list = async (req, res) => {
-    const {text, limit = 20, offset = 0} = req.body;
-    const list = await db.listItems(req.userData.userId, parseTerms(text), limit, offset);
+    let {text, limit = 20, offset = 0} = req.body;
+    const terms = parseTerms(text);
+    const termsStr = JSON.stringify(terms);
+    const userId = req.userData.userId;
+    let ids = null;
+
+    if (offset !== 0) {
+        const {search, search_ids} = await db.getLastSearchIds(userId);
+        if (search === termsStr) {
+            ids = JSON.parse(search_ids);
+        }
+    }
+
+    if (ids == null) {
+        ids = await db.getSearchIds(userId, terms);
+        await db.setLastSearchIds(userId, termsStr, ids);
+    }
+
+
+    let list = [];
+    let all = offset >= ids.length;
+    while (list.length === 0 && !all) {
+        list = await db.listItems(userId, ids, limit, offset);
+        offset += limit;
+        all = offset >= ids.length;
+    }
 
     res
         .json({
             list,
+            offset,
+            all,
         });
 }

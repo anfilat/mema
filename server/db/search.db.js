@@ -1,6 +1,29 @@
-const {query} = require('./core');
+const {query, get, getValueArray} = require('./core');
 
-async function listItems(userId, terms, limit, offset) {
+async function getLastSearchIds(userId) {
+    const sql = `
+        SELECT search, search_ids
+        FROM account
+        WHERE account_id = $1
+    `;
+    const values = [userId];
+    return get(sql, values);
+}
+
+async function setLastSearchIds(userId, termsStr, ids) {
+    const sql = `
+        UPDATE account
+        SET search = $1,
+            search_ids = $2
+        WHERE account_id = $3
+    `;
+    const values = [termsStr, JSON.stringify(ids), userId];
+    return get(sql, values);
+}
+
+const MaxLimit = 1000;
+
+async function getSearchIds(userId, terms) {
     let sql;
     let values;
 
@@ -11,7 +34,7 @@ async function listItems(userId, terms, limit, offset) {
         const termValues = [];
         terms.forEach((term, i) => {
             const num = i + 1;
-            const termI = i + 4;
+            const termI = i + 3;
             simTerms.push(`
                 COALESCE((
                     SELECT similarity(tag, $${termI}) sim
@@ -43,9 +66,6 @@ async function listItems(userId, terms, limit, offset) {
                 FROM mem_with_tags
             )
             SELECT mem.mem_id,
-                   text.text,
-                   mem.last_change_time,
-                   tags,
                    ${sumPoints.join(' + ')} AS sumSim
             FROM mem
                      LEFT JOIN text USING(text_id)
@@ -53,26 +73,43 @@ async function listItems(userId, terms, limit, offset) {
             WHERE mem.account_id = $1
               AND ${termConditions.join(' AND ')}
             ORDER BY sumSim DESC
-            LIMIT $2 OFFSET $3
+            LIMIT $2
         `;
-        values = [userId, limit, offset, ...termValues];
+        values = [userId, MaxLimit, ...termValues];
     } else {
         sql = `
-            SELECT mem.mem_id,
-                   text.text,
-                   mem.last_change_time,
-                   ARRAY_AGG(tag.tag) AS tags
+            SELECT mem_id
             FROM mem
-                     LEFT JOIN text USING (text_id)
-                     LEFT JOIN mem_tag USING (mem_id)
-                     LEFT JOIN tag USING (tag_id)
-            WHERE mem.account_id = $1
-            GROUP BY mem.mem_id, text.text, mem.last_change_time
-            ORDER BY mem.last_change_time desc
-            LIMIT $2 OFFSET $3
+            WHERE account_id = $1
+            ORDER BY last_change_time desc
+            LIMIT $2
         `;
-        values = [userId, limit, offset];
+        values = [userId, MaxLimit];
     }
+    return await getValueArray(sql, values, 'mem_id');
+}
+
+async function listItems(userId, ids, limit, offset) {
+    const listIds = ids.slice(offset, offset + limit).join(',');
+    if (listIds === '') {
+        return [];
+    }
+
+    const sql = `
+        SELECT mem.mem_id,
+               text.text,
+               mem.last_change_time,
+               ARRAY_AGG(tag.tag) AS tags
+        FROM mem
+                 LEFT JOIN text USING (text_id)
+                 LEFT JOIN mem_tag USING (mem_id)
+                 LEFT JOIN tag USING (tag_id)
+        WHERE mem.account_id = $1
+          AND mem_id IN (${listIds})
+        GROUP BY mem.mem_id, text.text, mem.last_change_time
+        ORDER BY position(mem_id::text in '${listIds}')
+    `;
+    const values = [userId];
     const res = await query(sql, values);
     return res.rows.map(item => ({
         id: item.mem_id,
@@ -83,5 +120,8 @@ async function listItems(userId, terms, limit, offset) {
 }
 
 module.exports = {
+    getLastSearchIds,
+    setLastSearchIds,
+    getSearchIds,
     listItems,
 }

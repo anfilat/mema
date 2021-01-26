@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS account (
     account_id serial PRIMARY KEY,
     email VARCHAR(128) NOT NULL,
     password VARCHAR(128),
+    search TEXT,
+    search_ids TEXT,
 
     CONSTRAINT account_email_key UNIQUE (email)
 );
