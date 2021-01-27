@@ -21,7 +21,7 @@ USER node
 WORKDIR /usr/src/app
 COPY --chown=node:node --from=build /usr/src/app/client/build /usr/src/app/client/build
 COPY --chown=node:node --from=build /usr/src/app/fulleffect-hook /usr/src/app/fulleffect-hook
-COPY --chown=node:node --from=build /usr/src/app/mdutils /usr/src/app/mdutils
+COPY --chown=node:node --from=build /usr/src/app/common /usr/src/app/common
 COPY --chown=node:node --from=build /usr/src/app/oncalleffect-hook /usr/src/app/oncalleffect-hook
 COPY --chown=node:node --from=build /usr/src/app/server /usr/src/app/server
 COPY --chown=node:node --from=build /usr/src/app/node_modules /usr/src/app/node_modules

@@ -4,7 +4,7 @@ import {makeStyles} from '@material-ui/core/styles';
 import {Virtuoso} from 'react-virtuoso'
 import useFullEffect from "fulleffect-hook";
 import useOnCallEffect from 'oncalleffect-hook';
-import {mdToHtml} from 'mdutils';
+import {mdToHtml} from 'common';
 import searchService from '../services/search';
 import Title from '../components/Title';
 import Item from '../components/Item';

@@ -4,7 +4,7 @@
   "description": "MemA app",
   "workspaces": [
     "fulleffect-hook",
-    "mdutils",
+    "common",
     "oncalleffect-hook"
   ],
   "scripts": {
