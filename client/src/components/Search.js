@@ -1,10 +1,9 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {makeStyles, fade} from '@material-ui/core/styles';
 import {InputBase, IconButton} from '@material-ui/core';
 import {Search as SearchIcon} from '@material-ui/icons';
 import useFullEffect from 'fulleffect-hook';
 import searchService from '../services/search';
-import useBind from '../hooks/bind.hook';
 
 const useStyles = makeStyles((theme) => ({
     search: {
@@ -34,17 +33,24 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Search() {
     const classes = useStyles();
-    const [value, changeHandler, setValue] = useBind(searchService.search);
+    const [value, setValue] = useState(searchService.search);
 
     useFullEffect(() => {
-        const unsubscribe = searchService.subscribe((value) => {
-            setValue(value);
-        });
+        const unsubscribe = searchService.subscribe(newValue);
 
         return () => {
             unsubscribe();
         };
     }, []);
+
+    function changeHandler(event) {
+        newValue(event.target.value);
+    }
+
+    function newValue(value) {
+        setValue(value);
+        searchService.curSearch = value;
+    }
 
     function focusHandler(event) {
         event.target.select();
@@ -53,7 +59,7 @@ export default function Search() {
     function searchHandler(event) {
         event.preventDefault();
 
-        searchService.showItems(value);
+        searchService.showItems();
     }
 
     return (

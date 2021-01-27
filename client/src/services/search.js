@@ -2,10 +2,13 @@ import history from './history';
 import authService from './auth';
 
 class SearchService {
+    #pathname;
     #searchStr;
     #subscribers;
+    #curSearch;
 
     constructor() {
+        this.#pathname = history.location.pathname;
         this.#searchStr = getSearchFromLocation(history.location.search);
         this.#subscribers = [];
         if (authService.isAuthenticated) {
@@ -18,6 +21,10 @@ class SearchService {
         return this.#searchStr;
     }
 
+    set curSearch(value) {
+        this.#curSearch = value.trim();
+    }
+
     subscribe(callback) {
         this.#subscribers.push(callback);
 
@@ -26,9 +33,13 @@ class SearchService {
         };
     }
 
-    showItems(value) {
-        if (value !== this.#searchStr) {
-            history.push(`/items?search=${encodeURIComponent(value)}`);
+    showItems() {
+        if (this.#pathname !== '/items' || this.#curSearch !== this.#searchStr) {
+            if (this.#curSearch) {
+                history.push(`/items?search=${encodeURIComponent(this.#curSearch)}`);
+            } else {
+                history.push(`/items`);
+            }
         }
     }
 
@@ -37,7 +48,8 @@ class SearchService {
     }
 
     _onHistoryChange = (location) => {
-        if (location.pathname !== '/items') {
+        this.#pathname = location.pathname;
+        if (this.#pathname !== '/items') {
             return;
         }
 

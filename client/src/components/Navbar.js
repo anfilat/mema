@@ -31,12 +31,7 @@ export default function Navbar() {
     }
 
     function handleItemsPage() {
-        const search = searchService.search;
-        if (search) {
-            history.push(`/items?search=${search}`);
-        } else {
-            history.push('/items');
-        }
+        searchService.showItems();
     }
 
     return (
