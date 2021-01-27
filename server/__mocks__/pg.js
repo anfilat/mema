@@ -114,13 +114,16 @@ const sqlInit = `
         account_id serial PRIMARY KEY,
         email VARCHAR(128) NOT NULL,
         password VARCHAR(128),
+        search TEXT,
+        search_ids TEXT,
         
         CONSTRAINT account_email_key UNIQUE (email)
     );
 
     CREATE TABLE token (
         token CHAR(36) PRIMARY KEY,
-        account_id int NOT NULL
+        account_id int NOT NULL,
+        expires timestamp NOT NULL
     );
 
     ALTER TABLE token ADD CONSTRAINT token_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id);
@@ -183,7 +186,7 @@ const sqlInit = `
 
 
     INSERT INTO account (email, password) VALUES ('test@test.com', '$2b$10$Buow0yAuljN7cs8vmrtGFOMHd9/78dx7cYuPYop.aA5WdcDX380Ri');
-    INSERT INTO token (token, account_id) VALUES ('someToken', 1);
+    INSERT INTO token (token, account_id, expires) VALUES ('someToken', 1, '3000-01-01');
 
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'something', now());
     INSERT INTO tag (account_id, tag, time) VALUES (1, 'other', now());

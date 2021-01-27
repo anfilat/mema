@@ -20,6 +20,16 @@ describe('search list', () => {
                 rowCount: 1,
                 rows: [{
                     mem_id: 1,
+                }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{
+                    mem_id: 1,
                     text: 'text',
                     last_change_time: new Date(),
                     tags: [],
@@ -53,6 +63,16 @@ describe('search list', () => {
                     account_id: 1,
                     token: 'someToken'
                 }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 1,
+                rows: [{
+                    mem_id: 1,
+                }],
+            })
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
             })
             .mockResolvedValueOnce({
                 rowCount: 1,

@@ -18,7 +18,7 @@ async function setLastSearchIds(userId, termsStr, ids) {
         WHERE account_id = $3
     `;
     const values = [termsStr, JSON.stringify(ids), userId];
-    return get(sql, values);
+    return query(sql, values);
 }
 
 const MaxLimit = 1000;
