@@ -47,7 +47,7 @@ async function deleteOldTokens() {
         DELETE FROM token
         WHERE expires < $1
     `;
-    const values = [Date.now()];
+    const values = [new Date()];
     const res = await query(sql, values);
     return res.rowCount;
 }
