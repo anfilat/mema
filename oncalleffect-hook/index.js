@@ -19,6 +19,9 @@ export default function useOnCallEffect(effect) {
     }, [start]);
 
     useEffect(() => {
+        val.unsubscribe = null;
+        val.mounted = true;
+
         return () => {
             if (val.unsubscribe != null) {
                 val.unsubscribe(false);

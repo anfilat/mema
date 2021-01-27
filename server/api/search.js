@@ -1,6 +1,6 @@
 const {body} = require('express-validator');
 const db = require('../db');
-const {parseTerms} = require('../helpers/utils')
+const {parseTerms} = require('common')
 
 exports.checkList = [
     body('text')

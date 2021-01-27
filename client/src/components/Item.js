@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {Link as RouterLink} from 'react-router-dom';
 import {makeStyles} from '@material-ui/core/styles';
 import {Chip, Card, CardContent, Box, Link} from '@material-ui/core';
+import searchService from '../services/search';
 import DeleteDialog from './DeleteDialog';
 import useDeleteItem from "../hooks/deleteItem.hool";
 
@@ -36,6 +37,14 @@ const useStyles = makeStyles(theme => ({
             margin: theme.spacing(0.5),
         },
     },
+    usedTag: {
+        backgroundColor: '#ffffa0',
+        cursor: 'pointer',
+    },
+    freeTag: {
+        backgroundColor: '#81baeb',
+        cursor: 'pointer',
+    },
     button: {
         color: theme.palette.primary.main,
         '&:hover': {
@@ -53,6 +62,14 @@ export default function Item(props) {
     const isFullHtml = html[1] !== '';
     const content = showAll ? html[1] : html[0];
     const {clickDelete, reallyDelete, handleCloseDeleteDialog, openDeleteDialog, loading} = useDeleteItem(id, remove);
+
+    function handleTagClick(tag) {
+        if (searchService.isInTerms(tag)) {
+            searchService.delTerm(tag);
+        } else {
+            searchService.addTerm(tag);
+        }
+    }
 
     function handlesShowAll() {
         setShowAll(!showAll);
@@ -78,7 +95,12 @@ export default function Item(props) {
                     />
                     <Box display="flex" className={classes.bottom}>
                         <div className={classes.tags}>
-                            {tags.map(tag => <Chip label={tag} key={tag}/>)}
+                            {tags.map(tag => <Chip
+                                className={searchService.isInTerms(tag) ? classes.usedTag : classes.freeTag}
+                                onClick={() => handleTagClick(tag)}
+                                label={tag}
+                                key={tag}/>
+                            )}
                         </div>
                         {isFullHtml &&
                             <div className={classes.button} onClick={handlesShowAll}>
