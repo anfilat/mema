@@ -39,7 +39,7 @@ async function listItems(userId, ids, limit, offset) {
         WHERE mem.account_id = $1
           AND mem_id IN (${listIds})
         GROUP BY mem.mem_id, text.text, mem.last_change_time
-        ORDER BY position(mem_id::text in '${listIds}')
+        ORDER BY array_position(array[${listIds}], mem.mem_id)
     `;
     const values = [userId];
     const res = await query(sql, values);
