@@ -87,7 +87,7 @@ class SearchService {
     }
 
     _setSearch(value) {
-        this.#searchStr = value;
+        this.#searchStr = value.trim();
         this.#terms = parseTerms(this.#searchStr);
 
         setTimeout(() => {

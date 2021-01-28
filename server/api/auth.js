@@ -5,9 +5,11 @@ const {newToken, setCookie, delCookie} = require('../helpers/token');
 
 exports.checkRegister = [
     body('email')
-        .isEmail().withMessage('Invalid email'),
+        .isEmail()
+        .withMessage('Invalid email'),
     body('password')
-        .isLength({min: 6}).withMessage('The minimum password length is 6 characters'),
+        .isLength({min: 6})
+        .withMessage('The minimum password length is 6 characters'),
 ];
 
 exports.register = async (req, res) => {
@@ -35,10 +37,12 @@ exports.register = async (req, res) => {
 exports.checkLogin = [
     body('email')
         .trim()
-        .not().isEmpty().withMessage('Empty email'),
+        .notEmpty()
+        .withMessage('Empty email'),
     body('password')
         .trim()
-        .not().isEmpty().withMessage('Empty password'),
+        .notEmpty()
+        .withMessage('Empty password'),
 ];
 
 exports.login = async (req, res) => {

@@ -14,4 +14,34 @@ router.post(
     search.list
 );
 
+// /api/search/extract
+router.post(
+    '/extract',
+    [
+        ...search.checkExtract,
+        stopOnError('Incorrect data'),
+    ],
+    search.extract
+);
+
+// /api/search/up
+router.post(
+    '/up',
+    [
+        ...search.checkUp,
+        stopOnError('Incorrect data'),
+    ],
+    search.up
+);
+
+// /api/search/down
+router.post(
+    '/down',
+    [
+        ...search.checkDown,
+        stopOnError('Incorrect data'),
+    ],
+    search.down
+);
+
 module.exports = router;

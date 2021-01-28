@@ -1,4 +1,4 @@
-const {query, get, getValueArray} = require('./core');
+const {query, get, getValueArray, transaction, clientQuery} = require('./core');
 
 async function getLastSearchIds(userId) {
     const sql = `
@@ -19,6 +19,151 @@ async function setLastSearchIds(userId, termsStr, ids) {
     `;
     const values = [termsStr, JSON.stringify(ids), userId];
     return query(sql, values);
+}
+
+async function listItems(userId, ids, limit, offset) {
+    const listIds = ids.slice(offset, offset + limit).join(',');
+    if (listIds === '') {
+        return [];
+    }
+
+    const sql = `
+        SELECT mem.mem_id,
+               text.text,
+               mem.last_change_time,
+               ARRAY_AGG(tag.tag) AS tags
+        FROM mem
+                 LEFT JOIN text USING (text_id)
+                 LEFT JOIN mem_tag USING (mem_id)
+                 LEFT JOIN tag USING (tag_id)
+        WHERE mem.account_id = $1
+          AND mem_id IN (${listIds})
+        GROUP BY mem.mem_id, text.text, mem.last_change_time
+        ORDER BY position(mem_id::text in '${listIds}')
+    `;
+    const values = [userId];
+    const res = await query(sql, values);
+    return res.rows.map(item => ({
+        id: item.mem_id,
+        text: item.text,
+        time: item.last_change_time,
+        tags: item.tags[0] == null ? [] : item.tags,
+    }));
+}
+
+async function searchIds(userId, termsStr, terms) {
+    const currentIds = await getSearchIds(userId, terms);
+
+    if (!termsStr) {
+        return currentIds;
+    }
+
+    return transaction(async function (client) {
+        const res = await readList(client, userId, termsStr);
+
+        if (res.rowCount === 0) {
+            return currentIds;
+        }
+
+        let {listId, ids, blockIds} = await parseListData(res, userId, terms);
+        const current = new Set(currentIds);
+
+        blockIds.forEach(id => {
+            current.delete(id);
+        });
+
+        ids = ids.filter(id => {
+            if (current.has(id)) {
+                current.delete(id);
+                return true;
+            }
+            return false;
+        });
+
+        ids.push(...Array.from(current));
+
+        await saveList(client, userId, termsStr, listId, ids, blockIds);
+        return ids;
+    });
+}
+
+async function updateList(userId, termsStr, terms, func) {
+    return transaction(async function (client) {
+        const res = await readList(client, userId, termsStr);
+
+        let listId;
+        let ids;
+        let blockIds;
+        if (res.rowCount > 0) {
+            ({listId, ids, blockIds} = await parseListData(res, userId, terms));
+        } else {
+            ids = await getSearchIds(userId, terms);
+            blockIds = [];
+        }
+
+        const resUpdate = func(ids, blockIds);
+        if (!resUpdate.ok) {
+            return;
+        }
+
+        await saveList(client, userId, termsStr, listId, resUpdate.ids, resUpdate.blockIds);
+    });
+}
+
+async function readList(client, userId, termsStr) {
+    const sql = `
+        SELECT list_id, search_ids, block_ids
+        FROM list
+        WHERE account_id = $1
+          AND search = $2
+        FOR UPDATE
+    `;
+    const values = [userId, termsStr];
+    return clientQuery(client, sql, values);
+}
+
+async function saveList(client, userId, termsStr, listId, ids, blockIds) {
+    const idsValue = JSON.stringify(ids);
+    const blockIdsValue = JSON.stringify(blockIds);
+    let updateSql;
+    let updateValues;
+    if (listId) {
+        updateSql = `
+            UPDATE list
+            SET search_ids = $1,
+                block_ids = $2
+            WHERE list_id = $3
+        `;
+        updateValues = [idsValue, blockIdsValue, listId];
+    } else {
+        updateSql = `
+            INSERT INTO list (account_id, search, search_ids, block_ids)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (account_id, search)
+                DO UPDATE SET search_ids = excluded.search_ids,
+                              block_ids = excluded.block_ids;
+        `;
+        updateValues = [userId, termsStr, idsValue, blockIdsValue];
+    }
+    return clientQuery(client, updateSql, updateValues);
+}
+
+async function parseListData(res) {
+    const {list_id, search_ids, block_ids} = res.rows[0];
+
+    return {
+        listId: list_id,
+        ids: parseArray(search_ids),
+        blockIds: parseArray(block_ids),
+    };
+}
+
+function parseArray(value) {
+    try {
+        return JSON.parse(value) ?? [];
+    } catch {
+        return [];
+    }
 }
 
 const MaxLimit = 1000;
@@ -89,39 +234,10 @@ async function getSearchIds(userId, terms) {
     return await getValueArray(sql, values, 'mem_id');
 }
 
-async function listItems(userId, ids, limit, offset) {
-    const listIds = ids.slice(offset, offset + limit).join(',');
-    if (listIds === '') {
-        return [];
-    }
-
-    const sql = `
-        SELECT mem.mem_id,
-               text.text,
-               mem.last_change_time,
-               ARRAY_AGG(tag.tag) AS tags
-        FROM mem
-                 LEFT JOIN text USING (text_id)
-                 LEFT JOIN mem_tag USING (mem_id)
-                 LEFT JOIN tag USING (tag_id)
-        WHERE mem.account_id = $1
-          AND mem_id IN (${listIds})
-        GROUP BY mem.mem_id, text.text, mem.last_change_time
-        ORDER BY position(mem_id::text in '${listIds}')
-    `;
-    const values = [userId];
-    const res = await query(sql, values);
-    return res.rows.map(item => ({
-        id: item.mem_id,
-        text: item.text,
-        time: item.last_change_time,
-        tags: item.tags[0] == null ? [] : item.tags,
-    }));
-}
-
 module.exports = {
     getLastSearchIds,
     setLastSearchIds,
-    getSearchIds,
     listItems,
+    updateList,
+    searchIds,
 }

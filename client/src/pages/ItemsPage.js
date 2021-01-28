@@ -8,6 +8,7 @@ import {mdToHtml} from 'common';
 import searchService from '../services/search';
 import Title from '../components/Title';
 import Item from '../components/Item';
+import DeleteDialog from '../components/DeleteDialog';
 import {Request} from '../utils';
 import useSnackbarEx from "../hooks/snackbarEx.hook";
 
@@ -25,7 +26,7 @@ const itemsLimit = 25;
 
 export default function ItemsPage() {
     const classes = useStyles();
-    const {showError} = useSnackbarEx();
+    const {showSuccess, showError} = useSnackbarEx();
     const [currentSearch, setCurrentSearch] = useState(searchService.search);
     const [items, setItems] = useState([]);
     const [offset, setOffset] = useState(0);
@@ -34,6 +35,9 @@ export default function ItemsPage() {
     const isLoading = loading > 0;
     const total = items.length;
     const title = currentSearch ? `Items: ${currentSearch}` : 'Items';
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [delItemId, setDelItemId] = useState(null);
+    const [delLoading, setDelLoading] = useState(null);
 
     const loadMore = useOnCallEffect(() => {
         let canceled = false;
@@ -92,16 +96,20 @@ export default function ItemsPage() {
             }
 
             setCurrentSearch(value);
-            setItems([]);
-            setOffset(0);
-            setAllDataHere(false);
-            loadMore();
+            reload();
         });
 
         return () => {
             unsubscribe();
         };
     });
+
+    function reload() {
+        setItems([]);
+        setOffset(0);
+        setAllDataHere(false);
+        loadMore();
+    }
 
     function loadNext() {
         if (isLoading || allDataHere) {
@@ -111,20 +119,141 @@ export default function ItemsPage() {
         loadMore();
     }
 
-    function removeItem(id) {
+    function delItem(id) {
+        setDelItemId(id);
+        setOpenDeleteDialog(true);
+    }
+
+    function handleCloseDeleteDialog() {
+        setOpenDeleteDialog(false);
+    }
+
+    const reallyDelete = useOnCallEffect(() => {
+        setOpenDeleteDialog(false);
+        setDelLoading(delItemId);
+
+        const request = new Request({abortOnUnmount: false});
+        request.fetch('/api/item/del', {
+            itemId: delItemId,
+        }).then(({ok, data, error, exit}) => {
+            if (ok) {
+                showSuccess(data.message);
+            } else {
+                showError(error);
+            }
+
+            if (exit) {
+                return;
+            }
+
+            setDelLoading(null);
+
+            if (ok) {
+                setItems(items => items.filter(value => value.id !== delItemId));
+            }
+        });
+
+        return (mounted) => {
+            if (!mounted) {
+                request.willUnmount();
+            }
+        }
+    });
+
+    function extractItem(id) {
         setItems(items => items.filter(value => value.id !== id));
+        extractOnServer(id);
+    }
+
+    function upItem(id) {
+        setItems(items => {
+            const index = items.findIndex((value => value.id === id));
+            if (index !== -1 && index !== 0) {
+                const t = items[index - 1];
+                items[index - 1] = items[index];
+                items[index] = t;
+
+                upOnServer(id, t.id);
+            }
+            return [...items];
+        });
+    }
+
+    function downItem(id) {
+        setItems(items => {
+            const index = items.findIndex((value => value.id === id));
+            if (index !== -1 && index !== total - 1) {
+                const t = items[index + 1];
+                items[index + 1] = items[index];
+                items[index] = t;
+
+                downOnServer(id, t.id);
+            }
+            return [...items];
+        });
+    }
+
+    function extractOnServer(id) {
+        const request = new Request({abortOnUnmount: false});
+        request.fetch('/api/search/extract', {
+            text: currentSearch,
+            id,
+        }).then(onServerResult);
+    }
+
+    function upOnServer(id, beforeId) {
+        const request = new Request({abortOnUnmount: false});
+        request.fetch('/api/search/up', {
+            text: currentSearch,
+            id,
+            beforeId,
+        }).then(onServerResult);
+    }
+
+    function downOnServer(id, afterId) {
+        const request = new Request({abortOnUnmount: false});
+        request.fetch('/api/search/down', {
+            text: currentSearch,
+            id,
+            afterId,
+        }).then(onServerResult);
+    }
+
+    function onServerResult({data, error, exit}) {
+        if (error) {
+            showError(error);
+        }
+
+        if (exit) {
+            return;
+        }
+
+        if (data.outdated) {
+            reload();
+        }
     }
 
     function renderItem(index) {
         const {id, html, tags, time} = items[index];
+        const extractDisabled = currentSearch === '';
+        const upDisabled = currentSearch === '' || index === 0;
+        const downDisabled = currentSearch === '' || index === total - 1;
+        const disableAll = delLoading === id;
 
         return <Item
+            key={id}
             id={id}
             html={html}
             tags={tags}
             time={time}
-            key={id}
-            remove={removeItem}
+            delItem={delItem}
+            extractItem={extractItem}
+            extractDisabled={extractDisabled}
+            upItem={upItem}
+            upDisabled={upDisabled}
+            downItem={downItem}
+            downDisabled={downDisabled}
+            disableAll={disableAll}
         />;
     }
 
@@ -151,6 +280,11 @@ export default function ItemsPage() {
                     footer={renderFooter}
                 />
             </Container>
+            <DeleteDialog
+                open={openDeleteDialog}
+                onClose={handleCloseDeleteDialog}
+                onOk={reallyDelete}
+            />
         </>
     );
 }

@@ -73,3 +73,14 @@ CREATE TABLE IF NOT EXISTS mem_tag (
     CONSTRAINT mem_tag_mem_id_fk FOREIGN KEY (mem_id) REFERENCES mem(mem_id) ON DELETE CASCADE,
     CONSTRAINT mem_tag_tag_id_fk FOREIGN KEY (tag_id) REFERENCES tag(tag_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS list (
+    list_id serial PRIMARY KEY,
+    account_id int NOT NULL,
+    search TEXT,
+    search_ids TEXT,
+    block_ids TEXT,
+
+    CONSTRAINT list_account_id_fk FOREIGN KEY (account_id) REFERENCES account(account_id) ON DELETE CASCADE,
+    CONSTRAINT list_account_id_tag UNIQUE (account_id, search)
+);

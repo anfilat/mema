@@ -3,8 +3,6 @@ import {Link as RouterLink} from 'react-router-dom';
 import {makeStyles} from '@material-ui/core/styles';
 import {Chip, Card, CardContent, Box, Link} from '@material-ui/core';
 import searchService from '../services/search';
-import DeleteDialog from './DeleteDialog';
-import useDeleteItem from "../hooks/deleteItem.hool";
 
 const useStyles = makeStyles(theme => ({
     main: {
@@ -47,21 +45,36 @@ const useStyles = makeStyles(theme => ({
     },
     button: {
         color: theme.palette.primary.main,
-        '&:hover': {
+        '&:not([disabled]):hover': {
             cursor: 'pointer',
             textDecoration: 'underline',
+        },
+        '&[disabled]': {
+            color: theme.palette.primary.light,
         },
     }
 }));
 
 export default function Item(props) {
     const classes = useStyles();
-    const {id, time, html, tags, remove} = props;
+    const {
+        id,
+        time,
+        html,
+        tags,
+        delItem,
+        extractItem,
+        extractDisabled,
+        upItem,
+        upDisabled,
+        downItem,
+        downDisabled,
+        disableAll,
+    } = props;
     const [showAll, setShowAll] = useState(false);
-    const editLink = `/edit/${id}`;
-    const isFullHtml = html[1] !== '';
     const content = showAll ? html[1] : html[0];
-    const {clickDelete, reallyDelete, handleCloseDeleteDialog, openDeleteDialog, loading} = useDeleteItem(id, remove);
+    const isFullHtml = html[1] !== '';
+    const editLink = `/edit/${id}`;
 
     function handleTagClick(tag) {
         if (searchService.isInTerms(tag)) {
@@ -71,52 +84,70 @@ export default function Item(props) {
         }
     }
 
+    function clickUp() {
+        upItem(id);
+    }
+
+    function clickDown() {
+        downItem(id);
+    }
+
+    function clickExtract() {
+        extractItem(id);
+    }
+
+    function clickDel() {
+        delItem(id);
+    }
+
     function handlesShowAll() {
         setShowAll(!showAll);
     }
 
     return (
-        <>
-            <Card variant="outlined" className={classes.main}>
-                <CardContent>
-                    <Box display="flex" justifyContent="space-between">
-                        {renderTime(time)}
-                        <div className={classes.buttons}>
-                            <div className={classes.button} onClick={clickDelete}>
-                                Delete
-                            </div>
-                            <Link component={RouterLink} to={editLink} variant="body2">
-                                Edit
-                            </Link>
+        <Card variant="outlined" className={classes.main}>
+            <CardContent>
+                <Box display="flex" justifyContent="space-between">
+                    {renderTime(time)}
+                    <div className={classes.buttons}>
+                        <div className={classes.button} onClick={clickUp} disabled={upDisabled}>
+                            Up
                         </div>
-                    </Box>
-                    <div
-                        dangerouslySetInnerHTML={{__html: content}}
-                    />
-                    <Box display="flex" className={classes.bottom}>
-                        <div className={classes.tags}>
-                            {tags.map(tag => <Chip
-                                className={searchService.isInTerms(tag) ? classes.usedTag : classes.freeTag}
-                                onClick={() => handleTagClick(tag)}
-                                label={tag}
-                                key={tag}/>
-                            )}
+                        <div className={classes.button} onClick={clickDown} disabled={downDisabled}>
+                            Down
                         </div>
-                        {isFullHtml &&
-                            <div className={classes.button} onClick={handlesShowAll}>
-                                {showAll ? 'Short' : 'Full'}
-                            </div>
-                        }
-                    </Box>
-                </CardContent>
-                {loading && <div className={classes.wait}/>}
-            </Card>
-            <DeleteDialog
-                open={openDeleteDialog}
-                onClose={handleCloseDeleteDialog}
-                onOk={reallyDelete}
-            />
-        </>
+                        <div className={classes.button} onClick={clickExtract} disabled={extractDisabled}>
+                            Extract
+                        </div>
+                        <div className={classes.button} onClick={clickDel}>
+                            Delete
+                        </div>
+                        <Link component={RouterLink} to={editLink} variant="body2">
+                            Edit
+                        </Link>
+                    </div>
+                </Box>
+                <div
+                    dangerouslySetInnerHTML={{__html: content}}
+                />
+                <Box display="flex" className={classes.bottom}>
+                    <div className={classes.tags}>
+                        {tags.map(tag => <Chip
+                            className={searchService.isInTerms(tag) ? classes.usedTag : classes.freeTag}
+                            onClick={() => handleTagClick(tag)}
+                            label={tag}
+                            key={tag}/>
+                        )}
+                    </div>
+                    {isFullHtml &&
+                        <div className={classes.button} onClick={handlesShowAll}>
+                            {showAll ? 'Short' : 'Full'}
+                        </div>
+                    }
+                </Box>
+            </CardContent>
+            {disableAll && <div className={classes.wait}/>}
+        </Card>
     );
 }
 
