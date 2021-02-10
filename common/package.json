@@ -3,6 +3,6 @@
   "version": "0.1.2",
   "dependencies": {
     "lodash": "^4.17.20",
-    "markdown-it": "^12.0.2"
+    "markdown-it": "^12.0.4"
   }
 }
