@@ -1,6 +1,6 @@
 {
   "name": "client",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "dependencies": {
     "@ckeditor/ckeditor5-react": "^2.1.0",
@@ -10,7 +10,7 @@
     "@material-ui/lab": "^4.0.0-alpha.57",
     "ckeditor5-custom-build": "file:./src/ckeditor",
     "history": "^4.10.1",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "notistack": "^1.0.3",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
