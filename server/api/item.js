@@ -13,7 +13,8 @@ exports.checkAdd = [
 
 exports.add = async (req, res) => {
     const {text, tags} = req.body;
-    const {memId: itemId, textId} = await db.addItem(req.userData.userId, text, cleanTags(tags));
+    const userId = req.userData.userId;
+    const {memId: itemId, textId} = await db.addItem(userId, text, cleanTags(tags));
 
     res
         .status(201)
@@ -32,7 +33,8 @@ exports.checkGet = [
 
 exports.get = async (req, res) => {
     const {itemId} = req.body;
-    const {ok, textId, text, tags} = await db.getItem(req.userData.userId, itemId);
+    const userId = req.userData.userId;
+    const {ok, textId, text, tags} = await db.getItem(userId, itemId);
 
     if (ok) {
         res.json({
@@ -63,7 +65,8 @@ exports.checkReSave = [
 
 exports.reSave = async (req, res) => {
     const {itemId, text, tags} = req.body;
-    const textId = await db.reSaveItem(req.userData.userId, itemId, text, cleanTags(tags));
+    const userId = req.userData.userId;
+    const textId = await db.reSaveItem(userId, itemId, text, cleanTags(tags));
 
     res.json({
         message: 'Text saved',
@@ -89,7 +92,8 @@ exports.checkUpdate = [
 
 exports.update = async (req, res) => {
     const {itemId, textId, text, tags} = req.body;
-    const ok = await db.updateItem(req.userData.userId, itemId, textId, text, cleanTags(tags));
+    const userId = req.userData.userId;
+    const ok = await db.updateItem(userId, itemId, textId, text, cleanTags(tags));
 
     if (ok) {
         res.json({
@@ -113,7 +117,8 @@ exports.checkDell = [
 
 exports.del = async (req, res) => {
     const {itemId} = req.body;
-    await db.delItem(req.userData.userId, itemId);
+    const userId = req.userData.userId;
+    await db.delItem(userId, itemId);
 
     res.json({
         message: 'Item deleted',

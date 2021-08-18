@@ -9,6 +9,7 @@ describe('search list', () => {
     test('success', async () => {
         app._db.switchToPgMock();
         app._db.query
+            // db.getToken
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -16,16 +17,34 @@ describe('search list', () => {
                     token: 'someToken'
                 }],
             })
+            // db.getSearchIds
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
                     mem_id: 1,
                 }],
             })
+            // BEGIN
             .mockResolvedValueOnce({
                 rowCount: 0,
                 rows: [],
             })
+            // db.searchIds db.readList
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            // COMMIT
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            // db.setLastSearchIds
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            // db.listItems
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -57,6 +76,7 @@ describe('search list', () => {
     test('success with offset', async () => {
         app._db.switchToPgMock();
         app._db.query
+            // db.getToken
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -64,6 +84,7 @@ describe('search list', () => {
                     token: 'someToken'
                 }],
             })
+            // db.getLastSearchIds
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -71,6 +92,7 @@ describe('search list', () => {
                     search_ids: null,
                 }],
             })
+            // db.getSearchIds
             .mockResolvedValueOnce({
                 rowCount: 2,
                 rows: [
@@ -78,10 +100,27 @@ describe('search list', () => {
                     { mem_id: 2 },
                 ],
             })
+            // BEGIN
             .mockResolvedValueOnce({
                 rowCount: 0,
                 rows: [],
             })
+            // db.searchIds db.readList
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            // COMMIT
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            // db.setLastSearchIds
+            .mockResolvedValueOnce({
+                rowCount: 0,
+                rows: [],
+            })
+            // db.listItems
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -113,6 +152,7 @@ describe('search list', () => {
     test('success without text', async () => {
         app._db.switchToPgMock();
         app._db.query
+            // db.getToken
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
@@ -120,16 +160,19 @@ describe('search list', () => {
                     token: 'someToken'
                 }],
             })
+            // db.getSearchIds
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{
                     mem_id: 1,
                 }],
             })
+            // db.setLastSearchIds
             .mockResolvedValueOnce({
                 rowCount: 0,
                 rows: [],
             })
+            // db.listItems
             .mockResolvedValueOnce({
                 rowCount: 1,
                 rows: [{

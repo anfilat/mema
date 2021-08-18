@@ -55,7 +55,7 @@ async function getTagsForMem(userId, memId) {
     const sql = `
         SELECT tag
         FROM tag
-        LEFT JOIN mem_tag on tag.tag_id = mem_tag.tag_id
+        LEFT JOIN mem_tag USING (tag_id)
         WHERE account_id = $1
           AND mem_id = $2;
     `;

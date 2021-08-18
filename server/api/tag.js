@@ -13,7 +13,8 @@ exports.checkList = [
 
 exports.list = async (req, res) => {
     const {text, tags} = req.body;
-    const list = await db.listTags(req.userData.userId, text.trim(), cleanTags(tags));
+    const userId = req.userData.userId;
+    const list = await db.listTags(userId, text.trim(), cleanTags(tags));
 
     res
         .json({
