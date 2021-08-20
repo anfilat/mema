@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {makeStyles, fade} from '@material-ui/core/styles';
+import {makeStyles, alpha} from '@material-ui/core/styles';
 import {InputBase, IconButton} from '@material-ui/core';
 import {Search as SearchIcon} from '@material-ui/icons';
 import useFullEffect from 'fulleffect-hook';
@@ -12,9 +12,9 @@ const useStyles = makeStyles((theme) => ({
         alignItems: 'center',
         position: 'relative',
         borderRadius: theme.shape.borderRadius,
-        backgroundColor: fade(theme.palette.common.white, 0.15),
+        backgroundColor: alpha(theme.palette.common.white, 0.15),
         '&:hover': {
-            backgroundColor: fade(theme.palette.common.white, 0.25),
+            backgroundColor: alpha(theme.palette.common.white, 0.25),
         },
         marginLeft: 0,
         marginRight: theme.spacing(1),

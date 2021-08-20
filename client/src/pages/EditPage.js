@@ -273,7 +273,7 @@ export default function EditPage() {
                 </Box>
                 <Grid
                     container
-                    justify="space-between"
+                    justifyContent="space-between"
                     spacing={2}
                 >
                     <Grid item>
@@ -320,7 +320,7 @@ export default function EditPage() {
                     <Grid
                         item
                         container
-                        justify="flex-end"
+                        justifyContent="flex-end"
                         className={classes.lastButtons}
                     >
                         <Grid item>

@@ -285,7 +285,7 @@ export default function NewPage() {
                 </Box>
                 <Grid
                     container
-                    justify="space-between"
+                    justifyContent="space-between"
                     spacing={2}
                 >
                     {(outdated || inEditing) && <Grid item>
@@ -332,7 +332,7 @@ export default function NewPage() {
                     <Grid
                         item
                         container
-                        justify="flex-end"
+                        justifyContent="flex-end"
                         spacing={2}
                         className={classes.lastButtons}
                     >
