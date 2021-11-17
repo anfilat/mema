@@ -9,6 +9,15 @@ const useStyles = makeStyles(theme => ({
         marginBottom: theme.spacing(1),
         position: 'relative',
     },
+    content: {
+        '& pre': {
+            color: '#353535',
+            backgroundColor: 'rgba(199, 199, 199, 0.3)',
+            border: '1px solid #c4c4c4',
+            'border-radius': '2px',
+            padding: '1em',
+        },
+    },
     wait: {
         position: 'absolute',
         top: 0,
@@ -127,7 +136,7 @@ export default function Item(props) {
                         </Link>
                     </div>
                 </Box>
-                <div
+                <div className={classes.content}
                     dangerouslySetInnerHTML={{__html: content}}
                 />
                 <Box display="flex" className={classes.bottom}>
